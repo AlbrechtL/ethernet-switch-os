@@ -201,8 +201,14 @@ invocation and would otherwise drop the workspace layer again.
 
 `.github/workflows/build.yml` runs the same `./kas-container build` as a local
 build, one job per board, on every push to `master` and on pull requests, and
-uploads the four images as a job artifact. Because nothing is pinned, a
-scheduled or manual run is also a check that the upstream branches still build.
+uploads the four images as a job artifact.
+
+The layer repositories no longer build images of their own. A push to
+`meta-ethernet-switch-os` runs a parse check there -- this configuration, this
+machine, no task executed -- which catches a broken recipe in minutes. It
+cannot trigger this workflow, so this one also runs weekly, which is what
+turns the layers' current `master` into images. Because nothing is pinned,
+that run doubles as a check that the upstream branches still build.
 
 ## Relation to the earlier build setup
 

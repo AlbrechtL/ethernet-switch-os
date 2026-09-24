@@ -5,6 +5,12 @@ on:
     branches: [master]
   pull_request:
   workflow_dispatch:
+  # Nothing here changes when a layer does, and a push to meta-rtl83xx-bsp or
+  # meta-ethernet-switch-os cannot trigger this workflow. Those repositories
+  # parse-check themselves on every push; this is what actually builds their
+  # current master into images, once a week.
+  schedule:
+    - cron: "0 4 * * 1"
 
 # Nothing is pinned here. The layer revisions live in kas/, and the policy is
 # branch tips: every run builds the current head of each layer's branch.
