@@ -15,10 +15,8 @@
 # make that default assignment a no-op ("bblayers.conf doesn't contain any
 # BBLAYERS definition"). An append is applied to the final value instead.
 #
-# devtool rather than EXTERNALSRC: clixon-switch is a cargo recipe whose
-# crates come from the crate:// entries in clixon-switch-crates.inc, and
-# externalsrc.bbclass disables do_fetch and do_unpack, so those crates would
-# never be staged.
+# devtool rather than EXTERNALSRC: it is the supported way to edit a recipe's
+# sources, and externalsrc.bbclass disables do_fetch and do_unpack.
 header:
   version: 23
 
