@@ -1,0 +1,29 @@
+# Zyxel GS1900-8 rev A1: 8 port Gigabit switch on a Realtek RTL8380,
+# 16 MiB SPI-NOR.
+#
+#   ./kas-container build kas/board/zyxel-gs1900-8-a1.yml
+#
+# kas sorts BBLAYERS alphabetically, so the include order below is for reading
+# only. It does not matter here: meta-ethernet-switch-os reaches into the BSP
+# through BBFILES_DYNAMIC, which keys off the "rtl83xx-bsp" collection name
+# rather than off the order of the layers.
+header:
+  version: 23
+  includes:
+    - kas/base.yml
+    - kas/bsp/rtl83xx.yml
+    - kas/os.yml
+
+machine: zyxel-gs1900-8-a1
+
+target:
+  - ethernet-switch-os-swu-factory
+  - ethernet-switch-os-swu-upgrade
+
+# What a build is expected to leave behind. "kas build --update" and CI read
+# these; they are also the files to copy to a TFTP server or to SWUpdate.
+artifacts:
+  swu-factory: build/tmp/deploy/images/zyxel-gs1900-8-a1/ethernet-switch-os-swu-factory-zyxel-gs1900-8-a1.swu
+  swu-upgrade: build/tmp/deploy/images/zyxel-gs1900-8-a1/ethernet-switch-os-swu-upgrade-zyxel-gs1900-8-a1.swu
+  initramfs: build/tmp/deploy/images/zyxel-gs1900-8-a1/ethernet-switch-os-initramfs-zyxel-gs1900-8-a1.bin
+  initramfs-rt-loader: build/tmp/deploy/images/zyxel-gs1900-8-a1/ethernet-switch-os-initramfs-zyxel-gs1900-8-a1-rt-loader.bin

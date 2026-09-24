@@ -1,0 +1,15 @@
+# What a CI runner needs on top of a board file. Append it with a colon:
+#
+#   ./kas-container build kas/board/zyxel-gs1900-8-a1.yml:kas/opt/ci.yml
+#
+# DL_DIR, SSTATE_DIR, TMPDIR and BB_HASHSERVE_DB_DIR are not set here: kas
+# forwards them from the environment into bitbake, and kas-container mounts
+# them into the container. The workflow sets them.
+header:
+  version: 23
+
+local_conf_header:
+  ci: |
+    # A hosted runner is disk bound long before it is CPU bound: drop each
+    # recipe's work directory once its packages are built.
+    INHERIT += "rm_work"

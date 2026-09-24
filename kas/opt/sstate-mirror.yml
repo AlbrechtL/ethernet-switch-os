@@ -1,0 +1,15 @@
+# Pull shared state from the Yocto Project's CDN instead of building
+# everything locally. Turns a first build from hours into minutes, at the cost
+# of a lot of downloading -- oe-core's own fragment warns it needs a robust
+# connection.
+#
+#   ./kas-container build kas/board/zyxel-gs1900-8-a1.yml:kas/opt/sstate-mirror.yml
+#
+# Only oe-core recipes are on the CDN. The kernel, rt-loader, clixon and the
+# switch plugin are built here either way.
+header:
+  version: 23
+
+local_conf_header:
+  sstate-mirror: |
+    OE_FRAGMENTS += "core/yocto/sstate-mirror-cdn"

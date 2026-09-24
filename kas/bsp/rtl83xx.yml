@@ -1,0 +1,15 @@
+# Realtek RTL83xx switch SoCs (RTL8380/RTL8382): kernel, device trees,
+# rt-loader and the flash image types.
+#
+# Hardware only -- it boots without meta-ethernet-switch-os and knows nothing
+# about it. Pick a machine from a file in kas/board/.
+header:
+  version: 23
+  includes:
+    - kas/base.yml
+
+repos:
+  meta-rtl83xx-bsp:
+    url: https://github.com/AlbrechtL/meta-rtl83xx-bsp
+    path: layers/meta-rtl83xx-bsp
+    branch: master

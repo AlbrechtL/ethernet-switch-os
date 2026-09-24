@@ -1,0 +1,11 @@
+# kas checks the layer repositories out here ...
+/layers/
+# ... and bitbake works here.
+/build/
+# Shared between builds, so kept out of build/ (see the Makefile).
+/downloads/
+/sstate-cache/
+
+# kas menu / kas-container scratch
+/.config.yaml
+/.kas-buildtools/

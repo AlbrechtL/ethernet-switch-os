@@ -1,0 +1,31 @@
+# The operating system: meta-ethernet-switch-os and the layers it depends on.
+# Board independent -- combine it with a BSP from kas/bsp/ and a machine.
+header:
+  version: 23
+  includes:
+    - kas/base.yml
+
+repos:
+  meta-openembedded:
+    url: https://github.com/openembedded/meta-openembedded
+    path: layers/meta-openembedded
+    layers:
+      meta-oe:
+      # Nothing here builds from meta-python, but meta-networking names it in
+      # LAYERDEPENDS, so parsing stops without it.
+      meta-python:
+      # net-snmp.
+      meta-networking:
+
+  meta-swupdate:
+    url: https://github.com/sbabic/meta-swupdate
+    path: layers/meta-swupdate
+
+  meta-ethernet-switch-os:
+    url: https://github.com/AlbrechtL/meta-ethernet-switch-os
+    path: layers/meta-ethernet-switch-os
+    branch: master
+
+# conf/distro/ethernet-switch-os.conf in meta-ethernet-switch-os: poky-tiny
+# plus clixon, dropbear and SWUpdate, with busybox as init and mdev.
+distro: ethernet-switch-os

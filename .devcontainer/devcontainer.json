@@ -1,0 +1,39 @@
+{
+    "name": "ethernet-switch-os",
+    "build": {
+        "dockerfile": "../container/Dockerfile",
+        "context": ".."
+    },
+    // kas and bitbake both want to write into the checkout; the upstream kas
+    // image expects to run as root when it does (kas-container passes
+    // --user=root for the same reason).
+    "remoteUser": "root",
+    "workspaceFolder": "/work",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/work,type=bind",
+    "runArgs": [
+        // bitbake isolates tasks with unprivileged user namespaces, which the
+        // default seccomp profile blocks.
+        "--security-opt",
+        "seccomp=unconfined"
+    ],
+    "mounts": [
+        // rtl838x-qemu runs QEMU in a container of its own; the docker client
+        // in this image needs the host daemon to do that.
+        "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+    ],
+    "containerEnv": {
+        "KAS_WORK_DIR": "/work",
+        "KAS_BUILD_DIR": "/work/build",
+        "DL_DIR": "/work/downloads",
+        "SSTATE_DIR": "/work/sstate-cache"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "yocto-project.yocto-bitbake",
+                "rust-lang.rust-analyzer",
+                "redhat.vscode-yaml"
+            ]
+        }
+    }
+}

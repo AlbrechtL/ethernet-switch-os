@@ -1,0 +1,27 @@
+# Keep devtool's workspace in bblayers.conf.
+#
+#   ./kas-container shell kas/board/zyxel-gs1900-8-a1.yml:kas/opt/devtool.yml
+#   devtool modify clixon-switch
+#   ... edit build/workspace/sources/clixon-switch ...
+#   bitbake ethernet-switch-os-swu-upgrade
+#
+# kas rewrites bblayers.conf on every invocation, so the layer "devtool
+# modify" adds would be dropped again on the next one. This adds it back, but
+# only once it exists -- naming a directory without a conf/layer.conf would
+# fail parsing for everyone who has never run devtool.
+#
+# ":append" rather than "+=": kas puts this header at the top of the file,
+# above its own "BBLAYERS ?=", and a "+=" there would set the variable and
+# make that default assignment a no-op ("bblayers.conf doesn't contain any
+# BBLAYERS definition"). An append is applied to the final value instead.
+#
+# devtool rather than EXTERNALSRC: clixon-switch is a cargo recipe whose
+# crates come from the crate:// entries in clixon-switch-crates.inc, and
+# externalsrc.bbclass disables do_fetch and do_unpack, so those crates would
+# never be staged.
+header:
+  version: 23
+
+bblayers_conf_header:
+  devtool: |
+    BBLAYERS:append = "${@' ' + d.getVar('TOPDIR') + '/workspace' if os.path.exists(d.getVar('TOPDIR') + '/workspace/conf/layer.conf') else ''}"

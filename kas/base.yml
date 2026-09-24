@@ -1,0 +1,51 @@
+# Everything a build needs regardless of board, BSP or userspace: the build
+# tool and the OpenEmbedded core metadata.
+#
+# The Yocto Project retired the combined "poky" repository after walnascar --
+# git.yoctoproject.org/poky has no wrynose branch -- so bitbake,
+# openembedded-core and meta-yocto are checked out separately. bitbake ends up
+# next to openembedded-core in layers/, which is where
+# scripts/oe-buildenv-internal looks for it ($OEROOT/../bitbake).
+header:
+  version: 23
+
+build_system: openembedded
+
+# The release branch. meta-rtl83xx-bsp and meta-ethernet-switch-os override it
+# with "master"; they move with this project, not with a Yocto release.
+defaults:
+  repos:
+    branch: wrynose
+
+repos:
+  bitbake:
+    url: https://git.openembedded.org/bitbake
+    path: layers/bitbake
+    # bitbake has its own version series, not the Yocto release names.
+    branch: "2.18"
+    layers:
+      # bitbake is the build tool, not a layer.
+      .: disabled
+
+  openembedded-core:
+    url: https://git.openembedded.org/openembedded-core
+    path: layers/openembedded-core
+    layers:
+      meta:
+
+  meta-yocto:
+    url: https://git.yoctoproject.org/meta-yocto
+    path: layers/meta-yocto
+    layers:
+      # Only for conf/distro/poky-tiny.conf, which
+      # meta-ethernet-switch-os' distro requires. meta-yocto-bsp is not used:
+      # every board here comes from a BSP layer under kas/bsp/.
+      meta-poky:
+
+local_conf_header:
+  fragments: |
+    # An empty root and cli password -- proof of concept only. This is an
+    # ordinary oe-core fragment, not one of the builtin "machine/" or
+    # "distro/" ones: those assign MACHINE and DISTRO themselves and bitbake
+    # aborts when something else has already set them, which kas does.
+    OE_FRAGMENTS += "core/yocto/root-login-with-empty-password"
