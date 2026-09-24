@@ -13,23 +13,17 @@ a simple web UI.
 It is built with the [Yocto Project](https://www.yoctoproject.org/): the
 system is a custom distro on top of OpenEmbedded, assembled per board from
 Yocto layers, and the result is a flashable firmware image rather than a
-general-purpose Linux installation.
-
-```sh
-git clone https://github.com/AlbrechtL/ethernet-switch-os
-cd ethernet-switch-os
-make container                  # build the development image, once
-make build                      # build the default board
-```
+general-purpose Linux installation. See [Building](#building) for how to
+build it.
 
 ## Documentation
 
 The **[user guide](https://albrechtl.github.io/ethernet-switch-os/)** covers
 using a switch that runs Ethernet Switch OS: first login, the CLI, the
 management address and DHCP, VLANs, spanning tree, SNMP, firmware updates
-and the current limitations. Its source is in [`docs/`](docs/). Preview it
-locally with `make docs-serve` (Docker only). This README is about building
-the firmware.
+and the current limitations. Its source is in [`docs/`](docs/); see
+[Building the user guide](#building-the-user-guide) for previewing it
+locally. This README is about building the firmware.
 
 ## Supported hardware
 
@@ -58,7 +52,8 @@ hand when it is needed.
 
 ## Requirements
 
-Docker, git and a POSIX shell. `make` if the convenience targets are wanted.
+Docker, git and a POSIX shell. VS Code with the Dev Containers extension if
+you want to work in the development container from the editor.
 
 Everything else — bitbake's host dependencies, the cross toolchain, Python,
 Rust — is inside the container image. `kas-container` in this repository is
@@ -68,15 +63,48 @@ vendored and pinned to kas 5.5.
 ## Building
 
 ```sh
-make container                                  # docker build -t ethernet-switch-os/kas:5.5 - < Dockerfile
-make build BOARD=zyxel-gs1900-8-a1              # the default
-make boards                                     # what can be built
-make shell                                      # a shell with bitbake ready
+git clone https://github.com/AlbrechtL/ethernet-switch-os
+cd ethernet-switch-os
 ```
 
-`make` only fills in the environment variables `kas-container` reads, so that
-downloads and shared state land outside `build/` and are shared between
-boards. The same thing by hand:
+The build always runs in a container, and there are two ways into it. The kas
+commands are the same in both — only the name differs: `kas` inside the dev
+container, `./kas-container` on the host.
+
+### In VS Code, with the dev container
+
+Open the checkout in VS Code and run **Dev Containers: Reopen in Container**.
+VS Code builds the development image from `Dockerfile` (the upstream kas
+image plus tools for working on the project) and mounts the checkout at `/work`.
+`.devcontainer/devcontainer.json` already sets `KAS_BUILD_DIR`, `DL_DIR` and
+`SSTATE_DIR`, so in a terminal there:
+
+```sh
+kas build kas/board/zyxel-gs1900-8-a1.yml
+```
+
+### On the shell, with kas-container
+
+`kas-container` runs kas in a Docker container by itself, so this is all a
+build needs:
+
+```sh
+./kas-container build kas/board/zyxel-gs1900-8-a1.yml
+```
+
+That uses the upstream `ghcr.io/siemens/kas/kas:5.5` image and puts
+everything under `build/`. Two optional additions, both what the dev
+container does too:
+
+- **The development image** from `Dockerfile`: the upstream kas image plus
+  tools for working *on* the project (a host Rust toolchain, `dtc`,
+  `mkimage`, the JFFS2 tools, a Docker client for rtl838x-qemu). It builds the
+  same artifacts. `kas-container` does not build images, so build it once,
+  and again whenever `Dockerfile` changes. The tag has to match the vendored
+  `kas-container` (5.5), or kas refuses to run.
+- **Downloads and shared state outside `build/`**, so they survive deleting
+  it and are shared between boards. `kas-container` creates the directories
+  and mounts them into the container.
 
 ```sh
 docker build -t ethernet-switch-os/kas:5.5 - < Dockerfile
@@ -85,20 +113,31 @@ export KAS_BUILD_DIR=$PWD/build DL_DIR=$PWD/downloads SSTATE_DIR=$PWD/sstate-cac
 ./kas-container build kas/board/zyxel-gs1900-8-a1.yml
 ```
 
-The image is optional. Plain `./kas-container build …` uses the upstream
-`ghcr.io/siemens/kas/kas:5.5` and builds the same artifacts; the image here
-only adds tools for working *on* the project (see `Dockerfile`).
+### Other kas commands
+
+Written for the shell; in the dev container replace `./kas-container` with
+`kas`.
+
+| Command | What it does |
+|---|---|
+| `./kas-container build kas/board/<board>.yml` | Build a board. |
+| `./kas-container shell kas/board/<board>.yml` | A shell with bitbake ready, e.g. for `bitbake -c menuconfig virtual/kernel`. |
+| `./kas-container checkout kas/board/<board>.yml` | Clone the layers and write `build/conf/` without building anything. |
+| `./kas-container dump kas/board/<board>.yml` | Print the fully resolved configuration. |
+| `ls kas/board/` | The boards that can be built. |
+| `rm -rf build` | Start over. Layers, downloads and shared state are kept, so the next build is fast. |
+| `rm -rf build layers downloads sstate-cache` | Drop everything kas created. |
 
 A first build takes hours. `kas/opt/sstate-mirror.yml` pulls oe-core's share
 of it from the Yocto Project's CDN instead:
 
 ```sh
-make build OPT=kas/opt/sstate-mirror.yml
+./kas-container build kas/board/zyxel-gs1900-8-a1.yml:kas/opt/sstate-mirror.yml
 ```
 
 ### What comes out
 
-In `build/tmp/deploy/images/zyxel-gs1900-8-a1/` (`make deploy` lists them):
+In `build/tmp/deploy/images/zyxel-gs1900-8-a1/`:
 
 | File | What it is for |
 |---|---|
@@ -113,6 +152,25 @@ README. Once the switch is up: `ssh cli@192.168.1.1` for the clixon CLI,
 `http://192.168.1.1/` for the status page, `http://192.168.1.1:8080` for
 SWUpdate. The [user guide](https://albrechtl.github.io/ethernet-switch-os/)
 takes it from there.
+
+### Building the user guide
+
+The user guide is plain [MkDocs](https://www.mkdocs.org/) with the Material
+theme, and needs only Docker too. Serve it on http://localhost:8000, rebuilt
+on every change:
+
+```sh
+docker run --rm -it -p 8000:8000 -v $PWD:/docs squidfunk/mkdocs-material:9.7.7
+```
+
+Or build it into `site/` the way CI does, failing on warnings and broken
+links:
+
+```sh
+docker run --rm -u $(id -u):$(id -g) -v $PWD:/docs squidfunk/mkdocs-material:9.7.7 build --strict
+```
+
+The image version matches `docs/requirements.txt`, which CI installs with pip.
 
 ## Testing without hardware
 
@@ -211,14 +269,14 @@ cheap is the reason this repository exists.
 kas checks the layers out under `layers/` as ordinary git clones, but it owns
 them: on every invocation it resets the local branch to the upstream one. A
 commit made in `layers/` and not yet pushed is **dropped from the branch** by
-the next `make build` -- it survives in the reflog, but nothing points at it
+the next build -- it survives in the reflog, but nothing points at it
 any more.
 
 So while working on a layer, add the fragment that tells kas to keep its
 hands off the project's own layers:
 
 ```sh
-make build OPT=kas/opt/local-layers.yml
+./kas-container build kas/board/zyxel-gs1900-8-a1.yml:kas/opt/local-layers.yml
 ```
 
 Then `layers/meta-ethernet-switch-os` and `layers/meta-rtl83xx-bsp` are yours

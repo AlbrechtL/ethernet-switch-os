@@ -2,7 +2,7 @@
 /layers/
 # ... and bitbake works here.
 /build/
-# Shared between builds, so kept out of build/ (see the Makefile).
+# Shared between builds, so kept out of build/ (see Building in the README).
 /downloads/
 /sstate-cache/
 
@@ -10,5 +10,5 @@
 /.config.yaml
 /.kas-buildtools/
 
-# mkdocs build output (make docs)
+# mkdocs build output
 /site/
