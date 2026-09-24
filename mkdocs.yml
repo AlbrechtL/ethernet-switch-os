@@ -1,0 +1,69 @@
+site_name: Ethernet Switch OS
+site_description: User guide for Ethernet Switch OS, a Linux system for managed Ethernet switches configured through OpenConfig and YANG.
+site_url: https://albrechtl.github.io/ethernet-switch-os/
+repo_url: https://github.com/AlbrechtL/ethernet-switch-os
+repo_name: AlbrechtL/ethernet-switch-os
+edit_uri: edit/master/docs/
+
+strict: true
+
+# With strict, broken #anchors in links fail the build as well.
+validation:
+  anchors: warn
+
+# Read by pip in CI, not a page.
+exclude_docs: |
+  requirements.txt
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - content.code.copy
+    - search.highlight
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - pymdownx.details
+  - pymdownx.superfences
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - Installation: getting-started/installation.md
+      - Running in QEMU: getting-started/qemu.md
+      - First login: getting-started/first-login.md
+      - Firmware update: getting-started/firmware-update.md
+  - CLI:
+      - Basics: cli/basics.md
+      - Management IP address: cli/ip.md
+      - VLANs: cli/vlans.md
+      - Ports: cli/interfaces.md
+      - Spanning tree: cli/spanning-tree.md
+      - SNMP: cli/snmp.md
+      - System: cli/system.md
+  - Web UI: web-ui.md
+  - RESTCONF: restconf/index.md
+  - Maintenance: maintenance.md
+  - Reference:
+      - CLI commands: reference/cli-commands.md
+      - Supported configuration: reference/supported-configuration.md
+      - Limitations: reference/limitations.md

@@ -9,3 +9,6 @@
 # kas menu / kas-container scratch
 /.config.yaml
 /.kas-buildtools/
+
+# mkdocs build output (make docs)
+/site/

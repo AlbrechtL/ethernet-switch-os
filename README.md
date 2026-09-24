@@ -22,11 +22,21 @@ make container                  # build the development image, once
 make build                      # build the default board
 ```
 
+## Documentation
+
+The **[user guide](https://albrechtl.github.io/ethernet-switch-os/)** covers
+using a switch that runs Ethernet Switch OS: first login, the CLI, the
+management address and DHCP, VLANs, spanning tree, SNMP, firmware updates
+and the current limitations. Its source is in [`docs/`](docs/). Preview it
+locally with `make docs-serve` (Docker only). This README is about building
+the firmware.
+
 ## Supported hardware
 
 | Hardware | SoC | Status |
 |---|---|---|
 | Zyxel GS1900-8 (rev A1), 8 × Gigabit | Realtek RTL8380 | Supported (`zyxel-gs1900-8-a1`) |
+| Zyxel GS1900-8, emulated by [rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu) | Realtek RTL8380 (emulated) | Supported, same image as the real switch (see [Running in QEMU](https://albrechtl.github.io/ethernet-switch-os/getting-started/qemu/)) |
 | QEMU x86_64 | — | Coming soon |
 
 ## Components and repositories
@@ -101,7 +111,8 @@ The flash layout, the TFTP procedure and what to type at the stock bootloader
 are in [meta-rtl83xx-bsp](https://github.com/AlbrechtL/meta-rtl83xx-bsp)'s
 README. Once the switch is up: `ssh cli@192.168.1.1` for the clixon CLI,
 `http://192.168.1.1/` for the status page, `http://192.168.1.1:8080` for
-SWUpdate.
+SWUpdate. The [user guide](https://albrechtl.github.io/ethernet-switch-os/)
+takes it from there.
 
 ## Testing without hardware
 

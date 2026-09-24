@@ -9,6 +9,7 @@
 #   make build OPT=kas/opt/sstate-mirror.yml
 #   make shell                        a shell with bitbake ready
 #   make boards                       what can be built
+#   make docs-serve                   the user guide on http://localhost:8000
 
 KAS_VERSION           ?= 5.5
 KAS_CONTAINER_IMAGE   ?= ethernet-switch-os/kas:$(KAS_VERSION)
@@ -28,7 +29,12 @@ KAS      := $(TOP)/kas-container
 KAS_CONF := kas/board/$(BOARD).yml$(if $(OPT),:$(OPT))
 DEPLOY   := $(KAS_BUILD_DIR)/tmp/deploy/images/$(BOARD)
 
-.PHONY: all container build checkout shell dump boards deploy clean distclean help
+# The user guide (mkdocs.yml, docs/). Same version as docs/requirements.txt,
+# which the CI installs.
+MKDOCS_IMAGE ?= squidfunk/mkdocs-material:9.7.7
+MKDOCS       := docker run --rm -u $(shell id -u):$(shell id -g) -v $(TOP):/docs $(MKDOCS_IMAGE)
+
+.PHONY: all container build checkout shell dump boards deploy clean distclean help docs docs-serve
 
 all: build
 
@@ -70,8 +76,16 @@ clean:
 distclean: clean
 	rm -rf $(TOP)/layers $(DL_DIR) $(SSTATE_DIR)
 
+## Build the user guide into site/, failing on warnings and broken links.
+docs:
+	$(MKDOCS) build --strict
+
+## Serve the user guide, rebuilt on every change.
+docs-serve:
+	docker run --rm -it -p 8000:8000 -v $(TOP):/docs $(MKDOCS_IMAGE)
+
 help:
-	@sed -n 's|^#   ||p' $(lastword $(MAKEFILE_LIST)) | head -6
+	@sed -n 's|^#   ||p' $(lastword $(MAKEFILE_LIST)) | head -7
 	@echo
 	@echo "BOARD=$(BOARD)  OPT=$(OPT)"
 	@echo "image=$(KAS_CONTAINER_IMAGE)"

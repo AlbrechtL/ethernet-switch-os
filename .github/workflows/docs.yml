@@ -1,0 +1,50 @@
+name: Documentation
+
+# Builds the user guide (mkdocs.yml, docs/) on every change to it, and
+# publishes it to GitHub Pages from master. Pages has to be set to
+# "Source: GitHub Actions" in the repository settings once.
+
+on:
+  push:
+    branches: [master]
+    paths: [docs/**, mkdocs.yml, .github/workflows/docs.yml]
+  pull_request:
+    paths: [docs/**, mkdocs.yml, .github/workflows/docs.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.x"
+      - run: pip install -r docs/requirements.txt
+      # --strict: warnings, such as broken links between pages, fail the build.
+      - run: mkdocs build --strict
+      - uses: actions/upload-pages-artifact@v5
+        if: github.event_name != 'pull_request'
+        with:
+          path: site
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
