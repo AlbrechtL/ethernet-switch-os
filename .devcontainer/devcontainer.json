@@ -1,7 +1,7 @@
 {
     "name": "ethernet-switch-os",
     "build": {
-        "dockerfile": "../container/Dockerfile",
+        "dockerfile": "../Dockerfile",
         "context": ".."
     },
     // kas and bitbake both want to write into the checkout; the upstream kas

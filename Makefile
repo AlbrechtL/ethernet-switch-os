@@ -32,10 +32,10 @@ DEPLOY   := $(KAS_BUILD_DIR)/tmp/deploy/images/$(BOARD)
 
 all: build
 
-## Build the development image. Only needed again when container/Dockerfile
+## Build the development image. Only needed again when Dockerfile
 ## changes.
 container:
-	docker build -t $(KAS_CONTAINER_IMAGE) container
+	docker build -t $(KAS_CONTAINER_IMAGE) - < Dockerfile
 
 build:
 	$(KAS) build $(KAS_CONF)

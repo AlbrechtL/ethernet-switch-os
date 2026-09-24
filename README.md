@@ -5,12 +5,15 @@
 > the help of AI, has not undergone thorough review or hardening, and should
 > not be assumed suitable for production use.
 
-The build entry point for **Ethernet Switch OS**, a Yocto-based Linux
-distribution for managed Ethernet switches. This repository contains no
-recipes of its own. It holds [kas](https://kas.readthedocs.io/) configuration
-files that describe, per board, which layers to check out and how to configure
-them — so that a build needs nothing on the host but Docker, git and a POSIX
-shell.
+**Ethernet Switch OS** is a minimal Linux system for managed Ethernet
+switches, based on YANG and OpenConfig models. The switch is configured
+through those models and offers three ways to do it: a RESTCONF API, a CLI and
+a simple web UI.
+
+It is built with the [Yocto Project](https://www.yoctoproject.org/): the
+system is a custom distro on top of OpenEmbedded, assembled per board from
+Yocto layers, and the result is a flashable firmware image rather than a
+general-purpose Linux installation.
 
 ```sh
 git clone https://github.com/AlbrechtL/ethernet-switch-os
@@ -19,17 +22,28 @@ make container                  # build the development image, once
 make build                      # build the default board
 ```
 
-## Connected repositories
+## Supported hardware
 
-The interesting parts live in four repositories of their own. kas checks the
-three layers out under `layers/`; `rtl838x-qemu` is a separate tool and is
-cloned by hand when it is needed.
+| Hardware | SoC | Status |
+|---|---|---|
+| Zyxel GS1900-8 (rev A1), 8 × Gigabit | Realtek RTL8380 | Supported (`zyxel-gs1900-8-a1`) |
+| QEMU x86_64 | — | Coming soon |
+
+## Components and repositories
+
+This repository is the build entry point and contains no recipes of its own.
+It holds [kas](https://kas.readthedocs.io/) configuration files that describe,
+per board, which Yocto layers to check out and how to configure them — so that
+a build needs nothing on the host but Docker, git and a POSIX shell. The
+interesting parts live in four repositories of their own. kas checks the three
+layers out under `layers/`; `rtl838x-qemu` is a separate tool and is cloned by
+hand when it is needed.
 
 | Repository | Role |
 |---|---|
 | [clixon-switch-rs](https://github.com/AlbrechtL/clixon-switch-rs) | The [clixon](https://www.clicon.org/) backend plugin, in Rust. Applies an OpenConfig configuration to the kernel: DSA ports in a VLAN-aware bridge, routed VLAN interfaces, spanning tree via mstpd, a read-only SNMPv3 agent. Built by a recipe in `meta-ethernet-switch-os`, not checked out by kas. |
 | [meta-ethernet-switch-os](https://github.com/AlbrechtL/meta-ethernet-switch-os) | The distro and the userspace: the `ethernet-switch-os` distro (poky-tiny plus sysvinit), clixon with the plugin, dropbear, SWUpdate with its two `.swu` images, and the read-only status web UI. |
-| [meta-rtl83xx-bsp](https://github.com/AlbrechtL/meta-rtl83xx-bsp) | The hardware: Realtek RTL83xx switch SoCs. Machine configurations, the patched kernel and its device trees, `rt-loader`, and the flash image types. Boots on its own, without the OS layer. |
+| [meta-rtl83xx-bsp](https://github.com/AlbrechtL/meta-rtl83xx-bsp) | The hardware: Realtek RTL83xx switch SoCs. Machine configurations, the patched kernel and its device trees, `rt-loader`, and the flash image types. The kernel patches (Realtek SoC support, device trees, MTD split) are taken from [OpenWrt](https://openwrt.org/) — many thanks to the OpenWrt developers for their work, without which this would not exist. Boots on its own, without the OS layer. |
 | [rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu) | Emulates an RTL838x switch, for booting and testing a built image without hardware. Frames really cross between the eight emulated front ports, so VLANs and spanning tree can be exercised. |
 
 ## Requirements
@@ -44,7 +58,7 @@ vendored and pinned to kas 5.5.
 ## Building
 
 ```sh
-make container                                  # docker build -t ethernet-switch-os/kas:5.5 container
+make container                                  # docker build -t ethernet-switch-os/kas:5.5 - < Dockerfile
 make build BOARD=zyxel-gs1900-8-a1              # the default
 make boards                                     # what can be built
 make shell                                      # a shell with bitbake ready
@@ -55,7 +69,7 @@ downloads and shared state land outside `build/` and are shared between
 boards. The same thing by hand:
 
 ```sh
-docker build -t ethernet-switch-os/kas:5.5 container
+docker build -t ethernet-switch-os/kas:5.5 - < Dockerfile
 export KAS_CONTAINER_IMAGE=ethernet-switch-os/kas:5.5
 export KAS_BUILD_DIR=$PWD/build DL_DIR=$PWD/downloads SSTATE_DIR=$PWD/sstate-cache
 ./kas-container build kas/board/zyxel-gs1900-8-a1.yml
@@ -63,7 +77,7 @@ export KAS_BUILD_DIR=$PWD/build DL_DIR=$PWD/downloads SSTATE_DIR=$PWD/sstate-cac
 
 The image is optional. Plain `./kas-container build …` uses the upstream
 `ghcr.io/siemens/kas/kas:5.5` and builds the same artifacts; the image here
-only adds tools for working *on* the project (see `container/Dockerfile`).
+only adds tools for working *on* the project (see `Dockerfile`).
 
 A first build takes hours. `kas/opt/sstate-mirror.yml` pulls oe-core's share
 of it from the Yocto Project's CDN instead:

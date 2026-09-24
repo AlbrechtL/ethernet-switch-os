@@ -1,7 +1,7 @@
 # The development container: the upstream kas image plus what this project
 # needs beyond a plain bitbake build.
 #
-#   docker build -t ethernet-switch-os/kas:5.5 container
+#   docker build -t ethernet-switch-os/kas:5.5 - < Dockerfile
 #   export KAS_CONTAINER_IMAGE=ethernet-switch-os/kas:5.5
 #
 # The tag matches the vendored kas-container script -- kas refuses to run
