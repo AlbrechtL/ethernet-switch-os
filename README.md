@@ -111,7 +111,7 @@ that.
 
 | Layer | Repository | Branch |
 |---|---|---|
-| `meta` | [openembedded-core](https://git.openembedded.org/openembedded-core) | wrynose |
+| `meta` | [openembedded-core](https://git.openembedded.org/openembedded-core) | wrynose, pinned to `9da814ca` |
 | `meta-poky` | [meta-yocto](https://git.yoctoproject.org/meta-yocto) | wrynose |
 | `meta-oe`, `meta-python`, `meta-networking` | [meta-openembedded](https://github.com/openembedded/meta-openembedded) | wrynose |
 | `meta-swupdate` | [meta-swupdate](https://github.com/sbabic/meta-swupdate) | wrynose |
@@ -121,9 +121,11 @@ that.
 Plus [bitbake](https://git.openembedded.org/bitbake) (branch `2.18`), which is
 the build tool rather than a layer.
 
-Branch tips, deliberately: no revisions are pinned here, so every build and
-every CI run uses the current head of each branch. kas warns about this on
-every invocation. If a reproducible build is ever needed,
+Branch tips, deliberately, with one exception: openembedded-core is pinned to
+`9da814ca`, the revision the kernel patches in `meta-rtl83xx-bsp` were made
+against (linux-yocto 6.18.39). Later wrynose commits update linux-yocto and the
+patches stop applying. Everything else uses the current head of its branch in
+every build and every CI run, and kas warns about that on every invocation. If a reproducible build is ever needed,
 `./kas-container lock kas/board/<board>.yml` writes a lock file next to the
 board file, which kas then picks up on its own; `--update` refreshes it.
 
@@ -146,6 +148,7 @@ kas/
 └── opt/
     ├── ci.yml                    rm_work, for a disk-bound runner
     ├── sstate-mirror.yml         pull oe-core's shared state from the CDN
+    ├── local-layers.yml          stop kas resetting the layers/ checkouts
     └── devtool.yml               keep devtool's workspace across kas runs
 ```
 
@@ -180,10 +183,23 @@ cheap is the reason this repository exists.
 
 ### Working on a layer
 
-kas checks the layers out under `layers/` as ordinary git clones on their
-branch, so they can be edited and committed in place. kas will not discard
-local commits, but it does move the checkout to the branch head on every
-invocation, so push before switching things around.
+kas checks the layers out under `layers/` as ordinary git clones, but it owns
+them: on every invocation it resets the local branch to the upstream one. A
+commit made in `layers/` and not yet pushed is **dropped from the branch** by
+the next `make build` -- it survives in the reflog, but nothing points at it
+any more.
+
+So while working on a layer, add the fragment that tells kas to keep its
+hands off the project's own layers:
+
+```sh
+make build OPT=kas/opt/local-layers.yml
+```
+
+Then `layers/meta-ethernet-switch-os` and `layers/meta-rtl83xx-bsp` are yours
+to edit, commit and push, and nothing moves underneath. Everything else still
+follows its branch tip. Without it, work in a clone of your own and let kas
+fetch from the remote.
 
 For `clixon-switch-rs`, whose source bitbake fetches from git, use devtool:
 
@@ -207,8 +223,8 @@ The layer repositories no longer build images of their own. A push to
 `meta-ethernet-switch-os` runs a parse check there -- this configuration, this
 machine, no task executed -- which catches a broken recipe in minutes. It
 cannot trigger this workflow, so this one also runs weekly, which is what
-turns the layers' current `master` into images. Because nothing is pinned,
-that run doubles as a check that the upstream branches still build.
+turns the layers' current `master` into images. Because almost nothing is
+pinned, that run doubles as a check that the upstream branches still build.
 
 ## Relation to the earlier build setup
 

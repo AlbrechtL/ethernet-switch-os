@@ -1,0 +1,26 @@
+# Stop kas from touching the project's own layer checkouts.
+#
+#   ./kas-container build kas/board/zyxel-gs1900-8-a1.yml:kas/opt/local-layers.yml
+#
+# By default kas owns every repository it declares: on each invocation it
+# resets the local branch to the upstream one, which silently drops commits
+# made in layers/ that have not been pushed. Handy for a build that must match
+# what is on GitHub, ruinous while working on a layer.
+#
+# A repository with no url gets no version control operations at all, so the
+# checkout is used exactly as it is -- edit, commit and push in layers/ and
+# nothing moves underneath. The directories have to exist already: run a plain
+# checkout once before using this.
+#
+# Only the layers this project owns. openembedded-core and the rest stay
+# under kas' control, because following their branch tips is the point.
+header:
+  version: 23
+
+repos:
+  meta-ethernet-switch-os:
+    url: null
+    branch: null
+  meta-rtl83xx-bsp:
+    url: null
+    branch: null
