@@ -1,0 +1,25 @@
+# The 4-port managed switch HAT on a Raspberry Pi: RTL8367S behind an
+# ENC28J60, kernel and device tree overlay, A/B SD card layout. Built on
+# meta-raspberrypi.
+#
+# Hardware only -- it boots without meta-ethernet-switch-os and knows nothing
+# about it. Pick a machine from a file in kas/board/.
+#
+# meta-rpi-managed-switch-bsp is not on GitHub yet, so it has no url: kas uses
+# the checkout in layers/meta-rpi-managed-switch-bsp as it is and runs no git
+# operations on it. Once it is published, add
+#
+#   url: https://github.com/AlbrechtL/meta-rpi-managed-switch-bsp
+#   branch: master
+header:
+  version: 23
+  includes:
+    - kas/base.yml
+
+repos:
+  meta-raspberrypi:
+    url: https://git.yoctoproject.org/meta-raspberrypi
+    path: layers/meta-raspberrypi
+
+  meta-rpi-managed-switch-bsp:
+    path: layers/meta-rpi-managed-switch-bsp
