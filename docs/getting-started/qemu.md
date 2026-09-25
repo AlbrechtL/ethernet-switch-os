@@ -10,8 +10,8 @@ Everything runs in Docker containers. You need Docker, git and a Linux host.
 
 ## 1. Build the image and the emulator
 
-The GS1900-8 is built as usual (see the
-[README](https://github.com/AlbrechtL/ethernet-switch-os#building)), with
+The GS1900-8 is built as usual (see
+[Building the firmware](../development/building.md)), with
 `kas/opt/rtl838x-qemu.yml` appended. That also builds QEMU with the RTL8380
 machine, so nothing else has to be installed:
 

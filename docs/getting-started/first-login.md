@@ -44,7 +44,7 @@ On the serial console (115200 8N1), the same users log in at the
 `zyxel-gs1900-8-a1 login:` prompt.
 
 !!! tip "In QEMU"
-    With the [QEMU setup](qemu.md#with-network-access-from-your-computer),
+    With the [QEMU setup](qemu.md#2-boot-the-switch),
     use `ssh -p 2222 cli@127.0.0.1` and `http://127.0.0.1:8000/` instead of
     `192.168.1.1`.
 

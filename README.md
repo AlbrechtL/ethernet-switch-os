@@ -13,37 +13,40 @@ a simple web UI.
 It is built with the [Yocto Project](https://www.yoctoproject.org/): the
 system is a custom distro on top of OpenEmbedded, assembled per board from
 Yocto layers, and the result is a flashable firmware image rather than a
-general-purpose Linux installation. See [Building](#building) for how to
-build it.
+general-purpose Linux installation.
 
 ## Documentation
 
-The **[user guide](https://albrechtl.github.io/ethernet-switch-os/)** covers
-using a switch that runs Ethernet Switch OS: first login, the CLI, the
-management address and DHCP, VLANs, spanning tree, SNMP, firmware updates
-and the current limitations. Its source is in [`docs/`](docs/); see
-[Building the user guide](#building-the-user-guide) for previewing it
-locally. This README is about building the firmware.
+Everything about using, building and developing Ethernet Switch OS is in the
+**[documentation](https://albrechtl.github.io/ethernet-switch-os/)**. Its
+source is in [`docs/`](docs/).
+
+| I want to … | Go to |
+|---|---|
+| Install it on a switch or try it in QEMU | [Getting started](https://albrechtl.github.io/ethernet-switch-os/getting-started/installation/) |
+| Configure the switch | [CLI](https://albrechtl.github.io/ethernet-switch-os/cli/basics/), [Web UI](https://albrechtl.github.io/ethernet-switch-os/web-ui/), [RESTCONF](https://albrechtl.github.io/ethernet-switch-os/restconf/) |
+| Build the firmware | [Building the firmware](https://albrechtl.github.io/ethernet-switch-os/development/building/) |
+| Know what does not work yet | [Limitations](https://albrechtl.github.io/ethernet-switch-os/reference/limitations/) |
 
 ## Supported hardware
 
-| Hardware | SoC | Status |
-|---|---|---|
-| Zyxel GS1900-8 (rev A1), 8 × Gigabit | Realtek RTL8380 | Supported (`zyxel-gs1900-8-a1`) |
-| Albrecht RTL8382MI test switch, 20 × Gigabit | Realtek RTL8382M | Experimental (`albrecht-rtl8382mi-test`) |
-| [4-port managed switch HAT](https://github.com/AlbrechtL/rpi-managed-switch-4-port) on a Raspberry Pi Zero, 4 × Gigabit | Realtek RTL8367S, Broadcom BCM2835 | Experimental (`rpi-managed-switch-rpi0`) |
-| Zyxel GS1900-8, emulated by [rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu) | Realtek RTL8380 (emulated) | Supported, same image as the real switch (see [Running in QEMU](https://albrechtl.github.io/ethernet-switch-os/getting-started/qemu/)) |
-| 8 port switch emulated in QEMU x86-64, with UEFI and A/B updates | x86-64 (emulated) | Experimental (`qemux86-64-switch`, see [Testing without hardware](#testing-without-hardware)) |
+The full list, with the SoC, the status and the board file of each, is in
+[Supported hardware](https://albrechtl.github.io/ethernet-switch-os/#supported-hardware).
+
+- [Zyxel GS1900-8](https://albrechtl.github.io/ethernet-switch-os/getting-started/installation/) (rev A1), Realtek RTL8380
+- [Albrecht RTL8382MI test switch](https://albrechtl.github.io/ethernet-switch-os/getting-started/installation/#albrecht-rtl8382mi-test-switch) (experimental)
+- [Raspberry Pi Zero with the 4-port managed switch HAT](https://albrechtl.github.io/ethernet-switch-os/getting-started/installation/#raspberry-pi-switch) (experimental)
+- [Zyxel GS1900-8 emulated in QEMU](https://albrechtl.github.io/ethernet-switch-os/getting-started/qemu/) with rtl838x-qemu
+- [8 port switch emulated in QEMU x86-64](https://albrechtl.github.io/ethernet-switch-os/getting-started/qemu-x86-64/) (experimental)
 
 ## Components and repositories
 
 This repository is the build entry point and contains no recipes of its own.
 It holds [kas](https://kas.readthedocs.io/) configuration files that describe,
-per board, which Yocto layers to check out and how to configure them — so that
-a build needs nothing on the host but Docker, git and a POSIX shell. The
-interesting parts live in repositories of their own. kas checks the layers out
-under `layers/`; `rtl838x-qemu` is not a layer and is built by a recipe in
-`meta-rtl83xx-bsp` when it is needed.
+per board, which Yocto layers to check out and how to configure them. The
+interesting parts live in repositories of their own. See
+[Layers and kas files](https://albrechtl.github.io/ethernet-switch-os/development/kas/)
+for the branches and how the layers fit together.
 
 | Repository | Role |
 |---|---|
@@ -52,382 +55,17 @@ under `layers/`; `rtl838x-qemu` is not a layer and is built by a recipe in
 | [meta-rtl83xx-bsp](https://github.com/AlbrechtL/meta-rtl83xx-bsp) | The hardware: Realtek RTL83xx switch SoCs. Machine configurations, the patched kernel and its device trees, `rt-loader`, and the flash image types. The kernel patches (Realtek SoC support, device trees, MTD split) are taken from [OpenWrt](https://openwrt.org/) — many thanks to the OpenWrt developers for their work, without which this would not exist. Boots on its own, without the OS layer. |
 | [meta-rpi-managed-switch-bsp](https://github.com/AlbrechtL/meta-rpi-managed-switch-bsp) | The hardware: the [4-port managed switch HAT](https://github.com/AlbrechtL/rpi-managed-switch-4-port) for the Raspberry Pi, on top of [meta-raspberrypi](https://git.yoctoproject.org/meta-raspberrypi). Machine configurations, the kernel with the switch's device tree overlay and OpenWrt's rtl8365mb backports, and an A/B SD card image with U-Boot. Ported from [its OpenWrt branch](https://github.com/AlbrechtL/openwrt/tree/rpi_managed_switch). Boots on its own, without the OS layer. |
 | [meta-qemu-switch-bsp](https://github.com/AlbrechtL/meta-qemu-switch-bsp) | The hardware: an 8 port switch emulated on QEMU x86-64, on top of oe-core's `qemux86-64` machine. UEFI (OVMF) with [EFI Boot Guard](https://github.com/siemens/efibootguard) from [meta-efibootguard](https://github.com/siemens/meta-efibootguard), virtio-net front ports, and an A/B disk image. Boots on its own, without the OS layer. |
-| [rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu) | Emulates an RTL838x switch, for booting and testing a built image without hardware. Frames really cross between the eight emulated front ports, so VLANs and spanning tree can be exercised. Built by `qemu-rtl838x-native` in `meta-rtl83xx-bsp` (see [rtl838x-qemu](#rtl838x-qemu)), not checked out by kas. |
+| [rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu) | Emulates an RTL838x switch, for booting and testing a built image without hardware. Frames really cross between the eight emulated front ports, so VLANs and spanning tree can be exercised. Built by `qemu-rtl838x-native` in `meta-rtl83xx-bsp`, not checked out by kas. |
 
-## Requirements
+## Contributing
 
-Docker, git and a POSIX shell. VS Code with the Dev Containers extension if
-you want to work in the development container from the editor.
+Bug reports, documentation fixes, support for new hardware and code are
+welcome. Send a change to the repository that owns the code (see the table
+above), as a pull request against its `master` branch, and build the board you
+changed first. The
+[contributing guide](https://albrechtl.github.io/ethernet-switch-os/development/contributing/)
+has the details.
 
-Everything else — bitbake's host dependencies, the cross toolchain, Python,
-Rust — is inside the container image. `kas-container` in this repository is
-the upstream script from [siemens/kas](https://github.com/siemens/kas),
-vendored and pinned to kas 5.5.
+## License
 
-## Building
-
-```sh
-git clone https://github.com/AlbrechtL/ethernet-switch-os
-cd ethernet-switch-os
-```
-
-Each supported hardware has a board file in `kas/board/`. It is the one file
-to name on the command line; it pulls in the layers, the machine and the
-build targets:
-
-| Hardware | Board file |
-|---|---|
-| Zyxel GS1900-8 (rev A1), also for [rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu) | `kas/board/zyxel-gs1900-8-a1.yml` |
-| Albrecht RTL8382MI test switch (experimental) | `kas/board/albrecht-rtl8382mi-test.yml` |
-| Raspberry Pi Zero with the [4-port managed switch HAT](https://github.com/AlbrechtL/rpi-managed-switch-4-port) (experimental) | `kas/board/rpi-managed-switch-rpi0.yml` |
-| 8 port switch emulated in QEMU x86-64 (experimental) | `kas/board/qemux86-64-switch.yml` |
-
-> **Note:** Use the board file of your hardware. The examples below build
-> the GS1900-8 (`kas/board/zyxel-gs1900-8-a1.yml`); for any other hardware,
-> replace it with that hardware's board file from the table. An image built
-> for another board does not work on your switch.
-
-The images land in `build/tmp/deploy/images/<board>/`, where `<board>` is the
-file name without `.yml`.
-
-The build always runs in a container, and there are two ways into it. The kas
-commands are the same in both — only the name differs: `kas` inside the dev
-container, `./kas-container` on the host.
-
-### In VS Code, with the dev container
-
-Open the checkout in VS Code and run **Dev Containers: Reopen in Container**.
-VS Code builds the development image from `Dockerfile` (the upstream kas
-image plus tools for working on the project) and mounts the checkout at `/work`.
-`.devcontainer/devcontainer.json` already sets `KAS_BUILD_DIR`, `DL_DIR` and
-`SSTATE_DIR`, so in a terminal there:
-
-```sh
-# Replace the board file with the one for your hardware, see the table above.
-kas build kas/board/zyxel-gs1900-8-a1.yml
-```
-
-### On the shell, with kas-container
-
-`kas-container` runs kas in a Docker container by itself, so this is all a
-build needs:
-
-```sh
-# Replace the board file with the one for your hardware, see the table above.
-./kas-container build kas/board/zyxel-gs1900-8-a1.yml
-```
-
-That uses the upstream `ghcr.io/siemens/kas/kas:5.5` image and puts
-everything under `build/`. Two optional additions, both what the dev
-container does too:
-
-- **The development image** from `Dockerfile`: the upstream kas image plus
-  tools for working *on* the project (a host Rust toolchain, `dtc`,
-  `mkimage`, the JFFS2 tools, a Docker client for rtl838x-qemu). It builds the
-  same artifacts. `kas-container` does not build images, so build it once,
-  and again whenever `Dockerfile` changes. The tag has to match the vendored
-  `kas-container` (5.5), or kas refuses to run.
-- **Downloads and shared state outside `build/`**, so they survive deleting
-  it and are shared between boards. `kas-container` creates the directories
-  and mounts them into the container.
-
-```sh
-docker build -t ethernet-switch-os/kas:5.5 - < Dockerfile
-export KAS_CONTAINER_IMAGE=ethernet-switch-os/kas:5.5
-export KAS_BUILD_DIR=$PWD/build DL_DIR=$PWD/downloads SSTATE_DIR=$PWD/sstate-cache
-./kas-container build kas/board/zyxel-gs1900-8-a1.yml
-```
-
-### Other kas commands
-
-Written for the shell; in the dev container replace `./kas-container` with
-`kas`.
-
-| Command | What it does |
-|---|---|
-| `./kas-container build kas/board/<board>.yml` | Build a board. |
-| `./kas-container shell kas/board/<board>.yml` | A shell with bitbake ready, e.g. for `bitbake -c menuconfig virtual/kernel`. |
-| `./kas-container checkout kas/board/<board>.yml` | Clone the layers and write `build/conf/` without building anything. |
-| `./kas-container dump kas/board/<board>.yml` | Print the fully resolved configuration. |
-| `ls kas/board/` | The boards that can be built. |
-| `rm -rf build` | Start over. Layers, downloads and shared state are kept, so the next build is fast. |
-| `rm -rf build layers downloads sstate-cache` | Drop everything kas created. |
-
-A first build takes hours. `kas/opt/sstate-mirror.yml` pulls oe-core's share
-of it from the Yocto Project's CDN instead:
-
-```sh
-./kas-container build kas/board/zyxel-gs1900-8-a1.yml:kas/opt/sstate-mirror.yml
-```
-
-### What comes out
-
-In `build/tmp/deploy/images/zyxel-gs1900-8-a1/`:
-
-| File | What it is for |
-|---|---|
-| `ethernet-switch-os-initramfs-zyxel-gs1900-8-a1.bin` | TFTP boot image; the first install and recovery run entirely from RAM. |
-| `ethernet-switch-os-initramfs-zyxel-gs1900-8-a1-rt-loader.bin` | The same payload without the uImage header, for booting with `go` instead of `bootm`. |
-| `ethernet-switch-os-swu-factory-zyxel-gs1900-8-a1.swu` | First install, uploaded from the TFTP initramfs. Writes `firmware`, wipes `data`. |
-| `ethernet-switch-os-swu-upgrade-zyxel-gs1900-8-a1.swu` | Update in place. Rewrites `firmware`, keeps user data. |
-
-The flash layout, the TFTP procedure and what to type at the stock bootloader
-are in [meta-rtl83xx-bsp](https://github.com/AlbrechtL/meta-rtl83xx-bsp)'s
-README.
-
-The Raspberry Pi switch is different: its board builds an SD card image,
-`rpi-switch-image-rpi-managed-switch-rpi0.rootfs.wic.bz2` with its `.wic.bmap`,
-which is the first install, and `ethernet-switch-os-swu-upgrade-rpi-managed-switch-rpi0.swu`
-for updates. There is no factory `.swu` and no TFTP image. The SD card layout
-and the A/B update are in
-[meta-rpi-managed-switch-bsp](https://github.com/AlbrechtL/meta-rpi-managed-switch-bsp)'s
-README. Once the switch is up: `ssh cli@192.168.1.1` for the clixon CLI,
-`http://192.168.1.1/` for the status and settings page,
-`http://192.168.1.1:8080` for SWUpdate. The [user guide](https://albrechtl.github.io/ethernet-switch-os/)
-takes it from there.
-
-The QEMU switch builds a disk image in the same A/B shape, with EFI Boot
-Guard instead of U-Boot: `qemu-switch-image-qemux86-64-switch.rootfs.wic`
-with its `.wic.bmap`, and `ethernet-switch-os-swu-upgrade-qemux86-64-switch.swu`.
-The build also leaves the UEFI firmware (`ovmf.*.qcow2`) and a QEMU for
-running it; see [Testing without hardware](#testing-without-hardware).
-
-### Building the user guide
-
-The user guide is plain [MkDocs](https://www.mkdocs.org/) with the Material
-theme, and needs only Docker too. Serve it on http://localhost:8000, rebuilt
-on every change:
-
-```sh
-docker run --rm -it -p 8000:8000 -v $PWD:/docs squidfunk/mkdocs-material:9.7.7
-```
-
-Or build it into `site/` the way CI does, failing on warnings and broken
-links:
-
-```sh
-docker run --rm -u $(id -u):$(id -g) -v $PWD:/docs squidfunk/mkdocs-material:9.7.7 build --strict
-```
-
-The image version matches `docs/requirements.txt`, which CI installs with pip.
-
-## Testing without hardware
-
-There are two ways: the **QEMU x86-64 switch**, a board of its own that boots
-in seconds under KVM and exercises the A/B update, or **rtl838x-qemu**, which
-runs the GS1900-8's own image on an emulated RTL8380.
-
-### The QEMU x86-64 switch
-
-```sh
-./kas-container build kas/board/qemux86-64-switch.yml
-./kas-container --kvm --runtime-args "--network=host" \
-    shell kas/board/qemux86-64-switch.yml -c /work/scripts/x86-64-q35-qemu
-```
-
-`scripts/x86-64-q35-qemu` boots a copy of the built disk with the QEMU and the UEFI
-firmware from the build, on the serial console of the terminal (`Ctrl-a x`
-quits). The switch has its factory address 192.168.1.1 on `lan1`, which is
-QEMU's user networking, forwarded to the host:
-
-| On the host | On the switch |
-|---|---|
-| `ssh -p 2222 cli@127.0.0.1` | the clixon CLI (`root@` for a shell) |
-| `http://127.0.0.1:8000/` | status and settings page, RESTCONF under `/restconf` |
-| `http://127.0.0.1:8080/` | SWUpdate |
-
-`lan2`..`lan8` are UDP sockets, so switches can be cabled together. Start
-each in a terminal of its own with the same `CABLES`, here lan2 and lan3 of
-switch 0 to lan2 and lan3 of switch 1 -- a loop for spanning tree to break:
-
-```sh
-./kas-container --kvm --runtime-args "--network=host" shell kas/board/qemux86-64-switch.yml \
-    -c "SWITCH=0 CABLES='0:2-1:2 0:3-1:3' /work/scripts/x86-64-q35-qemu"
-./kas-container --kvm --runtime-args "--network=host" shell kas/board/qemux86-64-switch.yml \
-    -c "SWITCH=1 CABLES='0:2-1:2 0:3-1:3' /work/scripts/x86-64-q35-qemu"
-```
-
-Switch N has its ports at 2222+10N, 8000+10N and 8080+10N. Cabled switches
-share VLAN 1, so they cannot all keep the factory address: a cabled switch N
-is reached at 192.168.1.N+1, which every switch but switch 0 has to be given
-once on its console (the user guide's
-[QEMU x86-64 switch](https://albrechtl.github.io/ethernet-switch-os/getting-started/qemu-x86-64/)
-page has the commands). Start the terminals a few seconds apart; two kas
-invocations at the same moment can collide on the `layers/` checkouts. Every switch keeps
-its disk in `build/qemu/switchN.wic` from run to run, with both slots, the
-boot environments and the saved configuration. A new build reaches it the way
-it reaches real hardware: upload the new `.swu` to SWUpdate, and the switch
-reboots into the other slot. `RESET=1` starts over from the built image.
-`scripts/x86-64-q35-qemu-test` boots a fresh disk, installs the `.swu` and checks
-that the other slot comes up and is confirmed -- what CI runs.
-
-The disk layout, EFI Boot Guard and how an update is confirmed or rolled back
-are in [meta-qemu-switch-bsp](https://github.com/AlbrechtL/meta-qemu-switch-bsp)'s
-README.
-
-### rtl838x-qemu
-
-```sh
-./kas-container build kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml
-./kas-container --runtime-args "--network=host" \
-    shell kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml -c /work/scripts/mips-rtl838x-qemu
-```
-
-`kas/opt/rtl838x-qemu.yml` adds `qemu-rtl838x-native` from meta-rtl83xx-bsp to
-the build: QEMU with [rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu)'s
-models, at the QEMU version rtl838x-qemu pins. `scripts/mips-rtl838x-qemu` boots the
-TFTP boot image with it, uImage header and all: the machine parses the header
-the same way the stock bootloader does, so `rt-loader` runs exactly as it does
-on the real switch.
-
-The ports, `SWITCH`, `CABLES` and `ADDRESS` work as for the QEMU x86-64
-switch, and lan1 also forwards SNMP to UDP 1161+10N. There is no flash, so
-every boot starts from the factory settings and `reboot` ends QEMU.
-`scripts/mips-rtl838x-qemu-test` boots the image and checks that RESTCONF lists
-all eight ports -- what CI runs.
-
-## Layers
-
-| Layer | Repository | Branch |
-|---|---|---|
-| `meta` | [openembedded-core](https://git.openembedded.org/openembedded-core) | wrynose |
-| `meta-poky` | [meta-yocto](https://git.yoctoproject.org/meta-yocto) | wrynose |
-| `meta-oe`, `meta-python`, `meta-networking` | [meta-openembedded](https://github.com/openembedded/meta-openembedded) | wrynose |
-| `meta-swupdate` | [meta-swupdate](https://github.com/sbabic/meta-swupdate) | wrynose |
-| `meta-rtl83xx-bsp` | [meta-rtl83xx-bsp](https://github.com/AlbrechtL/meta-rtl83xx-bsp) | master |
-| `meta-raspberrypi` | [meta-raspberrypi](https://git.yoctoproject.org/meta-raspberrypi) | wrynose |
-| `meta-rpi-managed-switch-bsp` | [meta-rpi-managed-switch-bsp](https://github.com/AlbrechtL/meta-rpi-managed-switch-bsp) | master |
-| `meta-efibootguard` | [meta-efibootguard](https://github.com/siemens/meta-efibootguard) | master (the wrynose one) |
-| `meta-qemu-switch-bsp` | [meta-qemu-switch-bsp](https://github.com/AlbrechtL/meta-qemu-switch-bsp) | master |
-| `meta-ethernet-switch-os` | [meta-ethernet-switch-os](https://github.com/AlbrechtL/meta-ethernet-switch-os) | master |
-
-Plus [bitbake](https://git.openembedded.org/bitbake) (branch `2.18`), which is
-the build tool rather than a layer. A board uses only the BSP layers of its
-own hardware: `meta-rtl83xx-bsp`, `meta-raspberrypi` with
-`meta-rpi-managed-switch-bsp`, or `meta-efibootguard` with
-`meta-qemu-switch-bsp`.
-
-Branch tips, deliberately: every layer uses the current head of its branch in
-every build and every CI run, and kas warns about that on every invocation. If a reproducible build is ever needed,
-`./kas-container lock kas/board/<board>.yml` writes a lock file next to the
-board file, which kas then picks up on its own; `--update` refreshes it.
-
-`meta-python` is in the list only because `meta-networking` names it in
-`LAYERDEPENDS`; nothing here builds from it. The Yocto Project retired the
-combined `poky` repository after *walnascar*, which is why oe-core, meta-yocto
-and bitbake are three separate checkouts.
-
-## The kas files
-
-```
-kas/
-├── base.yml                      bitbake, openembedded-core, meta-poky
-├── os.yml                        meta-ethernet-switch-os and its dependencies,
-│                                 and the ethernet-switch-os distro
-├── bsp/
-│   ├── rtl83xx.yml               meta-rtl83xx-bsp
-│   ├── rpi-managed-switch.yml    meta-raspberrypi, meta-rpi-managed-switch-bsp
-│   └── qemu-switch.yml           meta-efibootguard, meta-qemu-switch-bsp
-├── board/                        base + bsp + os, MACHINE, targets, artifacts
-│   ├── zyxel-gs1900-8-a1.yml
-│   ├── albrecht-rtl8382mi-test.yml
-│   ├── rpi-managed-switch-rpi0.yml
-│   └── qemux86-64-switch.yml
-└── opt/
-    ├── ci.yml                    rm_work, for a disk-bound runner
-    ├── sstate-mirror.yml         pull oe-core's shared state from the CDN
-    ├── local-layers.yml          stop kas resetting the layers/ checkouts
-    ├── local-layers-rpi-managed-switch.yml   the same for the Raspberry Pi boards
-    ├── local-layers-qemu-switch.yml          the same for the QEMU switch
-    └── devtool.yml               keep devtool's workspace across kas runs
-```
-
-A board file is the only thing that needs naming on the command line; it
-includes the rest. Anything under `kas/opt/` is appended with a colon and
-layers on top:
-
-```sh
-./kas-container build kas/board/zyxel-gs1900-8-a1.yml:kas/opt/sstate-mirror.yml
-```
-
-`./kas-container dump kas/board/<board>.yml` prints the whole thing resolved,
-which is the quickest way to see what a combination actually means.
-
-### Adding a board
-
-If the BSP already has a machine configuration for it, a board file is all it
-takes — copy `kas/board/zyxel-gs1900-8-a1.yml`, change `machine:` and the
-artifact paths, and add the name to the `board:` matrix in
-`.github/workflows/build.yml`. For a board the BSP does not know yet, the
-machine `.conf` (and usually a device tree) goes into `meta-rtl83xx-bsp`
-first.
-
-### Adding a BSP
-
-A second hardware family is a new file under `kas/bsp/`, listing that BSP
-layer and nothing else, plus board files that include it instead of
-`kas/bsp/rtl83xx.yml`. Nothing in `base.yml` or `os.yml` changes:
-`meta-ethernet-switch-os` deliberately does not depend on the BSP, and reaches
-into it through `BBFILES_DYNAMIC` only where the BSP is present. Making that
-cheap is the reason this repository exists.
-
-### Working on a layer
-
-kas checks the layers out under `layers/` as ordinary git clones, but it owns
-them: on every invocation it resets the local branch to the upstream one. A
-commit made in `layers/` and not yet pushed is **dropped from the branch** by
-the next build -- it survives in the reflog, but nothing points at it
-any more.
-
-So while working on a layer, add the fragment that tells kas to keep its
-hands off the project's own layers:
-
-```sh
-./kas-container build kas/board/zyxel-gs1900-8-a1.yml:kas/opt/local-layers.yml
-```
-
-Then `layers/meta-ethernet-switch-os` and `layers/meta-rtl83xx-bsp` are yours
-to edit, commit and push, and nothing moves underneath. For the Raspberry Pi
-boards use `kas/opt/local-layers-rpi-managed-switch.yml` instead, which does
-the same for `meta-ethernet-switch-os` and `meta-rpi-managed-switch-bsp`:
-kas would turn the `meta-rtl83xx-bsp` entry of `local-layers.yml`, which no
-Pi board file defines, into a layer at the root of this repository. The QEMU
-switch has `kas/opt/local-layers-qemu-switch.yml` for the same reason.
-Everything else still
-follows its branch tip. Without it, work in a clone of your own and let kas
-fetch from the remote.
-
-For `clixon-switch-rs`, whose source bitbake fetches from git, use devtool:
-
-```sh
-./kas-container shell kas/board/zyxel-gs1900-8-a1.yml:kas/opt/devtool.yml
-devtool modify clixon-switch
-# edit build/workspace/sources/clixon-switch, then
-bitbake ethernet-switch-os-swu-upgrade
-```
-
-`kas/opt/devtool.yml` is needed because kas rewrites `bblayers.conf` on every
-invocation and would otherwise drop the workspace layer again.
-
-## Continuous integration
-
-`.github/workflows/build.yml` runs the same `./kas-container build` as a local
-build, one job per board, on every push to `master` and on pull requests, and
-uploads the files the board file lists under `artifacts:` as a job artifact.
-For the QEMU switch it then runs `scripts/x86-64-q35-qemu-test` on the runner:
-boot, update into the other slot, check that it is confirmed.
-
-The layer repositories no longer build images of their own. A push to
-`meta-ethernet-switch-os` runs a parse check there -- this configuration, this
-machine, no task executed -- which catches a broken recipe in minutes. It
-cannot trigger this workflow, so this one also runs weekly, which is what
-turns the layers' current `master` into images. Because almost nothing is
-pinned, that run doubles as a check that the upstream branches still build.
-
-## Relation to the earlier build setup
-
-This replaces a `bitbake-setup` tree in which `bblayers.conf` held absolute
-paths, machine and distro were selected by mutable `bitbake-config-build`
-state inside the build directory, and the layer revisions were maintained by
-hand in three different places. One board at a time, and adding a second one
-meant editing that state. Here a board is a file.
+[MIT](LICENSE)

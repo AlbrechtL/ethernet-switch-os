@@ -20,8 +20,8 @@ KVM (`/dev/kvm`) makes it fast but is not required.
 
 ## 1. Build it
 
-The board is built like any other (see the
-[README](https://github.com/AlbrechtL/ethernet-switch-os#building)). The
+The board is built like any other (see
+[Building the firmware](../development/building.md)). The
 build also produces the UEFI firmware and a QEMU to run it with, so nothing
 else has to be installed:
 

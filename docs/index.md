@@ -36,11 +36,15 @@ Read that page before you rely on the switch for anything.
 
 ## Supported hardware
 
-| Hardware | Ports | Notes |
-|---|---|---|
-| Zyxel GS1900-8 (rev A1) | `lan1` … `lan8`, Gigabit Ethernet | |
-| Zyxel GS1900-8 emulated in QEMU ([rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu)) | `lan1` … `lan8` | Same image as the real switch; no flash, so nothing is kept across reboots. See [Running in QEMU](getting-started/qemu.md). |
-| Switch emulated in QEMU x86-64 (experimental) | `lan1` … `lan8` | A board of its own, with two firmware slots and rollback; the configuration is kept on a virtual disk. See [QEMU x86-64 switch](getting-started/qemu-x86-64.md). |
+| Hardware | SoC | Ports | Status | Board file |
+|---|---|---|---|---|
+| Zyxel GS1900-8 (rev A1) | Realtek RTL8380 | `lan1` … `lan8`, Gigabit Ethernet | Supported. See [Installation](getting-started/installation.md). | `zyxel-gs1900-8-a1` |
+| Albrecht RTL8382MI test switch | Realtek RTL8382M | 20 × Gigabit Ethernet | Experimental. See [Installation](getting-started/installation.md#albrecht-rtl8382mi-test-switch). | `albrecht-rtl8382mi-test` |
+| Raspberry Pi Zero with the [4-port managed switch HAT](https://github.com/AlbrechtL/rpi-managed-switch-4-port) | Realtek RTL8367S, Broadcom BCM2835 | 4 × Gigabit Ethernet | Experimental. See [Installation](getting-started/installation.md#raspberry-pi-switch). | `rpi-managed-switch-rpi0` |
+| Zyxel GS1900-8 emulated in QEMU ([rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu)) | Realtek RTL8380 (emulated) | `lan1` … `lan8` | Supported. Same image as the real switch; no flash, so nothing is kept across reboots. See [Running in QEMU](getting-started/qemu.md). | `zyxel-gs1900-8-a1` |
+| Switch emulated in QEMU x86-64 | x86-64 (emulated) | `lan1` … `lan8` | Experimental. A board of its own, with two firmware slots and rollback; the configuration is kept on a virtual disk. See [QEMU x86-64 switch](getting-started/qemu-x86-64.md). | `qemux86-64-switch` |
+
+The board file is what you name when you [build the firmware](development/building.md).
 
 ## Where to start
 

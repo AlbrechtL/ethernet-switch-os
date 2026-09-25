@@ -7,8 +7,7 @@ updates go through a web page or the `swupdate` command (see
 
 ## Images
 
-A build (see the
-[README](https://github.com/AlbrechtL/ethernet-switch-os#building)) produces
+A build (see [Building the firmware](../development/building.md)) produces
 these files. The CI also publishes them as an artifact of each
 [build run](https://github.com/AlbrechtL/ethernet-switch-os/actions).
 

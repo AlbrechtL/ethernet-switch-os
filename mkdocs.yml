@@ -1,5 +1,5 @@
 site_name: Ethernet Switch OS
-site_description: User guide for Ethernet Switch OS, a Linux system for managed Ethernet switches configured through OpenConfig and YANG.
+site_description: Documentation for Ethernet Switch OS, a Linux system for managed Ethernet switches configured through OpenConfig and YANG.
 site_url: https://albrechtl.github.io/ethernet-switch-os/
 repo_url: https://github.com/AlbrechtL/ethernet-switch-os
 repo_name: AlbrechtL/ethernet-switch-os
@@ -64,6 +64,11 @@ nav:
   - Web UI: web-ui.md
   - RESTCONF: restconf/index.md
   - Maintenance: maintenance.md
+  - Development:
+      - Building the firmware: development/building.md
+      - Layers and kas files: development/kas.md
+      - Testing and CI: development/testing.md
+      - Contributing: development/contributing.md
   - Reference:
       - CLI commands: reference/cli-commands.md
       - Supported configuration: reference/supported-configuration.md
