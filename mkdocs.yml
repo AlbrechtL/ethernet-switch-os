@@ -47,29 +47,26 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Limitations: limitations.md
   - Getting started:
       - Installation: getting-started/installation.md
-      - Running in QEMU: getting-started/qemu.md
-      - QEMU x86-64 switch: getting-started/qemu-x86-64.md
       - First login: getting-started/first-login.md
       - Firmware update: getting-started/firmware-update.md
+      - Maintenance: getting-started/maintenance.md
+  - Web UI: web-ui.md
   - CLI:
       - Basics: cli/basics.md
       - Management IP address: cli/ip.md
       - VLANs: cli/vlans.md
       - Ports: cli/interfaces.md
       - Spanning tree: cli/spanning-tree.md
-      - SNMP: cli/snmp.md
       - System: cli/system.md
-  - Web UI: web-ui.md
+      - Command reference: cli/commands.md
   - RESTCONF: restconf/index.md
-  - Maintenance: maintenance.md
+  - SNMP: snmp/index.md
+  - YANG models: yang-models.md
   - Development:
       - Building the firmware: development/building.md
       - Layers and kas files: development/kas.md
       - Testing and CI: development/testing.md
       - Contributing: development/contributing.md
-  - Reference:
-      - CLI commands: reference/cli-commands.md
-      - Supported configuration: reference/supported-configuration.md
-      - Limitations: reference/limitations.md

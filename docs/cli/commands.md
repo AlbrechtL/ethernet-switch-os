@@ -1,7 +1,7 @@
 # CLI commands
 
 All commands of the CLI. `<path>` is a path through the data model, as
-described in [CLI basics](../cli/basics.md). Use `?` and TAB to build it.
+described in [CLI basics](basics.md). Use `?` and TAB to build it.
 
 ## Editing the candidate
 
@@ -32,7 +32,7 @@ described in [CLI basics](../cli/basics.md). Use `?` and TAB to build it.
 | `show startup` | The saved configuration. |
 | `show state [<path>]` | The running configuration with live status, as text. |
 | `show state text\|json\|xml [<path>]` | The same in that format. |
-| `show version` | Version of clixon and CLIgen (not the firmware; see [System](../cli/system.md)). |
+| `show version` | Version of clixon and CLIgen (not the firmware; see [System](system.md)). |
 | `show memory cli\|backend` | Memory use of the CLI or the configuration daemon. |
 
 ## Other
@@ -47,10 +47,10 @@ described in [CLI basics](../cli/basics.md). Use `?` and TAB to build it.
 
 | Path | Chapter |
 |---|---|
-| `interfaces` | [Ports](../cli/interfaces.md), [Management IP address](../cli/ip.md), [VLANs](../cli/vlans.md) |
-| `vlans` | [VLANs](../cli/vlans.md) |
-| `switch` | [VLANs](../cli/vlans.md#port-based-vlans) (VLAN mode) |
-| `port-based-vlans` | [VLANs](../cli/vlans.md#port-based-vlans) |
-| `stp` | [Spanning tree](../cli/spanning-tree.md) |
-| `snmp` | [SNMP](../cli/snmp.md) |
-| `system` | [System](../cli/system.md) |
+| `interfaces` | [Ports](interfaces.md), [Management IP address](ip.md), [VLANs](vlans.md) |
+| `vlans` | [VLANs](vlans.md) |
+| `switch` | [VLANs](vlans.md#port-based-vlans) (VLAN mode) |
+| `port-based-vlans` | [VLANs](vlans.md#port-based-vlans) |
+| `stp` | [Spanning tree](spanning-tree.md) |
+| `snmp` | [SNMP](../snmp/index.md) |
+| `system` | [System](system.md) |

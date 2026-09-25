@@ -3,7 +3,7 @@
 ## Saving the configuration
 
 Changes take effect with `commit`, but only `save` makes them survive a
-reboot (see [CLI basics](cli/basics.md#candidate-running-startup)).
+reboot (see [CLI basics](../cli/basics.md#candidate-running-startup)).
 
 ```text
 switch> save
@@ -43,7 +43,7 @@ then replaces everything at once.
 
 ## Firmware update
 
-See [Firmware update](getting-started/firmware-update.md). An update overwrites the running
+See [Firmware update](firmware-update.md). An update overwrites the running
 system in place, so a power failure during the update leaves the switch
 unusable until it is recovered over the serial console.
 
@@ -58,7 +58,7 @@ $ ssh root@<switch-ip>
 # reboot
 ```
 
-The switch comes back with the [factory settings](getting-started/first-login.md#factory-settings),
+The switch comes back with the [factory settings](first-login.md#factory-settings),
 at `192.168.1.1`.
 
 On the Albrecht RTL8382MI test switch, DIP switch 6 does the same: switch it
@@ -78,4 +78,4 @@ and save.
 |---|---|
 | A committed but unsaved change cut you off | Power-cycle the switch. It boots with the saved configuration. |
 | A saved configuration cut you off | Connect to a port that is still in the management VLAN, or use the serial console (115200 8N1, login `root`) and fix it with `clixon_cli`, or do a factory reset. |
-| The switch does not boot | Boot the TFTP image and reinstall with the factory `.swu`, see [Recovery](getting-started/firmware-update.md#recovery). |
+| The switch does not boot | Boot the TFTP image and reinstall with the factory `.swu`, see [Recovery](firmware-update.md#recovery). |

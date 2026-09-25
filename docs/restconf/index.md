@@ -31,7 +31,7 @@ Differences from the CLI:
         http://192.168.1.1/restconf/operations/ietf-netconf:copy-config
     ```
 
-- There is no authentication (see [Limitations](../reference/limitations.md#security)).
+- There is no authentication (see [Limitations](../limitations.md#security)).
 
 Until this chapter is written, the
 [clixon-switch-rs README](https://github.com/AlbrechtL/clixon-switch-rs#data-model)

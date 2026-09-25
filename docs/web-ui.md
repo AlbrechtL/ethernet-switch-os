@@ -13,7 +13,7 @@ Both work in any current browser and need no login.
     Anyone who can reach the switch can open both pages, change the
     configuration on the status page and install firmware through the
     update page. See
-    [Limitations](reference/limitations.md#security).
+    [Limitations](limitations.md#security).
 
 ## Status page
 
@@ -93,7 +93,7 @@ See [Spanning tree](cli/spanning-tree.md).
 ### SNMP
 
 Whether the SNMPv3 agent is on, the engine ID, and the SNMP users. See
-[SNMP](cli/snmp.md).
+[SNMP](snmp/index.md).
 
 ### When the page shows an error
 
@@ -145,7 +145,7 @@ A few changes need care:
   VLAN or group.
 - **SNMP users.** You type the two passphrases (at least 8 characters each)
   in the dialog. The browser turns them into keys, and only the keys go to
-  the switch, as in [SNMP](cli/snmp.md#how-snmpv3-security-works-here). The
+  the switch, as in [SNMP](snmp/index.md#how-snmpv3-security-works-here). The
   user can read everything with `authPriv`, as user `nms` in that
   chapter. For the first user, the dialog proposes an engine ID if none is
   set; use your own if you want, and give every switch a different one.

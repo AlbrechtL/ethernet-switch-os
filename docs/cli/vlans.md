@@ -1,7 +1,7 @@
 # VLANs
 
 !!! bug "Known problem"
-    In the current firmware the CLI on the switch rejects VLAN ids (`Number 20 out of range: 1 - 4094`). Until this is fixed, set VLANs over RESTCONF, see [Known problems](../reference/limitations.md#known-problems-in-the-current-firmware).
+    In the current firmware the CLI on the switch rejects VLAN ids (`Number 20 out of range: 1 - 4094`). Until this is fixed, set VLANs over RESTCONF, see [Known problems](../limitations.md#known-problems-in-the-current-firmware).
 
 All ports are part of one VLAN-aware bridge. The switch works in one of two
 **VLAN modes**:

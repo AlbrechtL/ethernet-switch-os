@@ -27,7 +27,7 @@ interface vlan1 routed-vlan ipv4 addresses address 192.168.1.1 config prefix-len
     With static addresses only, the switch has no default route. It can only
     be reached from inside the networks its addresses are in, not through a
     router. Only the DHCP client sets a default route (and DNS servers).
-    See [Limitations](../reference/limitations.md).
+    See [Limitations](../limitations.md).
 
 !!! danger "Don't lock yourself out"
     A commit takes effect at once. Removing or changing the address you are
@@ -170,7 +170,7 @@ the leased address, or keep a static one.
 !!! bug "Known problem"
     In the current firmware the CLI on the switch rejects VLAN ids, which
     steps 1 and 2 need. Do these steps over RESTCONF for now, see
-    [Known problems](../reference/limitations.md#known-problems-in-the-current-firmware).
+    [Known problems](../limitations.md#known-problems-in-the-current-firmware).
 
 A common setup keeps management traffic in its own VLAN. Example: VLAN 99
 for management, reached through the uplink port `lan8`, which carries VLAN

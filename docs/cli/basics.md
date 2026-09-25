@@ -1,7 +1,7 @@
 # CLI basics
 
 !!! bug "Known problem"
-    In the current firmware the CLI on the switch rejects most numbers (VLAN ids, spanning tree timers), `snmp` is missing, and `show compare` fails. See [Known problems](../reference/limitations.md#known-problems-in-the-current-firmware) for workarounds.
+    In the current firmware the CLI on the switch rejects most numbers (VLAN ids, spanning tree timers), `snmp` is missing, and `show compare` fails. See [Known problems](../limitations.md#known-problems-in-the-current-firmware) for workarounds.
 
 The CLI is generated from the switch's YANG data models. Every setting has a
 path, and CLI commands spell that path out word by word. For example, the
@@ -51,7 +51,7 @@ documentation, so what you learn here carries over.
 
 The model offers more settings than the switch implements.
 `?` also shows settings that the switch rejects when you commit.
-[Supported configuration](../reference/supported-configuration.md) lists
+[YANG models](../yang-models.md) lists
 what works.
 
 ## Candidate, running, startup

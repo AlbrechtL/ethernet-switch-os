@@ -149,7 +149,7 @@ Guard instead of U-Boot: `qemu-switch-image-qemux86-64-switch.rootfs.wic`
 with its `.wic.bmap`, and
 `ethernet-switch-os-swu-upgrade-qemux86-64-switch.swu`. The build also leaves
 the UEFI firmware (`ovmf.*.qcow2`) and a QEMU for running it; see
-[QEMU x86-64 switch](../getting-started/qemu-x86-64.md).
+[QEMU: x86-64 switch](../getting-started/installation.md#qemu-x86-64-switch).
 
 ## Building this documentation
 

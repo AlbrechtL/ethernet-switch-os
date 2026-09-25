@@ -54,7 +54,7 @@ Routed VLAN interfaces can refer to their VLAN by **name** in the CLI
 (`routed-vlan config vlan office`), which is not affected.
 
 **`snmp` is missing from the CLI.** `set snmp ...` fails with
-`Unknown command`. Configure [SNMP](../cli/snmp.md) over RESTCONF; the
+`Unknown command`. Configure [SNMP](snmp/index.md) over RESTCONF; the
 [clixon-switch-rs README](https://github.com/AlbrechtL/clixon-switch-rs#snmp)
 has a complete example.
 
@@ -66,7 +66,7 @@ has a complete example.
 - **One firmware slot, no fallback.** An update overwrites the running
   system in place. A power failure or reset while it is written leaves the
   switch unable to start. Recovery needs the serial console and TFTP, and
-  erases the configuration. See [Firmware update](../getting-started/firmware-update.md).
+  erases the configuration. See [Firmware update](getting-started/firmware-update.md).
 - No automatic rollback if the new firmware does not work.
 - Update files are not signed.
 
@@ -112,7 +112,7 @@ has a complete example.
 
 ## CLI
 
-- No factory-reset command (see [Maintenance](../maintenance.md#factory-reset)).
+- No factory-reset command (see [Maintenance](getting-started/maintenance.md#factory-reset)).
 - No reboot command; use the root shell.
 - Error messages include internal details (timestamps, function names) in
   front of the actual reason.

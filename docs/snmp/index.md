@@ -1,7 +1,7 @@
 # SNMP
 
 !!! bug "Known problem"
-    In the current firmware `snmp` is missing from the CLI. Until this is fixed, configure SNMP over RESTCONF, see [Known problems](../reference/limitations.md#known-problems-in-the-current-firmware).
+    In the current firmware `snmp` is missing from the CLI. Until this is fixed, configure SNMP over RESTCONF, see [Known problems](../limitations.md#known-problems-in-the-current-firmware).
 
 The switch has a read-only **SNMPv3** agent for monitoring tools. It is
 **off** by factory default. SNMP can only read: the configuration is changed
@@ -165,7 +165,7 @@ switch> commit
 ## Contact and location
 
 `sysContact` and `sysLocation` come from the system settings, see
-[System](system.md). `sysName` is the switch's host name.
+[System](../cli/system.md). `sysName` is the switch's host name.
 
 ## Not supported
 

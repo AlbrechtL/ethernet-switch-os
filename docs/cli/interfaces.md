@@ -98,7 +98,7 @@ switch> commit
 ```
 
 In the current firmware the `access-vlan 1` line is rejected by the CLI
-(see [Known problems](../reference/limitations.md#known-problems-in-the-current-firmware)); add the port
+(see [Known problems](../limitations.md#known-problems-in-the-current-firmware)); add the port
 back over RESTCONF instead.
 
 Only real ports can be added. Other names are rejected:

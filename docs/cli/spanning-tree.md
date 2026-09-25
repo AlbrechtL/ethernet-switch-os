@@ -1,7 +1,7 @@
 # Spanning tree
 
 !!! bug "Known problem"
-    In the current firmware the CLI on the switch rejects the timers, `hold-count`, `max-hop`, `cost`, `port-priority` and MSTI ids. Turning a protocol on, `bridge-priority` and the port features work. See [Known problems](../reference/limitations.md#known-problems-in-the-current-firmware).
+    In the current firmware the CLI on the switch rejects the timers, `hold-count`, `max-hop`, `cost`, `port-priority` and MSTI ids. Turning a protocol on, `bridge-priority` and the port features work. See [Known problems](../limitations.md#known-problems-in-the-current-firmware).
 
 Spanning tree finds loops between switches and blocks ports so that frames
 cannot circle forever. It is **off** by factory default. Turn it on if the

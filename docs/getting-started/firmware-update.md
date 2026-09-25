@@ -23,7 +23,7 @@ update is a single `.swu` file. There are three ways to install it:
     - Back up the configuration first (see [below](#before-you-start)).
 
 !!! tip "Trying it in QEMU"
-    The [emulated switch](qemu.md) has the same update page and `swupdate`
+    The [emulated switch](installation.md#qemu-zyxel-gs1900-8) has the same update page and `swupdate`
     command, so you can practise there without risk. It runs the TFTP
     image, whose update page only takes the **factory** file (the upgrade
     file is refused with `Compatible SW not found`). It has no flash, so an
@@ -78,7 +78,7 @@ the reboot.
 
 2. **Back up** the configuration, in case a recovery becomes necessary. In
    the CLI, run `show configuration cli` and copy the output into a file on
-   your computer (see [Maintenance](../maintenance.md#backing-up-and-restoring-the-configuration)).
+   your computer (see [Maintenance](maintenance.md#backing-up-and-restoring-the-configuration)).
 
 3. Note the current version, to check afterwards that the update worked:
 
@@ -253,7 +253,7 @@ not reboot, and run the same command again right away.
 
     If the new firmware no longer accepts part of the saved configuration,
     the switch starts with the factory settings at `192.168.1.1` instead.
-    See [Maintenance](../maintenance.md#when-the-saved-configuration-cannot-be-loaded).
+    See [Maintenance](maintenance.md#when-the-saved-configuration-cannot-be-loaded).
 
 ## Recovery
 
@@ -274,4 +274,4 @@ and the [meta-rtl83xx-bsp README](https://github.com/AlbrechtL/meta-rtl83xx-bsp)
 
 The update page has **no password and no encryption**, and the `.swu` files
 are not signed. Anyone who can reach port 8080 can install any firmware.
-See [Limitations](../reference/limitations.md#security).
+See [Limitations](../limitations.md#security).

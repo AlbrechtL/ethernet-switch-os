@@ -1,4 +1,4 @@
-# Supported configuration
+# YANG models
 
 The data models describe much more than the switch implements. The switch
 accepts only the settings below and rejects everything else when you
