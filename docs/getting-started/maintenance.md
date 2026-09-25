@@ -78,4 +78,4 @@ and save.
 |---|---|
 | A committed but unsaved change cut you off | Power-cycle the switch. It boots with the saved configuration. |
 | A saved configuration cut you off | Connect to a port that is still in the management VLAN, or use the serial console (115200 8N1, login `root`) and fix it with `clixon_cli`, or do a factory reset. |
-| The switch does not boot | Boot the TFTP image and reinstall with the factory `.swu`, see [Recovery](firmware-update.md#recovery). |
+| The switch does not boot | Boot the TFTP image and reinstall with the factory `.swu`, see [Installation](installation.md#zyxel-gs1900-8). |

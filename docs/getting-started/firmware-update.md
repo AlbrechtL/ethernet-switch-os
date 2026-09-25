@@ -7,38 +7,99 @@ update is a single `.swu` file. There are three ways to install it:
 - [with `curl`](#update-with-curl) from your computer, through the same page,
 - [with `swupdate`](#update-in-the-switchs-shell) in a root shell on the switch.
 
+Some switches have [A/B updates](#ab-updates), which survive an
+interrupted update; the others have [non-A/B updates](#non-ab-updates):
+
+| Hardware | A/B | Rollback |
+|---|---|---|
+| Zyxel GS1900-8 | No, one slot | None |
+| Albrecht RTL8382MI test switch | No, one slot | None |
+| Zyxel GS1900-8 emulated in QEMU | No, one slot | None |
+| Raspberry Pi switch | Yes | After 3 starts that were not confirmed. There is no watchdog yet: a firmware that hangs without crashing needs a power cycle before it is counted. |
+| QEMU x86-64 switch | Yes | On the next start after one that was not confirmed. |
+
+!!! tip "Back up the configuration first"
+    A backup of the configuration is highly recommended before every
+    update. See [Maintenance](maintenance.md#backing-up-and-restoring-the-configuration).
+
+## Update types
+
+There are two types of update. Which one a switch uses depends on its
+hardware, see the table above.
+
+### A/B updates
+
+A switch with **A/B** updates has two firmware slots, A and B. It runs from
+one of them, and an update writes the other one. The running firmware is
+not touched, so if the update is interrupted, the switch simply starts the
+old firmware again.
+
+The first start of the new firmware is a trial. When the switch is fully
+up, it confirms the new firmware. If the new firmware never gets that far,
+because it hangs, crashes or loses power, the switch goes back to the
+previous firmware by itself. The configuration is shared by both slots and
+is kept either way.
+
+#### Which slot is written
+
+In the [switch's shell](#update-in-the-switchs-shell), `swupdate` needs,
+instead of `-e ethernet-switch-os,upgrade`, the slot that is **not** running:
+`-e ethernet-switch-os,slot-a` or `-e ethernet-switch-os,slot-b`.
+`cat /proc/cmdline` shows the running one:
+
+| Running (`root=`) | Use |
+|---|---|
+| Raspberry Pi switch: `/dev/mmcblk0p2` (A) | `ethernet-switch-os,slot-b` |
+| Raspberry Pi switch: `/dev/mmcblk0p3` (B) | `ethernet-switch-os,slot-a` |
+| QEMU x86-64 switch: `/dev/vda4` (A) | `ethernet-switch-os,slot-b` |
+| QEMU x86-64 switch: `/dev/vda5` (B) | `ethernet-switch-os,slot-a` |
+
+Naming the running slot would overwrite the running firmware. The update
+page picks the right slot by itself.
+
+### Non-A/B updates
+
+A switch **without** A/B has only one firmware slot, and an update
+overwrites the running firmware in place.
+
+The Zyxel GS1900-8 and the Albrecht RTL8382MI test switch cannot have A/B
+updates because of their 16 MB flash: it is too small for two firmware
+slots next to the bootloader and the configuration.
+
 !!! danger "A power failure during an update leaves the switch unusable"
-    The switch has only **one** firmware partition, and an update
-    **overwrites the running system in place**. There is no second copy
-    to fall back to. If the switch loses power or is reset while the new
-    firmware is being written, it will no longer start. To recover it you
-    need the serial console and a TFTP server, and the recovery
-    **erases the configuration** (see [Recovery](#recovery)).
+    An update **overwrites the running system in place**. There is no
+    second copy to fall back to. If the switch loses power or is reset
+    while the new firmware is being written, it will no longer start. To
+    get it back you need the serial console, a TFTP server and a new
+    [first installation](installation.md#zyxel-gs1900-8), which **erases
+    the configuration**.
 
     - Do not update during a thunderstorm or while someone is working on
       the power.
     - Use a UPS if the switch has one available.
     - Do not unplug the switch or press its reset button until it has
       rebooted and answers again.
-    - Back up the configuration first (see [below](#before-you-start)).
+    - Back up the configuration first (see
+      [Maintenance](maintenance.md#backing-up-and-restoring-the-configuration)).
 
-!!! tip "Trying it in QEMU"
-    The [emulated switch](installation.md#qemu-zyxel-gs1900-8) has the same update page and `swupdate`
-    command, so you can practise there without risk. It runs the TFTP
-    image, whose update page only takes the **factory** file (the upgrade
-    file is refused with `Compatible SW not found`). It has no flash, so an
-    update that gets as far as writing ends with
-    `Wrong MTD device in description: firmware`.
+!!! warning "Not tested in QEMU"
+    The [emulated Zyxel GS1900-8](installation.md#qemu-zyxel-gs1900-8) has
+    the same update page and `swupdate` command, but updates there are not
+    tested. The emulation has no flash, so an update cannot be written
+    there in any case. The A/B update of the
+    [QEMU x86-64 switch](installation.md#qemu-x86-64-switch) is tested in
+    CI.
 
 ## Which file
 
-Every build produces two `.swu` files (see
+Every build produces an upgrade `.swu` file. The Zyxel GS1900-8 and the
+Albrecht RTL8382MI test switch also get a factory `.swu` (see
 [Installation](installation.md#images)):
 
 | File | Use it for |
 |---|---|
 | `ethernet-switch-os-swu-upgrade-<board>.swu` | **Updating an installed switch.** Writes the firmware, keeps the configuration. |
-| `ethernet-switch-os-swu-factory-<board>.swu` | First installation and recovery only, from the TFTP image. Also erases the configuration. |
+| `ethernet-switch-os-swu-factory-<board>.swu` | First installation only, from the TFTP image. Also erases the configuration. |
 
 The switch refuses the wrong file before it writes anything. The factory
 file on an installed switch, or the upgrade file on the TFTP image, fails
@@ -49,44 +110,43 @@ Any version can be installed, including an older one.
 
 ## What happens during an update
 
-1. **Upload.** The file is copied into the switch's RAM. The switch works as
+1. **Upload.** The file is copied onto the switch. The switch works as
    usual.
 2. **Check.** SWUpdate checks that the file is for this hardware and is the
    upgrade type, and verifies its checksum. A damaged or wrong file stops
    here. **Nothing has been written yet**, and the switch keeps running the
    old firmware.
-3. **Write.** SWUpdate erases the firmware partition and writes the new
-   firmware. **This is the dangerous part.** The running system is being
-   overwritten under its own feet: SWUpdate itself has been moved into RAM
-   beforehand, but other programs, such as the CLI, SSH or the status
-   page, may stop working until the reboot. Do not use the switch during
-   this step.
+3. **Write.**
+    - **With A/B**, SWUpdate writes the new firmware into the slot that is
+      not running, and only then tells the bootloader to start that slot.
+      The switch keeps working normally during this step.
+    - **Without A/B**, SWUpdate erases the firmware partition and writes the
+      new firmware. **This is the dangerous part.** The running system is
+      being overwritten under its own feet: SWUpdate itself has been moved
+      into RAM beforehand, but other programs, such as the CLI, SSH or the
+      status page, may stop working until the reboot. Do not use the switch
+      during this step.
 4. **Reboot.** When writing has succeeded, the switch reboots by itself
-   into the new firmware a few seconds later.
+   into the new firmware a few seconds later. With A/B, it confirms the new
+   firmware once it is fully up, or goes back to the old one (see
+   [A/B updates](#ab-updates)).
 
-The configuration is not touched. The switch comes back with its **saved**
-configuration. Changes that were committed but not saved are lost with
+The configuration is not touched. The firmware and the configuration live
+on separate partitions:
+
+- The **firmware** partition (one per slot with A/B) holds the operating
+  system as a read-only image. This is what an update replaces.
+- The **data** partition holds everything the switch writes itself,
+  including the saved configuration. The upgrade `.swu` contains nothing
+  for it, so it is not written.
+
+At boot, the data partition is laid over the firmware image, so the new
+firmware finds the configuration where the old one left it. With A/B, both
+slots share the same data partition. Only the factory `.swu` writes the data
+partition, and it erases it.
+
+The switch comes back with its **saved** configuration. Changes that were committed but not saved are lost with
 the reboot.
-
-## Before you start
-
-1. **Save** the configuration, so the switch comes back as it is now:
-
-    ```text
-    switch> save
-    ```
-
-2. **Back up** the configuration, in case a recovery becomes necessary. In
-   the CLI, run `show configuration cli` and copy the output into a file on
-   your computer (see [Maintenance](maintenance.md#backing-up-and-restoring-the-configuration)).
-
-3. Note the current version, to check afterwards that the update worked:
-
-    ```text
-    switch> show state text system
-    ```
-
-    `os-version` is the firmware version.
 
 ## Update in the browser
 
@@ -105,11 +165,14 @@ the reboot.
    not reboot.
     - If the failure happened before writing started (wrong file, bad
       checksum), the old firmware is untouched. Nothing else needs doing.
-    - If writing itself failed, the firmware partition is incomplete.
-      **Do not reboot or power off.** Upload the upgrade file again right
-      away: the update service keeps running from RAM and can still write
-      the firmware. Once the switch reboots, it can only be
-      [recovered](#recovery).
+    - With A/B, a failure while writing only affects the slot that is not
+      running. The switch keeps running, and still starts, the old
+      firmware. Try again when you like.
+    - Without A/B, a failure while writing leaves the firmware partition
+      incomplete. **Do not reboot or power off.** Upload the upgrade file
+      again right away: the update service keeps running from RAM and can
+      still write the firmware. Once the switch reboots, it needs a new
+      [first installation](installation.md#zyxel-gs1900-8).
 
 !!! warning "The Restart System button"
     The **Restart System** button in the top right corner of the page
@@ -144,12 +207,15 @@ print nothing at all.
 To tell whether it worked:
 
 - **Watch it.** The switch stops answering while it reboots. Wait until it
-  answers again, then compare the firmware version with the one noted
+  answers again, then compare the firmware version with the one it had
   before:
 
     ```sh
     curl -s http://192.168.1.1/restconf/data/clixon-switch:system/state/os-version
     ```
+
+    With A/B, the old version after the reboot means the new firmware was
+    not confirmed and the switch went back.
 
 - **Follow the progress** live, if you have a WebSocket client such as
   [websocat](https://github.com/vi/websocat). Start it before the upload.
@@ -161,9 +227,9 @@ To tell whether it worked:
     ```
 
 If the switch does not reboot within a few minutes, the update failed.
-**Do not power it off.** The update page only shows messages of updates
-that run while it is open, so repeat the update in the browser to see the
-reason, and continue as in step 5 of
+On a switch without A/B, **do not power it off.** The update page only
+shows messages of updates that run while it is open, so repeat the update
+in the browser to see the reason, and continue as in step 5 of
 [the browser update](#update-in-the-browser).
 
 ## Update in the switch's shell
@@ -180,9 +246,9 @@ file that is already on the switch.
     `-O` makes a current OpenSSH `scp` use the classic protocol. The switch
     has no SFTP server, which `scp` otherwise needs.
 
-    Use `/tmp`, which is in RAM. The other directories are on the small
-    flash partition that also holds the configuration, and a file there
-    would stay after the update.
+    Use `/tmp`, which is in RAM. The other directories are on the partition
+    that also holds the configuration, and a file there would stay after
+    the update.
 
 2. Log in as `root`:
 
@@ -217,12 +283,13 @@ file that is already on the switch.
 | Option | Meaning |
 |---|---|
 | `-i <file>` | The `.swu` file to install. |
-| `-e ethernet-switch-os,upgrade` | Selects the upgrade part of the file. **Required.** (`ethernet-switch-os,factory` is only for the TFTP image.) |
+| `-e ethernet-switch-os,upgrade` | Selects the upgrade part of the file. **Required.** (`ethernet-switch-os,factory` is only for the TFTP image. On a switch with A/B, the slot instead, see [Which slot is written](#which-slot-is-written).) |
 | `-c` | Only check the file (hardware, type, checksums); write nothing. |
 | `-v` | Show what SWUpdate is doing. |
 
-If it fails **while writing**, the same rule as in the browser applies: do
-not reboot, and run the same command again right away.
+If it fails **while writing** on a switch without A/B, the same rule as in
+the browser applies: do not reboot, and run the same command again right
+away.
 
 !!! warning "The update page stops working until the next reboot"
     Every `swupdate` run in the shell, even a check with `-c`, removes the
@@ -231,47 +298,3 @@ not reboot, and run the same command again right away.
     until the switch reboots. Restarting the update service does not help.
     After a successful update you reboot anyway; after a check or a failed
     attempt, reboot before you use the update page.
-
-!!! note
-    The update page is the safer way. Its service copies itself into RAM
-    before it overwrites the firmware. A `swupdate` started in the shell
-    runs from the firmware partition it is overwriting.
-
-## After the update
-
-1. Log in again and check the version:
-
-    ```text
-    switch> show state text system
-    ```
-
-2. Check that the configuration came back as expected:
-
-    ```text
-    switch> show configuration cli
-    ```
-
-    If the new firmware no longer accepts part of the saved configuration,
-    the switch starts with the factory settings at `192.168.1.1` instead.
-    See [Maintenance](maintenance.md#when-the-saved-configuration-cannot-be-loaded).
-
-## Recovery
-
-If the switch does not start after an interrupted update:
-
-1. Connect the serial console (115200 8N1) and a PC with a TFTP server.
-2. Boot the `initramfs` image over TFTP from the bootloader. The bootloader
-   itself is never touched by an update, so this always works.
-3. Open `http://192.168.1.1:8080/` and install the **factory** `.swu`, then
-   reboot.
-4. The switch now has the factory settings. Restore your configuration from
-   the backup.
-
-The detailed steps are in [Installation](installation.md)
-and the [meta-rtl83xx-bsp README](https://github.com/AlbrechtL/meta-rtl83xx-bsp).
-
-## Security
-
-The update page has **no password and no encryption**, and the `.swu` files
-are not signed. Anyone who can reach port 8080 can install any firmware.
-See [Limitations](../limitations.md#security).
