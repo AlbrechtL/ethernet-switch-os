@@ -1,0 +1,44 @@
+# Emulated 8 port switch on QEMU x86-64, with A/B root filesystems and
+# updates through EFI Boot Guard. For trying Ethernet Switch OS and for
+# testing updates, VLANs and spanning tree without hardware.
+#
+#   ./kas-container build kas/board/qemux86-64-switch.yml
+#   ./kas-container --kvm --runtime-args "--network=host" \
+#       shell kas/board/qemux86-64-switch.yml -c /work/scripts/qemu-switch
+#
+# While working on meta-ethernet-switch-os or meta-qemu-switch-bsp, append
+# kas/opt/local-layers-qemu-switch.yml, not kas/opt/local-layers.yml (see
+# there). See zyxel-gs1900-8-a1.yml for why the include order does not
+# matter.
+header:
+  version: 23
+  includes:
+    - kas/base.yml
+    - kas/bsp/qemu-switch.yml
+    - kas/os.yml
+
+machine: qemux86-64-switch
+
+# The disk image, the update for a running switch, and what scripts/qemu-switch
+# runs them with: the UEFI firmware and QEMU itself (qemu-helper-native
+# gathers qemu-system-native and its libraries into one sysroot, as for
+# runqemu). There is no factory .swu: the first install is the .wic.
+target:
+  - qemu-switch-image
+  - ethernet-switch-os-swu-upgrade
+  - ovmf
+  - qemu-helper-native
+
+local_conf_header:
+  qemu-switch: |
+    # scripts/qemu-switch runs QEMU headless, on the serial console. Without
+    # SDL and ALSA qemu-system-native builds a good deal faster.
+    PACKAGECONFIG:remove:pn-qemu-system-native = "sdl alsa"
+
+# What a build is expected to leave behind. "kas build --update" and CI read
+# these; scripts/qemu-switch boots a copy of the .wic, the .swu goes to
+# SWUpdate.
+artifacts:
+  disk: build/tmp/deploy/images/qemux86-64-switch/qemu-switch-image-qemux86-64-switch.rootfs.wic
+  disk-bmap: build/tmp/deploy/images/qemux86-64-switch/qemu-switch-image-qemux86-64-switch.rootfs.wic.bmap
+  swu-upgrade: build/tmp/deploy/images/qemux86-64-switch/ethernet-switch-os-swu-upgrade-qemux86-64-switch.swu

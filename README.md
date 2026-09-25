@@ -33,7 +33,7 @@ locally. This README is about building the firmware.
 | Albrecht RTL8382MI test switch, 20 × Gigabit | Realtek RTL8382M | Experimental (`albrecht-rtl8382mi-test`) |
 | [4-port managed switch HAT](https://github.com/AlbrechtL/rpi-managed-switch-4-port) on a Raspberry Pi Zero, 4 × Gigabit | Realtek RTL8367S, Broadcom BCM2835 | Experimental (`rpi-managed-switch-rpi0`) |
 | Zyxel GS1900-8, emulated by [rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu) | Realtek RTL8380 (emulated) | Supported, same image as the real switch (see [Running in QEMU](https://albrechtl.github.io/ethernet-switch-os/getting-started/qemu/)) |
-| QEMU x86_64 | — | Coming soon |
+| 8 port switch emulated in QEMU x86-64, with UEFI and A/B updates | x86-64 (emulated) | Experimental (`qemux86-64-switch`, see [Testing without hardware](#testing-without-hardware)) |
 
 ## Components and repositories
 
@@ -51,6 +51,7 @@ it is needed.
 | [meta-ethernet-switch-os](https://github.com/AlbrechtL/meta-ethernet-switch-os) | The distro and the userspace: the `ethernet-switch-os` distro (poky-tiny plus sysvinit), clixon with the plugin, dropbear, SWUpdate with its two `.swu` images, and the status and settings web UI. |
 | [meta-rtl83xx-bsp](https://github.com/AlbrechtL/meta-rtl83xx-bsp) | The hardware: Realtek RTL83xx switch SoCs. Machine configurations, the patched kernel and its device trees, `rt-loader`, and the flash image types. The kernel patches (Realtek SoC support, device trees, MTD split) are taken from [OpenWrt](https://openwrt.org/) — many thanks to the OpenWrt developers for their work, without which this would not exist. Boots on its own, without the OS layer. |
 | [meta-rpi-managed-switch-bsp](https://github.com/AlbrechtL/meta-rpi-managed-switch-bsp) | The hardware: the [4-port managed switch HAT](https://github.com/AlbrechtL/rpi-managed-switch-4-port) for the Raspberry Pi, on top of [meta-raspberrypi](https://git.yoctoproject.org/meta-raspberrypi). Machine configurations, the kernel with the switch's device tree overlay and OpenWrt's rtl8365mb backports, and an A/B SD card image with U-Boot. Ported from [its OpenWrt branch](https://github.com/AlbrechtL/openwrt/tree/rpi_managed_switch). Boots on its own, without the OS layer. |
+| [meta-qemu-switch-bsp](https://github.com/AlbrechtL/meta-qemu-switch-bsp) | The hardware: an 8 port switch emulated on QEMU x86-64, on top of oe-core's `qemux86-64` machine. UEFI (OVMF) with [EFI Boot Guard](https://github.com/siemens/efibootguard) from [meta-efibootguard](https://github.com/siemens/meta-efibootguard), virtio-net front ports, and an A/B disk image. Boots on its own, without the OS layer. |
 | [rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu) | Emulates an RTL838x switch, for booting and testing a built image without hardware. Frames really cross between the eight emulated front ports, so VLANs and spanning tree can be exercised. |
 
 ## Requirements
@@ -79,6 +80,7 @@ build targets:
 | Zyxel GS1900-8 (rev A1), also for [rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu) | `kas/board/zyxel-gs1900-8-a1.yml` |
 | Albrecht RTL8382MI test switch (experimental) | `kas/board/albrecht-rtl8382mi-test.yml` |
 | Raspberry Pi Zero with the [4-port managed switch HAT](https://github.com/AlbrechtL/rpi-managed-switch-4-port) (experimental) | `kas/board/rpi-managed-switch-rpi0.yml` |
+| 8 port switch emulated in QEMU x86-64 (experimental) | `kas/board/qemux86-64-switch.yml` |
 
 > **Note:** Use the board file of your hardware. The examples below build
 > the GS1900-8 (`kas/board/zyxel-gs1900-8-a1.yml`); for any other hardware,
@@ -184,6 +186,12 @@ README. Once the switch is up: `ssh cli@192.168.1.1` for the clixon CLI,
 `http://192.168.1.1:8080` for SWUpdate. The [user guide](https://albrechtl.github.io/ethernet-switch-os/)
 takes it from there.
 
+The QEMU switch builds a disk image in the same A/B shape, with EFI Boot
+Guard instead of U-Boot: `qemu-switch-image-qemux86-64-switch.rootfs.wic`
+with its `.wic.bmap`, and `ethernet-switch-os-swu-upgrade-qemux86-64-switch.swu`.
+The build also leaves the UEFI firmware (`ovmf.*.qcow2`) and a QEMU for
+running it; see [Testing without hardware](#testing-without-hardware).
+
 ### Building the user guide
 
 The user guide is plain [MkDocs](https://www.mkdocs.org/) with the Material
@@ -204,6 +212,60 @@ docker run --rm -u $(id -u):$(id -g) -v $PWD:/docs squidfunk/mkdocs-material:9.7
 The image version matches `docs/requirements.txt`, which CI installs with pip.
 
 ## Testing without hardware
+
+There are two ways: the **QEMU x86-64 switch**, a board of its own that boots
+in seconds under KVM and exercises the A/B update, or **rtl838x-qemu**, which
+runs the GS1900-8's own image on an emulated RTL8380.
+
+### The QEMU x86-64 switch
+
+```sh
+./kas-container build kas/board/qemux86-64-switch.yml
+./kas-container --kvm --runtime-args "--network=host" \
+    shell kas/board/qemux86-64-switch.yml -c /work/scripts/qemu-switch
+```
+
+`scripts/qemu-switch` boots a copy of the built disk with the QEMU and the UEFI
+firmware from the build, on the serial console of the terminal (`Ctrl-a x`
+quits). The switch has its factory address 192.168.1.1 on `lan1`, which is
+QEMU's user networking, forwarded to the host:
+
+| On the host | On the switch |
+|---|---|
+| `ssh -p 2222 cli@127.0.0.1` | the clixon CLI (`root@` for a shell) |
+| `http://127.0.0.1:8000/` | status and settings page, RESTCONF under `/restconf` |
+| `http://127.0.0.1:8080/` | SWUpdate |
+
+`lan2`..`lan8` are UDP sockets, so switches can be cabled together. Start
+each in a terminal of its own with the same `CABLES`, here lan2 and lan3 of
+switch 0 to lan2 and lan3 of switch 1 -- a loop for spanning tree to break:
+
+```sh
+./kas-container --kvm --runtime-args "--network=host" shell kas/board/qemux86-64-switch.yml \
+    -c "SWITCH=0 CABLES='0:2-1:2 0:3-1:3' /work/scripts/qemu-switch"
+./kas-container --kvm --runtime-args "--network=host" shell kas/board/qemux86-64-switch.yml \
+    -c "SWITCH=1 CABLES='0:2-1:2 0:3-1:3' /work/scripts/qemu-switch"
+```
+
+Switch N has its ports at 2222+10N, 8000+10N and 8080+10N. Cabled switches
+share VLAN 1, so they cannot all keep the factory address: a cabled switch N
+is reached at 192.168.1.N+1, which every switch but switch 0 has to be given
+once on its console (the user guide's
+[QEMU x86-64 switch](https://albrechtl.github.io/ethernet-switch-os/getting-started/qemu-x86-64/)
+page has the commands). Start the terminals a few seconds apart; two kas
+invocations at the same moment can collide on the `layers/` checkouts. Every switch keeps
+its disk in `build/qemu/switchN.wic` from run to run, with both slots, the
+boot environments and the saved configuration. A new build reaches it the way
+it reaches real hardware: upload the new `.swu` to SWUpdate, and the switch
+reboots into the other slot. `RESET=1` starts over from the built image.
+`scripts/qemu-switch-test` boots a fresh disk, installs the `.swu` and checks
+that the other slot comes up and is confirmed -- what CI runs.
+
+The disk layout, EFI Boot Guard and how an update is confirmed or rolled back
+are in [meta-qemu-switch-bsp](https://github.com/AlbrechtL/meta-qemu-switch-bsp)'s
+README.
+
+### rtl838x-qemu
 
 ```sh
 git clone --recurse-submodules https://github.com/AlbrechtL/rtl838x-qemu
@@ -232,12 +294,15 @@ that.
 | `meta-rtl83xx-bsp` | [meta-rtl83xx-bsp](https://github.com/AlbrechtL/meta-rtl83xx-bsp) | master |
 | `meta-raspberrypi` | [meta-raspberrypi](https://git.yoctoproject.org/meta-raspberrypi) | wrynose |
 | `meta-rpi-managed-switch-bsp` | [meta-rpi-managed-switch-bsp](https://github.com/AlbrechtL/meta-rpi-managed-switch-bsp) | master |
+| `meta-efibootguard` | [meta-efibootguard](https://github.com/siemens/meta-efibootguard) | master (the wrynose one) |
+| `meta-qemu-switch-bsp` | [meta-qemu-switch-bsp](https://github.com/AlbrechtL/meta-qemu-switch-bsp) | master |
 | `meta-ethernet-switch-os` | [meta-ethernet-switch-os](https://github.com/AlbrechtL/meta-ethernet-switch-os) | master |
 
 Plus [bitbake](https://git.openembedded.org/bitbake) (branch `2.18`), which is
 the build tool rather than a layer. A board uses only the BSP layers of its
-own hardware: `meta-rtl83xx-bsp`, or `meta-raspberrypi` with
-`meta-rpi-managed-switch-bsp`.
+own hardware: `meta-rtl83xx-bsp`, `meta-raspberrypi` with
+`meta-rpi-managed-switch-bsp`, or `meta-efibootguard` with
+`meta-qemu-switch-bsp`.
 
 Branch tips, deliberately: every layer uses the current head of its branch in
 every build and every CI run, and kas warns about that on every invocation. If a reproducible build is ever needed,
@@ -258,16 +323,19 @@ kas/
 │                                 and the ethernet-switch-os distro
 ├── bsp/
 │   ├── rtl83xx.yml               meta-rtl83xx-bsp
-│   └── rpi-managed-switch.yml    meta-raspberrypi, meta-rpi-managed-switch-bsp
+│   ├── rpi-managed-switch.yml    meta-raspberrypi, meta-rpi-managed-switch-bsp
+│   └── qemu-switch.yml           meta-efibootguard, meta-qemu-switch-bsp
 ├── board/                        base + bsp + os, MACHINE, targets, artifacts
 │   ├── zyxel-gs1900-8-a1.yml
 │   ├── albrecht-rtl8382mi-test.yml
-│   └── rpi-managed-switch-rpi0.yml
+│   ├── rpi-managed-switch-rpi0.yml
+│   └── qemux86-64-switch.yml
 └── opt/
     ├── ci.yml                    rm_work, for a disk-bound runner
     ├── sstate-mirror.yml         pull oe-core's shared state from the CDN
     ├── local-layers.yml          stop kas resetting the layers/ checkouts
     ├── local-layers-rpi-managed-switch.yml   the same for the Raspberry Pi boards
+    ├── local-layers-qemu-switch.yml          the same for the QEMU switch
     └── devtool.yml               keep devtool's workspace across kas runs
 ```
 
@@ -320,7 +388,9 @@ to edit, commit and push, and nothing moves underneath. For the Raspberry Pi
 boards use `kas/opt/local-layers-rpi-managed-switch.yml` instead, which does
 the same for `meta-ethernet-switch-os` and `meta-rpi-managed-switch-bsp`:
 kas would turn the `meta-rtl83xx-bsp` entry of `local-layers.yml`, which no
-Pi board file defines, into a layer at the root of this repository. Everything else still
+Pi board file defines, into a layer at the root of this repository. The QEMU
+switch has `kas/opt/local-layers-qemu-switch.yml` for the same reason.
+Everything else still
 follows its branch tip. Without it, work in a clone of your own and let kas
 fetch from the remote.
 
@@ -340,7 +410,9 @@ invocation and would otherwise drop the workspace layer again.
 
 `.github/workflows/build.yml` runs the same `./kas-container build` as a local
 build, one job per board, on every push to `master` and on pull requests, and
-uploads the four images as a job artifact.
+uploads the files the board file lists under `artifacts:` as a job artifact.
+For the QEMU switch it then runs `scripts/qemu-switch-test` on the runner:
+boot, update into the other slot, check that it is confirmed.
 
 The layer repositories no longer build images of their own. A push to
 `meta-ethernet-switch-os` runs a parse check there -- this configuration, this

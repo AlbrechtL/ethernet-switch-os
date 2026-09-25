@@ -1,0 +1,23 @@
+# An emulated 8 port switch on QEMU x86-64: a q35 PC with UEFI (OVMF), EFI
+# Boot Guard for A/B updates, virtio-net front ports. Built on oe-core's
+# qemux86-64 machine.
+#
+# Hardware only -- it boots without meta-ethernet-switch-os and knows nothing
+# about it. Pick a machine from a file in kas/board/.
+header:
+  version: 23
+  includes:
+    - kas/base.yml
+
+repos:
+  # The bootloader, its environment tools and the wic plugins for the config
+  # partitions. Its master branch is the one for wrynose.
+  meta-efibootguard:
+    url: https://github.com/siemens/meta-efibootguard
+    path: layers/meta-efibootguard
+    branch: master
+
+  meta-qemu-switch-bsp:
+    url: https://github.com/AlbrechtL/meta-qemu-switch-bsp
+    path: layers/meta-qemu-switch-bsp
+    branch: master

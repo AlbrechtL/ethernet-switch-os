@@ -50,6 +50,7 @@ nav:
   - Getting started:
       - Installation: getting-started/installation.md
       - Running in QEMU: getting-started/qemu.md
+      - QEMU x86-64 switch: getting-started/qemu-x86-64.md
       - First login: getting-started/first-login.md
       - Firmware update: getting-started/firmware-update.md
   - CLI:

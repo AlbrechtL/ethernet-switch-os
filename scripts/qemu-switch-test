@@ -1,0 +1,80 @@
+#!/bin/sh
+# Smoke test of the emulated QEMU switch and its A/B update, for CI and for a
+# quick check after a build. Runs inside the kas container, as
+# scripts/qemu-switch does:
+#
+#   ./kas-container --kvm --runtime-args "--network=host" \
+#       shell kas/board/qemux86-64-switch.yml -c /work/scripts/qemu-switch-test
+#
+# 1. Boots a fresh copy of the built disk (slot A) and waits until RESTCONF
+#    lists the front ports lan1..lan8.
+# 2. Uploads the built .swu to SWUpdate, which writes slot B and reboots.
+# 3. Waits until slot B is up and confirmed, and RESTCONF answers again.
+#
+# Uses switch 9 (ports 2312, 8090, 8170), so it does not disturb switches
+# started with scripts/qemu-switch. Exits non-zero on the first failure; the
+# serial console is in build/qemu/switch9.log.
+
+set -eu
+
+here=$(cd "$(dirname "$0")" && pwd)
+BUILDDIR=${BUILDDIR:-$here/../build}
+MACHINE=qemux86-64-switch
+SWU=$BUILDDIR/tmp/deploy/images/$MACHINE/ethernet-switch-os-swu-upgrade-$MACHINE.swu
+LOG=$BUILDDIR/qemu/switch9.log
+HTTP=http://127.0.0.1:8090
+SWUPDATE=http://127.0.0.1:8170
+
+mkdir -p "$BUILDDIR/qemu"
+rm -f "$LOG"
+
+SWITCH=9 RESET=1 LOG="$LOG" "$here/qemu-switch" &
+qemu=$!
+trap 'kill $qemu 2>/dev/null || true' EXIT INT TERM
+
+fail() {
+    echo "FAIL: $*" >&2
+    echo "--- serial console (last 60 lines) ---" >&2
+    tail -n 60 "$LOG" >&2 || true
+    exit 1
+}
+
+# Waits up to $1 seconds for $2 to appear in the serial console.
+wait_log() {
+    t=0
+    while ! grep -q "$2" "$LOG" 2>/dev/null; do
+        kill -0 $qemu 2>/dev/null || fail "QEMU exited while waiting for '$2'"
+        [ $t -lt "$1" ] || fail "no '$2' after $1 s"
+        sleep 2
+        t=$((t + 2))
+    done
+}
+
+# Waits up to $1 seconds until RESTCONF lists lan1..lan8.
+wait_restconf() {
+    t=0
+    while :; do
+        ports=$(curl -sf -H 'Accept: application/yang-data+json' \
+            "$HTTP/restconf/data/openconfig-interfaces:interfaces" 2>/dev/null |
+            grep -o '"lan[1-8]"' | sort -u | wc -l) || ports=0
+        [ "$ports" -ge 8 ] && return 0
+        kill -0 $qemu 2>/dev/null || fail "QEMU exited while waiting for RESTCONF"
+        [ $t -lt "$1" ] || fail "RESTCONF does not list lan1..lan8 after $1 s"
+        sleep 5
+        t=$((t + 5))
+    done
+}
+
+echo "== boot slot A"
+wait_log 300 'root=/dev/vda4'
+wait_restconf 300
+echo "ok: slot A up, lan1..lan8 in RESTCONF"
+
+echo "== update to slot B"
+[ -e "$SWU" ] || fail "$SWU missing"
+curl -sf -F "file=@$SWU" "$SWUPDATE/upload" >/dev/null || fail "upload of $SWU failed"
+wait_log 600 'A/B: slot on /dev/vda5 confirmed'
+wait_restconf 300
+echo "ok: slot B up and confirmed, lan1..lan8 in RESTCONF"
+
+echo "PASS"

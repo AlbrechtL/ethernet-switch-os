@@ -40,12 +40,13 @@ Read that page before you rely on the switch for anything.
 |---|---|---|
 | Zyxel GS1900-8 (rev A1) | `lan1` … `lan8`, Gigabit Ethernet | |
 | Zyxel GS1900-8 emulated in QEMU ([rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu)) | `lan1` … `lan8` | Same image as the real switch; no flash, so nothing is kept across reboots. See [Running in QEMU](getting-started/qemu.md). |
+| Switch emulated in QEMU x86-64 (experimental) | `lan1` … `lan8` | A board of its own, with two firmware slots and rollback; the configuration is kept on a virtual disk. See [QEMU x86-64 switch](getting-started/qemu-x86-64.md). |
 
 ## Where to start
 
 1. [Installation](getting-started/installation.md): getting Ethernet Switch OS
-   onto the switch, or [Running in QEMU](getting-started/qemu.md) to try it
-   without one.
+   onto the switch, or [Running in QEMU](getting-started/qemu.md) or the
+   [QEMU x86-64 switch](getting-started/qemu-x86-64.md) to try it without one.
 2. [First login](getting-started/first-login.md): factory settings and how to
    connect.
 3. [CLI basics](cli/basics.md): how the CLI works. Read this before the task

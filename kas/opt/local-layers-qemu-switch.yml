@@ -1,0 +1,17 @@
+# kas/opt/local-layers.yml for the QEMU switch board:
+#
+#   ./kas-container build kas/board/qemux86-64-switch.yml:kas/opt/local-layers-qemu-switch.yml
+#
+# local-layers.yml itself cannot be used with it. It names meta-rtl83xx-bsp,
+# and a repository without url that no other file defines falls back to the
+# root of this repository -- which kas would then add as a layer.
+header:
+  version: 23
+
+repos:
+  meta-ethernet-switch-os:
+    url: null
+    branch: null
+  meta-qemu-switch-bsp:
+    url: null
+    branch: null

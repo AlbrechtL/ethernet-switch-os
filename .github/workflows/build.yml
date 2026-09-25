@@ -22,7 +22,7 @@ jobs:
       fail-fast: false
       matrix:
         # One job per file in kas/board/.
-        board: [zyxel-gs1900-8-a1, albrecht-rtl8382mi-test]
+        board: [zyxel-gs1900-8-a1, albrecht-rtl8382mi-test, qemux86-64-switch]
     # A cold build is a full toolchain, kernel and Rust cross-compile; the
     # 6 hour job limit is the real ceiling.
     timeout-minutes: 350
@@ -88,21 +88,35 @@ jobs:
       - name: Build
         run: ./kas-container build kas/board/${{ matrix.board }}.yml:kas/opt/ci.yml
 
-      # The deliverables: the two .swu packages and the TFTP boot images, under
-      # their stable symlink names. cp -L because they are symlinks into the
-      # same directory and upload-artifact would otherwise store dangling
-      # links. These are exactly the files kas/board/*.yml lists as artifacts.
+      # The deliverables, exactly the files the board file lists under
+      # "artifacts:" (the .swu packages, and boot or disk images), under their
+      # stable symlink names. The paths there are relative to the checkout,
+      # with the build directory as build/; here it is $KAS_BUILD_DIR. cp -L
+      # because they are symlinks into the same directory and upload-artifact
+      # would otherwise store dangling links. yq is on the runner image.
       - name: Collect images
         if: success()
         run: |
           set -eu
-          deploy="$KAS_BUILD_DIR/tmp/deploy/images/${{ matrix.board }}"
           mkdir -p artifacts
-          cp -L "$deploy"/ethernet-switch-os-swu-factory-${{ matrix.board }}.swu artifacts/
-          cp -L "$deploy"/ethernet-switch-os-swu-upgrade-${{ matrix.board }}.swu artifacts/
-          cp -L "$deploy"/ethernet-switch-os-initramfs-${{ matrix.board }}.bin artifacts/
-          cp -L "$deploy"/ethernet-switch-os-initramfs-${{ matrix.board }}-rt-loader.bin artifacts/
+          yq '.artifacts[]' kas/board/${{ matrix.board }}.yml | while read -r path; do
+            cp -L "$KAS_BUILD_DIR/${path#build/}" artifacts/
+          done
           ls -l artifacts
+
+      # The emulated switch can be booted right here: boot the disk image,
+      # install the .swu into the other A/B slot and check that it comes up
+      # and gets confirmed. /dev/kvm exists on the hosted runners, but only
+      # the kvm group may open it.
+      - name: Boot and update test
+        if: success() && matrix.board == 'qemux86-64-switch'
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' |
+            sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          ./kas-container --kvm --runtime-args "--network=host" \
+            shell kas/board/${{ matrix.board }}.yml:kas/opt/ci.yml -c /work/scripts/qemu-switch-test
 
       - uses: actions/upload-artifact@v4
         if: success()
@@ -121,5 +135,6 @@ jobs:
           path: |
             /mnt/yocto/build/tmp/log/
             /mnt/yocto/build/tmp/work/*/*/*/temp/log.do_*
+            /mnt/yocto/build/qemu/*.log
           if-no-files-found: ignore
           retention-days: 7
