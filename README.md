@@ -30,6 +30,7 @@ locally. This README is about building the firmware.
 | Hardware | SoC | Status |
 |---|---|---|
 | Zyxel GS1900-8 (rev A1), 8 × Gigabit | Realtek RTL8380 | Supported (`zyxel-gs1900-8-a1`) |
+| Albrecht RTL8382MI test switch, 20 × Gigabit | Realtek RTL8382M | Experimental (`albrecht-rtl8382mi-test`) |
 | Zyxel GS1900-8, emulated by [rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu) | Realtek RTL8380 (emulated) | Supported, same image as the real switch (see [Running in QEMU](https://albrechtl.github.io/ethernet-switch-os/getting-started/qemu/)) |
 | QEMU x86_64 | — | Coming soon |
 

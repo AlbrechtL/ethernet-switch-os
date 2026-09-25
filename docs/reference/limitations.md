@@ -92,6 +92,8 @@ has a complete example.
 - No flow control.
 - No link aggregation (LAG, LACP).
 - No port mirroring, storm control, rate limiting or port security.
+- Albrecht RTL8382MI test switch: ports 17 to 20 (RTL8214FC combo ports)
+  are driven as copper ports only; their SFP side is not supported.
 
 ## Layer 2
 

@@ -1,0 +1,26 @@
+# Albrecht RTL8382MI test switch: 20 port Gigabit switch on a Realtek
+# RTL8382M, 16 MiB SPI-NOR. Experimental.
+#
+#   ./kas-container build kas/board/albrecht-rtl8382mi-test.yml
+#
+# See zyxel-gs1900-8-a1.yml for why the include order does not matter.
+header:
+  version: 23
+  includes:
+    - kas/base.yml
+    - kas/bsp/rtl83xx.yml
+    - kas/os.yml
+
+machine: albrecht-rtl8382mi-test
+
+target:
+  - ethernet-switch-os-swu-factory
+  - ethernet-switch-os-swu-upgrade
+
+# What a build is expected to leave behind. "kas build --update" and CI read
+# these; they are also the files to copy to a TFTP server or to SWUpdate.
+artifacts:
+  swu-factory: build/tmp/deploy/images/albrecht-rtl8382mi-test/ethernet-switch-os-swu-factory-albrecht-rtl8382mi-test.swu
+  swu-upgrade: build/tmp/deploy/images/albrecht-rtl8382mi-test/ethernet-switch-os-swu-upgrade-albrecht-rtl8382mi-test.swu
+  initramfs: build/tmp/deploy/images/albrecht-rtl8382mi-test/ethernet-switch-os-initramfs-albrecht-rtl8382mi-test.bin
+  initramfs-rt-loader: build/tmp/deploy/images/albrecht-rtl8382mi-test/ethernet-switch-os-initramfs-albrecht-rtl8382mi-test-rt-loader.bin

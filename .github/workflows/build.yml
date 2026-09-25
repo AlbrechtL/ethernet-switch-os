@@ -22,7 +22,7 @@ jobs:
       fail-fast: false
       matrix:
         # One job per file in kas/board/.
-        board: [zyxel-gs1900-8-a1]
+        board: [zyxel-gs1900-8-a1, albrecht-rtl8382mi-test]
     # A cold build is a full toolchain, kernel and Rust cross-compile; the
     # 6 hour job limit is the real ceiling.
     timeout-minutes: 350

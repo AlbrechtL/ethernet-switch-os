@@ -31,6 +31,37 @@ The exact steps (serial settings, bootloader commands, flash layout, how to
 go back to the original firmware) are in the
 [meta-rtl83xx-bsp README](https://github.com/AlbrechtL/meta-rtl83xx-bsp).
 
+## Albrecht RTL8382MI test switch
+
+This board (20 ports, experimental) uses the Realtek SDK bootloader, whose
+prompt is `RTL838x#`. The first installation differs from the GS1900 in
+two ways:
+
+1. As delivered, the bootloader environment fails its CRC check. Save it
+   once before anything else:
+
+    ```text
+    RTL838x# saveenv
+    ```
+
+2. Load the TFTP image to `0x8f000000`:
+
+    ```text
+    RTL838x# tftpboot 0x8f000000 192.168.1.12:ethernet-switch-os-initramfs-albrecht-rtl8382mi-test.bin
+    RTL838x# bootm
+    ```
+
+Then continue with step 3 above. The factory `.swu` merges the original
+`JFFS2_CFG` and `JFFS2_LOG` partitions into the configuration partition, and
+both firmware slots (`RUNTIME1`, `RUNTIME2`) into one.
+
+The port LEDs blink while the firmware is written and during a reboot.
+DIP switch 6 is the reset switch: switched on and back off within 5 seconds
+it reboots the switch, left on for 5 seconds or more it resets the
+configuration to the factory default (see
+[Maintenance](../maintenance.md#factory-reset)). DIP switches 1 to 5 have no
+function yet; they are only logged.
+
 !!! tip "Trying it without hardware"
     [rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu) emulates the
     switch and boots the same `initramfs` image. All of this guide works

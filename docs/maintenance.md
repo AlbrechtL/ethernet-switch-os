@@ -61,6 +61,9 @@ $ ssh root@<switch-ip>
 The switch comes back with the [factory settings](getting-started/first-login.md#factory-settings),
 at `192.168.1.1`.
 
+On the Albrecht RTL8382MI test switch, DIP switch 6 does the same: switch it
+on, wait at least 5 seconds, and switch it off again.
+
 ## When the saved configuration cannot be loaded
 
 If the saved configuration fails to apply at boot, for example after an
