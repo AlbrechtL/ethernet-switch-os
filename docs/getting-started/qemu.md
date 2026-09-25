@@ -26,7 +26,7 @@ cd ethernet-switch-os
 ```sh
 ./kas-container --runtime-args "--network=host" \
     shell kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml \
-    -c /work/scripts/rtl838x-qemu
+    -c /work/scripts/mips-rtl838x-qemu
 ```
 
 The terminal shows the serial console, which is what you would see on the
@@ -67,12 +67,12 @@ here `lan2` of switch 0 goes to `lan2` of switch 1:
 # Terminal 1
 ./kas-container --runtime-args "--network=host" \
     shell kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml \
-    -c "SWITCH=0 CABLES='0:2-1:2' /work/scripts/rtl838x-qemu"
+    -c "SWITCH=0 CABLES='0:2-1:2' /work/scripts/mips-rtl838x-qemu"
 
 # Terminal 2
 ./kas-container --runtime-args "--network=host" \
     shell kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml \
-    -c "SWITCH=1 CABLES='0:2-1:2' /work/scripts/rtl838x-qemu"
+    -c "SWITCH=1 CABLES='0:2-1:2' /work/scripts/mips-rtl838x-qemu"
 ```
 
 Cabled switches share VLAN 1, so they cannot all keep the factory address
@@ -99,7 +99,7 @@ Each switch has its own forwarded ports on your computer:
 | `SWITCH=N` | `192.168.1.N+1` | 2222 + 10·N | 8000 + 10·N | 8080 + 10·N | 1161 + 10·N |
 
 A switch without cables is always reached at `192.168.1.1`. To forward to
-another address, add `ADDRESS=...` in front of `/work/scripts/rtl838x-qemu`.
+another address, add `ADDRESS=...` in front of `/work/scripts/mips-rtl838x-qemu`.
 
 !!! note
     With the factory settings, all ports of a switch are in VLAN 1 and

@@ -5,7 +5,7 @@
 #
 #   ./kas-container build kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml
 #   ./kas-container --runtime-args "--network=host" \
-#       shell kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml -c /work/scripts/rtl838x-qemu
+#       shell kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml -c /work/scripts/mips-rtl838x-qemu
 #
 # --network=host puts the forwarded ports below on the host's 127.0.0.1 and
 # lets switches started from different containers reach each other. The
@@ -26,7 +26,7 @@
 #   LOG=FILE     serial console into FILE instead of the terminal, no
 #                interaction (for scripts and CI).
 #
-# Front ports, the same scheme as scripts/qemu-switch:
+# Front ports, the same scheme as scripts/x86-64-q35-qemu:
 #   lan1         QEMU user networking (slirp) as the management network:
 #                192.168.1.0/24 with the host (gateway) at .254-N and a DNS
 #                server at .244-N, ADDRESS forwarded to 127.0.0.1 on the

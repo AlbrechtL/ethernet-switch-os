@@ -1,10 +1,10 @@
 #!/bin/sh
 # Smoke test of the emulated QEMU switch and its A/B update, for CI and for a
 # quick check after a build. Runs inside the kas container, as
-# scripts/qemu-switch does:
+# scripts/x86-64-q35-qemu does:
 #
 #   ./kas-container --kvm --runtime-args "--network=host" \
-#       shell kas/board/qemux86-64-switch.yml -c /work/scripts/qemu-switch-test
+#       shell kas/board/qemux86-64-switch.yml -c /work/scripts/x86-64-q35-qemu-test
 #
 # 1. Boots a fresh copy of the built disk (slot A) and waits until RESTCONF
 #    lists the front ports lan1..lan8.
@@ -12,7 +12,7 @@
 # 3. Waits until slot B is up and confirmed, and RESTCONF answers again.
 #
 # Uses switch 9 (ports 2312, 8090, 8170), so it does not disturb switches
-# started with scripts/qemu-switch. Exits non-zero on the first failure; the
+# started with scripts/x86-64-q35-qemu. Exits non-zero on the first failure; the
 # serial console is in build/qemu/switch9.log.
 
 set -eu
@@ -28,7 +28,7 @@ SWUPDATE=http://127.0.0.1:8170
 mkdir -p "$BUILDDIR/qemu"
 rm -f "$LOG"
 
-SWITCH=9 RESET=1 LOG="$LOG" "$here/qemu-switch" &
+SWITCH=9 RESET=1 LOG="$LOG" "$here/x86-64-q35-qemu" &
 qemu=$!
 trap 'kill $qemu 2>/dev/null || true' EXIT INT TERM
 

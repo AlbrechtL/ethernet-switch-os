@@ -222,10 +222,10 @@ runs the GS1900-8's own image on an emulated RTL8380.
 ```sh
 ./kas-container build kas/board/qemux86-64-switch.yml
 ./kas-container --kvm --runtime-args "--network=host" \
-    shell kas/board/qemux86-64-switch.yml -c /work/scripts/qemu-switch
+    shell kas/board/qemux86-64-switch.yml -c /work/scripts/x86-64-q35-qemu
 ```
 
-`scripts/qemu-switch` boots a copy of the built disk with the QEMU and the UEFI
+`scripts/x86-64-q35-qemu` boots a copy of the built disk with the QEMU and the UEFI
 firmware from the build, on the serial console of the terminal (`Ctrl-a x`
 quits). The switch has its factory address 192.168.1.1 on `lan1`, which is
 QEMU's user networking, forwarded to the host:
@@ -242,9 +242,9 @@ switch 0 to lan2 and lan3 of switch 1 -- a loop for spanning tree to break:
 
 ```sh
 ./kas-container --kvm --runtime-args "--network=host" shell kas/board/qemux86-64-switch.yml \
-    -c "SWITCH=0 CABLES='0:2-1:2 0:3-1:3' /work/scripts/qemu-switch"
+    -c "SWITCH=0 CABLES='0:2-1:2 0:3-1:3' /work/scripts/x86-64-q35-qemu"
 ./kas-container --kvm --runtime-args "--network=host" shell kas/board/qemux86-64-switch.yml \
-    -c "SWITCH=1 CABLES='0:2-1:2 0:3-1:3' /work/scripts/qemu-switch"
+    -c "SWITCH=1 CABLES='0:2-1:2 0:3-1:3' /work/scripts/x86-64-q35-qemu"
 ```
 
 Switch N has its ports at 2222+10N, 8000+10N and 8080+10N. Cabled switches
@@ -258,7 +258,7 @@ its disk in `build/qemu/switchN.wic` from run to run, with both slots, the
 boot environments and the saved configuration. A new build reaches it the way
 it reaches real hardware: upload the new `.swu` to SWUpdate, and the switch
 reboots into the other slot. `RESET=1` starts over from the built image.
-`scripts/qemu-switch-test` boots a fresh disk, installs the `.swu` and checks
+`scripts/x86-64-q35-qemu-test` boots a fresh disk, installs the `.swu` and checks
 that the other slot comes up and is confirmed -- what CI runs.
 
 The disk layout, EFI Boot Guard and how an update is confirmed or rolled back
@@ -270,12 +270,12 @@ README.
 ```sh
 ./kas-container build kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml
 ./kas-container --runtime-args "--network=host" \
-    shell kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml -c /work/scripts/rtl838x-qemu
+    shell kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml -c /work/scripts/mips-rtl838x-qemu
 ```
 
 `kas/opt/rtl838x-qemu.yml` adds `qemu-rtl838x-native` from meta-rtl83xx-bsp to
 the build: QEMU with [rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu)'s
-models, at the QEMU version rtl838x-qemu pins. `scripts/rtl838x-qemu` boots the
+models, at the QEMU version rtl838x-qemu pins. `scripts/mips-rtl838x-qemu` boots the
 TFTP boot image with it, uImage header and all: the machine parses the header
 the same way the stock bootloader does, so `rt-loader` runs exactly as it does
 on the real switch.
@@ -283,7 +283,7 @@ on the real switch.
 The ports, `SWITCH`, `CABLES` and `ADDRESS` work as for the QEMU x86-64
 switch, and lan1 also forwards SNMP to UDP 1161+10N. There is no flash, so
 every boot starts from the factory settings and `reboot` ends QEMU.
-`scripts/rtl838x-qemu-test` boots the image and checks that RESTCONF lists
+`scripts/mips-rtl838x-qemu-test` boots the image and checks that RESTCONF lists
 all eight ports -- what CI runs.
 
 ## Layers
@@ -414,7 +414,7 @@ invocation and would otherwise drop the workspace layer again.
 `.github/workflows/build.yml` runs the same `./kas-container build` as a local
 build, one job per board, on every push to `master` and on pull requests, and
 uploads the files the board file lists under `artifacts:` as a job artifact.
-For the QEMU switch it then runs `scripts/qemu-switch-test` on the runner:
+For the QEMU switch it then runs `scripts/x86-64-q35-qemu-test` on the runner:
 boot, update into the other slot, check that it is confirmed.
 
 The layer repositories no longer build images of their own. A push to

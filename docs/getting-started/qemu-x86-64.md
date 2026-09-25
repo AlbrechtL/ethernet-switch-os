@@ -35,7 +35,7 @@ cd ethernet-switch-os
 
 ```sh
 ./kas-container --kvm --runtime-args "--network=host" \
-    shell kas/board/qemux86-64-switch.yml -c /work/scripts/qemu-switch
+    shell kas/board/qemux86-64-switch.yml -c /work/scripts/x86-64-q35-qemu
 ```
 
 The terminal shows the serial console. After a few seconds the login prompt
@@ -68,7 +68,7 @@ with the factory settings and the image you built last, add `RESET=1`:
 
 ```sh
 ./kas-container --kvm --runtime-args "--network=host" \
-    shell kas/board/qemux86-64-switch.yml -c "RESET=1 /work/scripts/qemu-switch"
+    shell kas/board/qemux86-64-switch.yml -c "RESET=1 /work/scripts/x86-64-q35-qemu"
 ```
 
 ## 3. Connect switches
@@ -106,11 +106,11 @@ to break:
 ```sh
 # Terminal 1
 ./kas-container --kvm --runtime-args "--network=host" shell kas/board/qemux86-64-switch.yml \
-    -c "SWITCH=0 CABLES='0:2-1:2 0:3-1:3' /work/scripts/qemu-switch"
+    -c "SWITCH=0 CABLES='0:2-1:2 0:3-1:3' /work/scripts/x86-64-q35-qemu"
 
 # Terminal 2
 ./kas-container --kvm --runtime-args "--network=host" shell kas/board/qemux86-64-switch.yml \
-    -c "SWITCH=1 CABLES='0:2-1:2 0:3-1:3' /work/scripts/qemu-switch"
+    -c "SWITCH=1 CABLES='0:2-1:2 0:3-1:3' /work/scripts/x86-64-q35-qemu"
 ```
 
 Each switch has its own forwarded ports on your computer:
@@ -122,7 +122,7 @@ Each switch has its own forwarded ports on your computer:
 | `SWITCH=N` | `192.168.1.N+1` | 2222 + 10·N | 8000 + 10·N | 8080 + 10·N |
 
 A switch without cables is always reached at `192.168.1.1`. To forward to
-another address, add `ADDRESS=...` in front of `/work/scripts/qemu-switch`.
+another address, add `ADDRESS=...` in front of `/work/scripts/x86-64-q35-qemu`.
 
 !!! note
     With the factory settings, all ports of a switch are in VLAN 1. Two

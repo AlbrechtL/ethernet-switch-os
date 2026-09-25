@@ -121,7 +121,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
           ./kas-container --kvm --runtime-args "--network=host" \
-            shell kas/board/${{ matrix.board }}.yml:kas/opt/ci.yml -c /work/scripts/qemu-switch-test
+            shell kas/board/${{ matrix.board }}.yml:kas/opt/ci.yml -c /work/scripts/x86-64-q35-qemu-test
 
       # The GS1900-8 image in rtl838x-qemu: boot it and check that RESTCONF
       # lists all eight ports. No KVM, the emulated CPU is a MIPS.
@@ -129,7 +129,7 @@ jobs:
         if: success() && matrix.board == 'zyxel-gs1900-8-a1'
         run: |
           ./kas-container --runtime-args "--network=host" \
-            shell kas/board/${{ matrix.board }}.yml:kas/opt/ci.yml${{ matrix.opt }} -c /work/scripts/rtl838x-qemu-test
+            shell kas/board/${{ matrix.board }}.yml:kas/opt/ci.yml${{ matrix.opt }} -c /work/scripts/mips-rtl838x-qemu-test
 
       - uses: actions/upload-artifact@v4
         if: success()

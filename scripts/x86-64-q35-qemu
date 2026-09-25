@@ -4,7 +4,7 @@
 # bitbake-built QEMU and OVMF at hand:
 #
 #   ./kas-container --kvm --runtime-args "--network=host" \
-#       shell kas/board/qemux86-64-switch.yml -c /work/scripts/qemu-switch
+#       shell kas/board/qemux86-64-switch.yml -c /work/scripts/x86-64-q35-qemu
 #
 # --network=host puts the forwarded ports below on the host's 127.0.0.1 and
 # lets switches started from different containers reach each other. The

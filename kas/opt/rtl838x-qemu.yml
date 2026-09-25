@@ -4,7 +4,7 @@
 #
 #   ./kas-container build kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml
 #   ./kas-container --runtime-args "--network=host" \
-#       shell kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml -c /work/scripts/rtl838x-qemu
+#       shell kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml -c /work/scripts/mips-rtl838x-qemu
 #
 # The emulator is QEMU with rtl838x-qemu's models, built by
 # qemu-rtl838x-native in meta-rtl83xx-bsp. It is not part of the board file

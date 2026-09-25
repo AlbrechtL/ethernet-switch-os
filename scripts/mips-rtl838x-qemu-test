@@ -1,16 +1,16 @@
 #!/bin/sh
 # Smoke test of the Zyxel GS1900-8 image in rtl838x-qemu, for CI and for a
 # quick check after a build. Runs inside the kas container, as
-# scripts/rtl838x-qemu does:
+# scripts/mips-rtl838x-qemu does:
 #
 #   ./kas-container --runtime-args "--network=host" \
-#       shell kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml -c /work/scripts/rtl838x-qemu-test
+#       shell kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml -c /work/scripts/mips-rtl838x-qemu-test
 #
 # Boots the initramfs image and waits until RESTCONF lists the front ports
 # lan1..lan8. There is no update test: the emulated switch has no flash.
 #
 # Uses switch 9 (ports 2312, 8090, 8170, 1251), so it does not disturb
-# switches started with scripts/rtl838x-qemu. Exits non-zero on the first
+# switches started with scripts/mips-rtl838x-qemu. Exits non-zero on the first
 # failure; the serial console is in build/qemu/rtl838x-switch9.log.
 
 set -eu
@@ -23,7 +23,7 @@ HTTP=http://127.0.0.1:8090
 mkdir -p "$BUILDDIR/qemu"
 rm -f "$LOG"
 
-SWITCH=9 LOG="$LOG" "$here/rtl838x-qemu" &
+SWITCH=9 LOG="$LOG" "$here/mips-rtl838x-qemu" &
 qemu=$!
 trap 'kill $qemu 2>/dev/null || true' EXIT INT TERM
 
