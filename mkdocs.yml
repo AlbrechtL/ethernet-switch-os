@@ -40,7 +40,11 @@ markdown_extensions:
   - attr_list
   - def_list
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - tables
   - toc:
       permalink: true
@@ -66,6 +70,7 @@ nav:
   - SNMP: snmp/index.md
   - YANG models: yang-models.md
   - Development:
+      - Firmware architecture: development/architecture.md
       - Building the firmware: development/building.md
       - Layers and kas files: development/kas.md
       - Testing and CI: development/testing.md
