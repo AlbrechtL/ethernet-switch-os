@@ -31,6 +31,7 @@ locally. This README is about building the firmware.
 |---|---|---|
 | Zyxel GS1900-8 (rev A1), 8 × Gigabit | Realtek RTL8380 | Supported (`zyxel-gs1900-8-a1`) |
 | Albrecht RTL8382MI test switch, 20 × Gigabit | Realtek RTL8382M | Experimental (`albrecht-rtl8382mi-test`) |
+| [4-port managed switch HAT](https://github.com/AlbrechtL/rpi-managed-switch-4-port) on a Raspberry Pi Zero, 4 × Gigabit | Realtek RTL8367S, Broadcom BCM2835 | Experimental (`rpi-managed-switch-rpi0`) |
 | Zyxel GS1900-8, emulated by [rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu) | Realtek RTL8380 (emulated) | Supported, same image as the real switch (see [Running in QEMU](https://albrechtl.github.io/ethernet-switch-os/getting-started/qemu/)) |
 | QEMU x86_64 | — | Coming soon |
 
@@ -40,15 +41,16 @@ This repository is the build entry point and contains no recipes of its own.
 It holds [kas](https://kas.readthedocs.io/) configuration files that describe,
 per board, which Yocto layers to check out and how to configure them — so that
 a build needs nothing on the host but Docker, git and a POSIX shell. The
-interesting parts live in four repositories of their own. kas checks the three
-layers out under `layers/`; `rtl838x-qemu` is a separate tool and is cloned by
-hand when it is needed.
+interesting parts live in repositories of their own. kas checks the layers out
+under `layers/`; `rtl838x-qemu` is a separate tool and is cloned by hand when
+it is needed.
 
 | Repository | Role |
 |---|---|
 | [clixon-switch-rs](https://github.com/AlbrechtL/clixon-switch-rs) | The [clixon](https://www.clicon.org/) backend plugin, in Rust. Applies an OpenConfig configuration to the kernel: DSA ports in a VLAN-aware bridge, routed VLAN interfaces, spanning tree via mstpd, a read-only SNMPv3 agent. Built by a recipe in `meta-ethernet-switch-os`, not checked out by kas. |
 | [meta-ethernet-switch-os](https://github.com/AlbrechtL/meta-ethernet-switch-os) | The distro and the userspace: the `ethernet-switch-os` distro (poky-tiny plus sysvinit), clixon with the plugin, dropbear, SWUpdate with its two `.swu` images, and the status and settings web UI. |
 | [meta-rtl83xx-bsp](https://github.com/AlbrechtL/meta-rtl83xx-bsp) | The hardware: Realtek RTL83xx switch SoCs. Machine configurations, the patched kernel and its device trees, `rt-loader`, and the flash image types. The kernel patches (Realtek SoC support, device trees, MTD split) are taken from [OpenWrt](https://openwrt.org/) — many thanks to the OpenWrt developers for their work, without which this would not exist. Boots on its own, without the OS layer. |
+| [meta-rpi-managed-switch-bsp](https://github.com/AlbrechtL/meta-rpi-managed-switch-bsp) | The hardware: the [4-port managed switch HAT](https://github.com/AlbrechtL/rpi-managed-switch-4-port) for the Raspberry Pi, on top of [meta-raspberrypi](https://git.yoctoproject.org/meta-raspberrypi). Machine configurations, the kernel with the switch's device tree overlay and OpenWrt's rtl8365mb backports, and an A/B SD card image with U-Boot. Ported from [its OpenWrt branch](https://github.com/AlbrechtL/openwrt/tree/rpi_managed_switch). Boots on its own, without the OS layer. |
 | [rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu) | Emulates an RTL838x switch, for booting and testing a built image without hardware. Frames really cross between the eight emulated front ports, so VLANs and spanning tree can be exercised. |
 
 ## Requirements
@@ -169,6 +171,14 @@ In `build/tmp/deploy/images/zyxel-gs1900-8-a1/`:
 
 The flash layout, the TFTP procedure and what to type at the stock bootloader
 are in [meta-rtl83xx-bsp](https://github.com/AlbrechtL/meta-rtl83xx-bsp)'s
+README.
+
+The Raspberry Pi switch is different: its board builds an SD card image,
+`rpi-switch-image-rpi-managed-switch-rpi0.rootfs.wic.bz2` with its `.wic.bmap`,
+which is the first install, and `ethernet-switch-os-swu-upgrade-rpi-managed-switch-rpi0.swu`
+for updates. There is no factory `.swu` and no TFTP image. The SD card layout
+and the A/B update are in
+[meta-rpi-managed-switch-bsp](https://github.com/AlbrechtL/meta-rpi-managed-switch-bsp)'s
 README. Once the switch is up: `ssh cli@192.168.1.1` for the clixon CLI,
 `http://192.168.1.1/` for the status and settings page,
 `http://192.168.1.1:8080` for SWUpdate. The [user guide](https://albrechtl.github.io/ethernet-switch-os/)
@@ -220,10 +230,14 @@ that.
 | `meta-oe`, `meta-python`, `meta-networking` | [meta-openembedded](https://github.com/openembedded/meta-openembedded) | wrynose |
 | `meta-swupdate` | [meta-swupdate](https://github.com/sbabic/meta-swupdate) | wrynose |
 | `meta-rtl83xx-bsp` | [meta-rtl83xx-bsp](https://github.com/AlbrechtL/meta-rtl83xx-bsp) | master |
+| `meta-raspberrypi` | [meta-raspberrypi](https://git.yoctoproject.org/meta-raspberrypi) | wrynose |
+| `meta-rpi-managed-switch-bsp` | [meta-rpi-managed-switch-bsp](https://github.com/AlbrechtL/meta-rpi-managed-switch-bsp) | master |
 | `meta-ethernet-switch-os` | [meta-ethernet-switch-os](https://github.com/AlbrechtL/meta-ethernet-switch-os) | master |
 
 Plus [bitbake](https://git.openembedded.org/bitbake) (branch `2.18`), which is
-the build tool rather than a layer.
+the build tool rather than a layer. A board uses only the BSP layers of its
+own hardware: `meta-rtl83xx-bsp`, or `meta-raspberrypi` with
+`meta-rpi-managed-switch-bsp`.
 
 Branch tips, deliberately: every layer uses the current head of its branch in
 every build and every CI run, and kas warns about that on every invocation. If a reproducible build is ever needed,
@@ -243,7 +257,8 @@ kas/
 ├── os.yml                        meta-ethernet-switch-os and its dependencies,
 │                                 and the ethernet-switch-os distro
 ├── bsp/
-│   └── rtl83xx.yml               meta-rtl83xx-bsp
+│   ├── rtl83xx.yml               meta-rtl83xx-bsp
+│   └── rpi-managed-switch.yml    meta-raspberrypi, meta-rpi-managed-switch-bsp
 ├── board/                        base + bsp + os, MACHINE, targets, artifacts
 │   ├── zyxel-gs1900-8-a1.yml
 │   ├── albrecht-rtl8382mi-test.yml
@@ -252,6 +267,7 @@ kas/
     ├── ci.yml                    rm_work, for a disk-bound runner
     ├── sstate-mirror.yml         pull oe-core's shared state from the CDN
     ├── local-layers.yml          stop kas resetting the layers/ checkouts
+    ├── local-layers-rpi-managed-switch.yml   the same for the Raspberry Pi boards
     └── devtool.yml               keep devtool's workspace across kas runs
 ```
 
@@ -300,7 +316,11 @@ hands off the project's own layers:
 ```
 
 Then `layers/meta-ethernet-switch-os` and `layers/meta-rtl83xx-bsp` are yours
-to edit, commit and push, and nothing moves underneath. Everything else still
+to edit, commit and push, and nothing moves underneath. For the Raspberry Pi
+boards use `kas/opt/local-layers-rpi-managed-switch.yml` instead, which does
+the same for `meta-ethernet-switch-os` and `meta-rpi-managed-switch-bsp`:
+kas would turn the `meta-rtl83xx-bsp` entry of `local-layers.yml`, which no
+Pi board file defines, into a layer at the root of this repository. Everything else still
 follows its branch tip. Without it, work in a clone of your own and let kas
 fetch from the remote.
 

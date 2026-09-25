@@ -4,10 +4,10 @@
 #
 #   ./kas-container build kas/board/rpi-managed-switch-rpi0.yml
 #
-# While working on meta-ethernet-switch-os, append
-# kas/opt/local-layers-rpi-managed-switch.yml, not kas/opt/local-layers.yml
-# (see there). See zyxel-gs1900-8-a1.yml for why the include order does not
-# matter.
+# While working on meta-ethernet-switch-os or meta-rpi-managed-switch-bsp,
+# append kas/opt/local-layers-rpi-managed-switch.yml, not
+# kas/opt/local-layers.yml (see there). See zyxel-gs1900-8-a1.yml for why the
+# include order does not matter.
 header:
   version: 23
   includes:

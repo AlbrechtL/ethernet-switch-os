@@ -5,12 +5,14 @@
 # local-layers.yml itself cannot be used with them. It names
 # meta-rtl83xx-bsp, and a repository without url that no other file defines
 # falls back to the root of this repository -- which kas would then add as a
-# layer. meta-rpi-managed-switch-bsp has no url yet anyway (see
-# kas/bsp/rpi-managed-switch.yml), so only the OS layer needs releasing here.
+# layer.
 header:
   version: 23
 
 repos:
   meta-ethernet-switch-os:
+    url: null
+    branch: null
+  meta-rpi-managed-switch-bsp:
     url: null
     branch: null
