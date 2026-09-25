@@ -68,6 +68,24 @@ git clone https://github.com/AlbrechtL/ethernet-switch-os
 cd ethernet-switch-os
 ```
 
+Each supported hardware has a board file in `kas/board/`. It is the one file
+to name on the command line; it pulls in the layers, the machine and the
+build targets:
+
+| Hardware | Board file |
+|---|---|
+| Zyxel GS1900-8 (rev A1), also for [rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu) | `kas/board/zyxel-gs1900-8-a1.yml` |
+| Albrecht RTL8382MI test switch (experimental) | `kas/board/albrecht-rtl8382mi-test.yml` |
+| Raspberry Pi Zero with the [4-port managed switch HAT](https://github.com/AlbrechtL/rpi-managed-switch-4-port) (experimental) | `kas/board/rpi-managed-switch-rpi0.yml` |
+
+> **Note:** Use the board file of your hardware. The examples below build
+> the GS1900-8 (`kas/board/zyxel-gs1900-8-a1.yml`); for any other hardware,
+> replace it with that hardware's board file from the table. An image built
+> for another board does not work on your switch.
+
+The images land in `build/tmp/deploy/images/<board>/`, where `<board>` is the
+file name without `.yml`.
+
 The build always runs in a container, and there are two ways into it. The kas
 commands are the same in both — only the name differs: `kas` inside the dev
 container, `./kas-container` on the host.
@@ -81,6 +99,7 @@ image plus tools for working on the project) and mounts the checkout at `/work`.
 `SSTATE_DIR`, so in a terminal there:
 
 ```sh
+# Replace the board file with the one for your hardware, see the table above.
 kas build kas/board/zyxel-gs1900-8-a1.yml
 ```
 
@@ -90,6 +109,7 @@ kas build kas/board/zyxel-gs1900-8-a1.yml
 build needs:
 
 ```sh
+# Replace the board file with the one for your hardware, see the table above.
 ./kas-container build kas/board/zyxel-gs1900-8-a1.yml
 ```
 
@@ -224,8 +244,10 @@ kas/
 │                                 and the ethernet-switch-os distro
 ├── bsp/
 │   └── rtl83xx.yml               meta-rtl83xx-bsp
-├── board/
-│   └── zyxel-gs1900-8-a1.yml     base + bsp + os, MACHINE, targets, artifacts
+├── board/                        base + bsp + os, MACHINE, targets, artifacts
+│   ├── zyxel-gs1900-8-a1.yml
+│   ├── albrecht-rtl8382mi-test.yml
+│   └── rpi-managed-switch-rpi0.yml
 └── opt/
     ├── ci.yml                    rm_work, for a disk-bound runner
     ├── sstate-mirror.yml         pull oe-core's shared state from the CDN
