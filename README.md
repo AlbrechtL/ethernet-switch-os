@@ -194,7 +194,7 @@ that.
 
 | Layer | Repository | Branch |
 |---|---|---|
-| `meta` | [openembedded-core](https://git.openembedded.org/openembedded-core) | wrynose, pinned to `9da814ca` |
+| `meta` | [openembedded-core](https://git.openembedded.org/openembedded-core) | wrynose |
 | `meta-poky` | [meta-yocto](https://git.yoctoproject.org/meta-yocto) | wrynose |
 | `meta-oe`, `meta-python`, `meta-networking` | [meta-openembedded](https://github.com/openembedded/meta-openembedded) | wrynose |
 | `meta-swupdate` | [meta-swupdate](https://github.com/sbabic/meta-swupdate) | wrynose |
@@ -204,10 +204,7 @@ that.
 Plus [bitbake](https://git.openembedded.org/bitbake) (branch `2.18`), which is
 the build tool rather than a layer.
 
-Branch tips, deliberately, with one exception: openembedded-core is pinned to
-`9da814ca`, the revision the kernel patches in `meta-rtl83xx-bsp` were made
-against (linux-yocto 6.18.39). Later wrynose commits update linux-yocto and the
-patches stop applying. Everything else uses the current head of its branch in
+Branch tips, deliberately: every layer uses the current head of its branch in
 every build and every CI run, and kas warns about that on every invocation. If a reproducible build is ever needed,
 `./kas-container lock kas/board/<board>.yml` writes a lock file next to the
 board file, which kas then picks up on its own; `--update` refreshes it.

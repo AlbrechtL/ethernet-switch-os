@@ -30,10 +30,6 @@ repos:
   openembedded-core:
     url: https://git.openembedded.org/openembedded-core
     path: layers/openembedded-core
-    # Pinned to the revision the kernel patches in meta-rtl83xx-bsp were made
-    # against (linux-yocto 6.18.39). Later wrynose commits move linux-yocto
-    # on, up to 6.18.48, and the patches no longer apply there.
-    commit: 9da814ca3685ada3fce46b8987f04ed3d57247b7
     layers:
       meta:
 
