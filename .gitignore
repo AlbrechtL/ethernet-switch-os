@@ -12,3 +12,5 @@
 
 # mkdocs build output
 /site/
+
+.kas_shell_history
