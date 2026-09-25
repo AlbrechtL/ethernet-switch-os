@@ -11,8 +11,8 @@ do yet, so you can decide whether it fits your use.
 
 - The users `root` and `cli` have **no password**, and passwords cannot be
   set through the configuration.
-- RESTCONF has no authentication and no TLS: anyone who reaches port 80
-  can read and change the configuration.
+- RESTCONF and the web page have no authentication and no TLS: anyone who
+  reaches port 80 can read and change the configuration.
 - The firmware update page on port 8080 has no authentication either.
 - There are no user accounts, roles or read-only access.
 

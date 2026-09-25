@@ -58,7 +58,7 @@ On the serial console (115200 8N1), the same users log in at the
 
 | URL | Content |
 |---|---|
-| `http://192.168.1.1/` | Status page: firmware version, uptime, management address, ports, VLANs. Read-only. See [Web UI](../web-ui.md). |
+| `http://192.168.1.1/` | Status and settings page: firmware version, uptime, management address, ports, VLANs, spanning tree, SNMP. See [Web UI](../web-ui.md). |
 | `http://192.168.1.1:8080/` | Firmware update (SWUpdate). See [Firmware update](firmware-update.md). |
 
 ## Next steps

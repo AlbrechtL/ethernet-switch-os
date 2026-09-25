@@ -47,7 +47,7 @@ hand when it is needed.
 | Repository | Role |
 |---|---|
 | [clixon-switch-rs](https://github.com/AlbrechtL/clixon-switch-rs) | The [clixon](https://www.clicon.org/) backend plugin, in Rust. Applies an OpenConfig configuration to the kernel: DSA ports in a VLAN-aware bridge, routed VLAN interfaces, spanning tree via mstpd, a read-only SNMPv3 agent. Built by a recipe in `meta-ethernet-switch-os`, not checked out by kas. |
-| [meta-ethernet-switch-os](https://github.com/AlbrechtL/meta-ethernet-switch-os) | The distro and the userspace: the `ethernet-switch-os` distro (poky-tiny plus sysvinit), clixon with the plugin, dropbear, SWUpdate with its two `.swu` images, and the read-only status web UI. |
+| [meta-ethernet-switch-os](https://github.com/AlbrechtL/meta-ethernet-switch-os) | The distro and the userspace: the `ethernet-switch-os` distro (poky-tiny plus sysvinit), clixon with the plugin, dropbear, SWUpdate with its two `.swu` images, and the status and settings web UI. |
 | [meta-rtl83xx-bsp](https://github.com/AlbrechtL/meta-rtl83xx-bsp) | The hardware: Realtek RTL83xx switch SoCs. Machine configurations, the patched kernel and its device trees, `rt-loader`, and the flash image types. The kernel patches (Realtek SoC support, device trees, MTD split) are taken from [OpenWrt](https://openwrt.org/) — many thanks to the OpenWrt developers for their work, without which this would not exist. Boots on its own, without the OS layer. |
 | [rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu) | Emulates an RTL838x switch, for booting and testing a built image without hardware. Frames really cross between the eight emulated front ports, so VLANs and spanning tree can be exercised. |
 
@@ -150,8 +150,8 @@ In `build/tmp/deploy/images/zyxel-gs1900-8-a1/`:
 The flash layout, the TFTP procedure and what to type at the stock bootloader
 are in [meta-rtl83xx-bsp](https://github.com/AlbrechtL/meta-rtl83xx-bsp)'s
 README. Once the switch is up: `ssh cli@192.168.1.1` for the clixon CLI,
-`http://192.168.1.1/` for the status page, `http://192.168.1.1:8080` for
-SWUpdate. The [user guide](https://albrechtl.github.io/ethernet-switch-os/)
+`http://192.168.1.1/` for the status and settings page,
+`http://192.168.1.1:8080` for SWUpdate. The [user guide](https://albrechtl.github.io/ethernet-switch-os/)
 takes it from there.
 
 ### Building the user guide

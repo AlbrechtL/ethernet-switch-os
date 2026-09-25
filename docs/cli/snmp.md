@@ -5,7 +5,7 @@
 
 The switch has a read-only **SNMPv3** agent for monitoring tools. It is
 **off** by factory default. SNMP can only read: the configuration is changed
-through the CLI or RESTCONF only.
+through the CLI, RESTCONF or the [web page](../web-ui.md#snmp) only.
 
 What it answers:
 
