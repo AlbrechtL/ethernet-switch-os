@@ -35,8 +35,16 @@ There are two user accounts. **Neither has a password.**
 
 ```text
 $ ssh cli@192.168.1.1
+
+  --- Random switch joke ---
+  The switch is on a strict diet and counts every single byte.
+  1500 bytes per meal on weekdays, jumbo frames on the weekend.
+
 switch>
 ```
+
+Every interactive login prints a random switch joke first, marked with a
+`--- Random switch joke ---` header.
 
 `quit` leaves the CLI and closes the SSH session.
 
