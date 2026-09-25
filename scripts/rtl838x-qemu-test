@@ -1,0 +1,68 @@
+#!/bin/sh
+# Smoke test of the Zyxel GS1900-8 image in rtl838x-qemu, for CI and for a
+# quick check after a build. Runs inside the kas container, as
+# scripts/rtl838x-qemu does:
+#
+#   ./kas-container --runtime-args "--network=host" \
+#       shell kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml -c /work/scripts/rtl838x-qemu-test
+#
+# Boots the initramfs image and waits until RESTCONF lists the front ports
+# lan1..lan8. There is no update test: the emulated switch has no flash.
+#
+# Uses switch 9 (ports 2312, 8090, 8170, 1251), so it does not disturb
+# switches started with scripts/rtl838x-qemu. Exits non-zero on the first
+# failure; the serial console is in build/qemu/rtl838x-switch9.log.
+
+set -eu
+
+here=$(cd "$(dirname "$0")" && pwd)
+BUILDDIR=${BUILDDIR:-$here/../build}
+LOG=$BUILDDIR/qemu/rtl838x-switch9.log
+HTTP=http://127.0.0.1:8090
+
+mkdir -p "$BUILDDIR/qemu"
+rm -f "$LOG"
+
+SWITCH=9 LOG="$LOG" "$here/rtl838x-qemu" &
+qemu=$!
+trap 'kill $qemu 2>/dev/null || true' EXIT INT TERM
+
+fail() {
+    echo "FAIL: $*" >&2
+    echo "--- serial console (last 60 lines) ---" >&2
+    tail -n 60 "$LOG" >&2 || true
+    exit 1
+}
+
+# Waits up to $1 seconds for $2 to appear in the serial console.
+wait_log() {
+    t=0
+    while ! grep -q "$2" "$LOG" 2>/dev/null; do
+        kill -0 $qemu 2>/dev/null || fail "QEMU exited while waiting for '$2'"
+        [ $t -lt "$1" ] || fail "no '$2' after $1 s"
+        sleep 2
+        t=$((t + 2))
+    done
+}
+
+# Waits up to $1 seconds until RESTCONF lists lan1..lan8.
+wait_restconf() {
+    t=0
+    while :; do
+        ports=$(curl -sf -H 'Accept: application/yang-data+json' \
+            "$HTTP/restconf/data/openconfig-interfaces:interfaces" 2>/dev/null |
+            grep -o '"lan[1-8]"' | sort -u | wc -l) || ports=0
+        [ "$ports" -ge 8 ] && return 0
+        kill -0 $qemu 2>/dev/null || fail "QEMU exited while waiting for RESTCONF"
+        [ $t -lt "$1" ] || fail "RESTCONF does not list lan1..lan8 after $1 s"
+        sleep 5
+        t=$((t + 5))
+    done
+}
+
+echo "== boot"
+wait_log 300 'login:'
+wait_restconf 300
+echo "ok: switch up, lan1..lan8 in RESTCONF"
+
+echo "PASS"

@@ -23,6 +23,11 @@ jobs:
       matrix:
         # One job per file in kas/board/.
         board: [zyxel-gs1900-8-a1, albrecht-rtl8382mi-test, qemux86-64-switch]
+        # kas/opt fragments a board is built with on top of kas/opt/ci.yml.
+        # The GS1900-8 also gets its emulator, to boot the image below.
+        include:
+          - board: zyxel-gs1900-8-a1
+            opt: ":kas/opt/rtl838x-qemu.yml"
     # A cold build is a full toolchain, kernel and Rust cross-compile; the
     # 6 hour job limit is the real ceiling.
     timeout-minutes: 350
@@ -86,7 +91,7 @@ jobs:
             yocto-${{ matrix.board }}-
 
       - name: Build
-        run: ./kas-container build kas/board/${{ matrix.board }}.yml:kas/opt/ci.yml
+        run: ./kas-container build kas/board/${{ matrix.board }}.yml:kas/opt/ci.yml${{ matrix.opt }}
 
       # The deliverables, exactly the files the board file lists under
       # "artifacts:" (the .swu packages, and boot or disk images), under their
@@ -117,6 +122,14 @@ jobs:
           sudo udevadm trigger --name-match=kvm
           ./kas-container --kvm --runtime-args "--network=host" \
             shell kas/board/${{ matrix.board }}.yml:kas/opt/ci.yml -c /work/scripts/qemu-switch-test
+
+      # The GS1900-8 image in rtl838x-qemu: boot it and check that RESTCONF
+      # lists all eight ports. No KVM, the emulated CPU is a MIPS.
+      - name: Boot test in rtl838x-qemu
+        if: success() && matrix.board == 'zyxel-gs1900-8-a1'
+        run: |
+          ./kas-container --runtime-args "--network=host" \
+            shell kas/board/${{ matrix.board }}.yml:kas/opt/ci.yml${{ matrix.opt }} -c /work/scripts/rtl838x-qemu-test
 
       - uses: actions/upload-artifact@v4
         if: success()

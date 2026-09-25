@@ -42,8 +42,8 @@ It holds [kas](https://kas.readthedocs.io/) configuration files that describe,
 per board, which Yocto layers to check out and how to configure them — so that
 a build needs nothing on the host but Docker, git and a POSIX shell. The
 interesting parts live in repositories of their own. kas checks the layers out
-under `layers/`; `rtl838x-qemu` is a separate tool and is cloned by hand when
-it is needed.
+under `layers/`; `rtl838x-qemu` is not a layer and is built by a recipe in
+`meta-rtl83xx-bsp` when it is needed.
 
 | Repository | Role |
 |---|---|
@@ -52,7 +52,7 @@ it is needed.
 | [meta-rtl83xx-bsp](https://github.com/AlbrechtL/meta-rtl83xx-bsp) | The hardware: Realtek RTL83xx switch SoCs. Machine configurations, the patched kernel and its device trees, `rt-loader`, and the flash image types. The kernel patches (Realtek SoC support, device trees, MTD split) are taken from [OpenWrt](https://openwrt.org/) — many thanks to the OpenWrt developers for their work, without which this would not exist. Boots on its own, without the OS layer. |
 | [meta-rpi-managed-switch-bsp](https://github.com/AlbrechtL/meta-rpi-managed-switch-bsp) | The hardware: the [4-port managed switch HAT](https://github.com/AlbrechtL/rpi-managed-switch-4-port) for the Raspberry Pi, on top of [meta-raspberrypi](https://git.yoctoproject.org/meta-raspberrypi). Machine configurations, the kernel with the switch's device tree overlay and OpenWrt's rtl8365mb backports, and an A/B SD card image with U-Boot. Ported from [its OpenWrt branch](https://github.com/AlbrechtL/openwrt/tree/rpi_managed_switch). Boots on its own, without the OS layer. |
 | [meta-qemu-switch-bsp](https://github.com/AlbrechtL/meta-qemu-switch-bsp) | The hardware: an 8 port switch emulated on QEMU x86-64, on top of oe-core's `qemux86-64` machine. UEFI (OVMF) with [EFI Boot Guard](https://github.com/siemens/efibootguard) from [meta-efibootguard](https://github.com/siemens/meta-efibootguard), virtio-net front ports, and an A/B disk image. Boots on its own, without the OS layer. |
-| [rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu) | Emulates an RTL838x switch, for booting and testing a built image without hardware. Frames really cross between the eight emulated front ports, so VLANs and spanning tree can be exercised. |
+| [rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu) | Emulates an RTL838x switch, for booting and testing a built image without hardware. Frames really cross between the eight emulated front ports, so VLANs and spanning tree can be exercised. Built by `qemu-rtl838x-native` in `meta-rtl83xx-bsp` (see [rtl838x-qemu](#rtl838x-qemu)), not checked out by kas. |
 
 ## Requirements
 
@@ -268,20 +268,23 @@ README.
 ### rtl838x-qemu
 
 ```sh
-git clone --recurse-submodules https://github.com/AlbrechtL/rtl838x-qemu
-cd rtl838x-qemu
-./rtl838x.sh build
-./rtl838x.sh run ../ethernet-switch-os/build/tmp/deploy/images/zyxel-gs1900-8-a1/ethernet-switch-os-initramfs-zyxel-gs1900-8-a1.bin
+./kas-container build kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml
+./kas-container --runtime-args "--network=host" \
+    shell kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml -c /work/scripts/rtl838x-qemu
 ```
 
-That is the TFTP boot image, uImage header and all: the machine parses the
-header the same way the stock bootloader does, so `rt-loader` runs exactly as
-it does on the real switch.
+`kas/opt/rtl838x-qemu.yml` adds `qemu-rtl838x-native` from meta-rtl83xx-bsp to
+the build: QEMU with [rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu)'s
+models, at the QEMU version rtl838x-qemu pins. `scripts/rtl838x-qemu` boots the
+TFTP boot image with it, uImage header and all: the machine parses the header
+the same way the stock bootloader does, so `rt-loader` runs exactly as it does
+on the real switch.
 
-`rtl838x-qemu` runs QEMU in its own container and takes the image as its first
-argument, so it is kept outside kas. The development container has a Docker
-client for driving it from inside; the devcontainer mounts the socket for
-that.
+The ports, `SWITCH`, `CABLES` and `ADDRESS` work as for the QEMU x86-64
+switch, and lan1 also forwards SNMP to UDP 1161+10N. There is no flash, so
+every boot starts from the factory settings and `reboot` ends QEMU.
+`scripts/rtl838x-qemu-test` boots the image and checks that RESTCONF lists
+all eight ports -- what CI runs.
 
 ## Layers
 

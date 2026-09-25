@@ -1,0 +1,21 @@
+# Also build rtl838x-qemu, the emulated Zyxel GS1900-8, and boot the image in
+# it. Only for kas/board/zyxel-gs1900-8-a1.yml -- the emulator models that
+# board, its eight ports and its device tree:
+#
+#   ./kas-container build kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml
+#   ./kas-container --runtime-args "--network=host" \
+#       shell kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml -c /work/scripts/rtl838x-qemu
+#
+# The emulator is QEMU with rtl838x-qemu's models, built by
+# qemu-rtl838x-native in meta-rtl83xx-bsp. It is not part of the board file
+# so that a build for the real switch does not compile QEMU.
+#
+# kas replaces lists instead of merging them, so this repeats the board's
+# targets; keep the two in step.
+header:
+  version: 23
+
+target:
+  - ethernet-switch-os-swu-factory
+  - ethernet-switch-os-swu-upgrade
+  - rtl838x-qemu-helper-native

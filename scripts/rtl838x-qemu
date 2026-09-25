@@ -1,0 +1,143 @@
+#!/bin/sh
+# Boots the Zyxel GS1900-8 image in rtl838x-qemu, the emulated RTL8380 switch,
+# from the build directory. Meant to run inside the kas container, which has
+# the bitbake-built emulator at hand:
+#
+#   ./kas-container build kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml
+#   ./kas-container --runtime-args "--network=host" \
+#       shell kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml -c /work/scripts/rtl838x-qemu
+#
+# --network=host puts the forwarded ports below on the host's 127.0.0.1 and
+# lets switches started from different containers reach each other. The
+# serial console is the terminal; Ctrl-a x quits QEMU.
+#
+# The emulated switch has no flash: it boots the initramfs image, every boot
+# starts from the factory settings, and "reboot" ends QEMU.
+#
+# Environment:
+#   SWITCH=N     which switch, 0..9 (default 0). Picks the ports below.
+#   CABLES=...   space separated cables between front ports lan2..lan8 of
+#                switches started with this script, e.g. "0:2-1:2 0:3-1:3"
+#                connects lan2 and lan3 of switch 0 to lan2 and lan3 of
+#                switch 1. Every switch of the setup needs the same CABLES.
+#   ADDRESS=IP   the switch address the forwarded ports below go to.
+#                Default: the factory address 192.168.1.1, or 192.168.1.N+1
+#                for a switch that is cabled to another one (see below).
+#   LOG=FILE     serial console into FILE instead of the terminal, no
+#                interaction (for scripts and CI).
+#
+# Front ports, the same scheme as scripts/qemu-switch:
+#   lan1         QEMU user networking (slirp) as the management network:
+#                192.168.1.0/24 with the host (gateway) at .254-N and a DNS
+#                server at .244-N, ADDRESS forwarded to 127.0.0.1 on the
+#                host:
+#                  ssh      2222 + 10*N
+#                  http     8000 + 10*N   (status page, RESTCONF)
+#                  SWUpdate 8080 + 10*N
+#                  SNMP     1161 + 10*N   (UDP)
+#                The slirp DHCP server hands out 192.168.1.100+10*N and up.
+#   lan2..lan8   UDP sockets on 127.0.0.1, port 20000 + 100*N + port number;
+#                one front port of another switch at the other end, or
+#                nothing (link up, frames go nowhere).
+#
+# Cabled switches share VLAN 1, lan1 and its user network included, so they
+# cannot all keep the factory address: the forwarded ports would reach
+# whichever switch answers the ARP first. A cabled switch N therefore
+# forwards to 192.168.1.N+1, which it has to be given on its serial console
+# after every boot -- without flash it forgets it (see
+# docs/getting-started/qemu.md). For the same reason every switch's user
+# network has addresses of its own: slirp derives its MAC addresses from
+# them, and two slirps answering for the same address on one VLAN would
+# take each other's traffic.
+
+set -eu
+
+SWITCH=${SWITCH:-0}
+CABLES=${CABLES:-}
+LOG=${LOG:-}
+
+case "$SWITCH" in
+    [0-9]) ;;
+    *) echo "SWITCH must be 0..9" >&2; exit 1 ;;
+esac
+
+BUILDDIR=${BUILDDIR:-$(cd "$(dirname "$0")/.." && pwd)/build}
+MACHINE=zyxel-gs1900-8-a1
+KAS_FILES=kas/board/$MACHINE.yml:kas/opt/rtl838x-qemu.yml
+IMAGE=$BUILDDIR/tmp/deploy/images/$MACHINE/ethernet-switch-os-initramfs-$MACHINE.bin
+
+QEMU=$(ls "$BUILDDIR"/tmp/work/x86_64-linux/rtl838x-qemu-helper-native/*/recipe-sysroot-native/usr/bin/qemu-system-mips-rtl838x 2>/dev/null | head -n 1)
+if [ -z "$QEMU" ]; then
+    echo "no qemu-system-mips-rtl838x in $BUILDDIR -- build $KAS_FILES first" >&2
+    exit 1
+fi
+if [ ! -e "$IMAGE" ]; then
+    echo "$IMAGE is missing -- build $KAS_FILES first" >&2
+    exit 1
+fi
+
+# UDP port of front port $2 (2..8) of switch $1.
+port() {
+    echo $((20000 + 100 * $1 + $2))
+}
+
+# The UDP port the other end of front port $1 of this switch listens on, from
+# CABLES. Unconnected ports send to a port nobody listens on.
+peer() {
+    for cable in $CABLES; do
+        a=${cable%-*}
+        b=${cable#*-}
+        if [ "$a" = "$SWITCH:$1" ]; then
+            port "${b%:*}" "${b#*:}"
+            return
+        fi
+        if [ "$b" = "$SWITCH:$1" ]; then
+            port "${a%:*}" "${a#*:}"
+            return
+        fi
+    done
+    echo $((30000 + 100 * SWITCH + $1))
+}
+
+cabled=
+for cable in $CABLES; do
+    case "$cable" in
+        "$SWITCH":*|*-"$SWITCH":*) cabled=1 ;;
+    esac
+done
+if [ -n "$cabled" ]; then
+    ADDRESS=${ADDRESS:-192.168.1.$((SWITCH + 1))}
+else
+    ADDRESS=${ADDRESS:-192.168.1.1}
+fi
+
+ssh_port=$((2222 + 10 * SWITCH))
+http_port=$((8000 + 10 * SWITCH))
+swupdate_port=$((8080 + 10 * SWITCH))
+snmp_port=$((1161 + 10 * SWITCH))
+
+# The front ports claim the NICs in the order they are given: the first is
+# lan1, the second lan2 and so on. -netdev plus "-net nic" rather than -nic,
+# which cannot take dgram's dotted options.
+set -- \
+    -netdev "user,id=lan1,net=192.168.1.0/24,host=192.168.1.$((254 - SWITCH)),dns=192.168.1.$((244 - SWITCH)),dhcpstart=192.168.1.$((100 + 10 * SWITCH)),hostfwd=tcp:127.0.0.1:$ssh_port-$ADDRESS:22,hostfwd=tcp:127.0.0.1:$http_port-$ADDRESS:80,hostfwd=tcp:127.0.0.1:$swupdate_port-$ADDRESS:8080,hostfwd=udp:127.0.0.1:$snmp_port-$ADDRESS:161" \
+    -net nic,netdev=lan1
+for n in 2 3 4 5 6 7 8; do
+    set -- "$@" \
+        -netdev "dgram,id=lan$n,local.type=inet,local.host=127.0.0.1,local.port=$(port "$SWITCH" $n),remote.type=inet,remote.host=127.0.0.1,remote.port=$(peer $n)" \
+        -net nic,netdev=lan$n
+done
+
+if [ -n "$LOG" ]; then
+    set -- "$@" -display none -monitor none -serial "file:$LOG"
+else
+    set -- "$@" -nographic
+fi
+
+echo "switch $SWITCH: $ADDRESS forwarded: ssh -p $ssh_port cli@127.0.0.1, http://127.0.0.1:$http_port/, SWUpdate http://127.0.0.1:$swupdate_port/, SNMP udp 127.0.0.1:$snmp_port"
+
+exec "$QEMU" \
+    -name "rtl838x-switch$SWITCH" \
+    -M rtl838x -m 128 -no-reboot \
+    -kernel "$IMAGE" \
+    "$@"
