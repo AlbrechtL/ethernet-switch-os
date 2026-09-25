@@ -17,7 +17,7 @@ Both work in any current browser and need no login.
 
 ## Status page
 
-![The status page of a switch with a DHCP lease](assets/status-page.png)
+![The status page of a switch with VLANs, spanning tree, SNMP and a DHCP lease](assets/status-page.png)
 
 The status page shows the state of the switch at a glance. Its **Edit**,
 **Add** and **Delete** buttons change the configuration, see
@@ -115,6 +115,8 @@ refuses the change, the dialog stays open and shows why, for example
     you off.
 
 The page does not update itself while a dialog is open.
+
+![The dialog of a trunk port](assets/web-ui-port-dialog.png)
 
 | Where | What you can change |
 |---|---|
