@@ -13,9 +13,8 @@ virtual network cards. Its board name is `qemux86-64-switch`. Unlike the
   [firmware updates](../maintenance.md#firmware-update) work as they will
   on hardware that has two slots.
 
-!!! warning "Experimental"
-    The QEMU x86-64 switch is new. Use it for trying things out and for
-    testing, not as a production switch.
+!!! note "Tested on"
+    This guide was tested on Ubuntu 26.04.
 
 ## 1. Install QEMU
 
@@ -29,21 +28,8 @@ The switch boots with UEFI; OVMF is the UEFI firmware for QEMU. The
 package puts it into `/usr/share/OVMF/`.
 
 For full speed, QEMU needs access to KVM, the virtualization in the Linux
-kernel. Check it with:
-
-```sh
-ls -l /dev/kvm
-```
-
-If only root and the `kvm` group may open it, add yourself to the group
-and log in again:
-
-```sh
-sudo usermod -aG kvm $USER
-```
-
-Without KVM the switch still runs, but slowly: it takes about a minute to
-boot. See [without KVM](#without-kvm).
+kernel. Without KVM the switch still runs, but slowly: it takes about a
+minute to boot. See [without KVM](#without-kvm).
 
 ## 2. Download the image
 
@@ -249,17 +235,6 @@ firmware on the next start, and your configuration is still there.
 
 Which slot is running is shown by `cat /proc/cmdline` in a root shell:
 `root=/dev/vda4` is slot A, `root=/dev/vda5` slot B.
-
-## What is different from a real switch
-
-| | QEMU x86-64 switch |
-|---|---|
-| Hardware | A virtual PC. The ports are handled by the Linux bridge in software; nothing is offloaded to a switch chip. |
-| Firmware | Its own image. Firmware for another board is refused, and its firmware does not work on real switches. |
-| Firmware slots | Two (A/B), with rollback. The Zyxel GS1900-8 has one. |
-| Ports `lan2` … `lan8` | Always show a link, even without a cable. Frames sent there without a cable are lost. |
-| Port speed | Reported by the virtual network card, not a real Gigabit link. |
-| First installation | None needed: the downloaded disk is ready to boot. |
 
 ## With a firmware build of your own
 
