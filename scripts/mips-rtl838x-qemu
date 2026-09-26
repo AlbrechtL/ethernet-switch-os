@@ -11,8 +11,13 @@
 # lets switches started from different containers reach each other. The
 # serial console is the terminal; Ctrl-a x quits QEMU.
 #
-# The emulated switch has no flash: it boots the initramfs image, every boot
-# starts from the factory settings, and "reboot" ends QEMU.
+# It always boots the firmware the last build left in build/tmp/deploy: it
+# lays the firmware partition out in a flash image the way a factory install
+# does, and QEMU boots it from there as the switch's bootloader would. QEMU's
+# -snapshot keeps every write to the flash, the saved configuration and
+# firmware updates included, in a temporary file that goes away with QEMU, so
+# every start is the factory state of the latest build. A reboot, after a
+# firmware update too, does not restart QEMU and so keeps them.
 #
 # Environment:
 #   SWITCH=N     which switch, 0..9 (default 0). Picks the ports below.
@@ -44,11 +49,11 @@
 # cannot all keep the factory address: the forwarded ports would reach
 # whichever switch answers the ARP first. A cabled switch N therefore
 # forwards to 192.168.1.N+1, which it has to be given on its serial console
-# after every boot -- without flash it forgets it (see
-# docs/installation/zyxel-gs1900-8.md). For the same reason every switch's user
-# network has addresses of its own: slirp derives its MAC addresses from
-# them, and two slirps answering for the same address on one VLAN would
-# take each other's traffic.
+# after every start (see docs/installation/zyxel-gs1900-8.md), because it
+# forgets it on the next. For the same reason every switch's user network has
+# addresses of its own: slirp derives its MAC addresses from them, and two
+# slirps answering for the same address on one VLAN would take each other's
+# traffic.
 
 set -eu
 
@@ -64,17 +69,34 @@ esac
 BUILDDIR=${BUILDDIR:-$(cd "$(dirname "$0")/.." && pwd)/build}
 MACHINE=zyxel-gs1900-8-a1
 KAS_FILES=kas/board/$MACHINE.yml:kas/opt/rtl838x-qemu.yml
-IMAGE=$BUILDDIR/tmp/deploy/images/$MACHINE/ethernet-switch-os-initramfs-$MACHINE.bin
+DEPLOY=$BUILDDIR/tmp/deploy/images/$MACHINE
+FIRMWARE=$DEPLOY/rtl83xx-image-$MACHINE.rootfs.rtl83xx-fw
+DATA=$DEPLOY/rtl83xx-image-$MACHINE.rootfs.rtl83xx-data
+FLASH=$BUILDDIR/qemu/rtl838x-switch$SWITCH-flash.bin
 
 QEMU=$(ls "$BUILDDIR"/tmp/work/x86_64-linux/rtl838x-qemu-helper-native/*/recipe-sysroot-native/usr/bin/qemu-system-mips-rtl838x 2>/dev/null | head -n 1)
 if [ -z "$QEMU" ]; then
     echo "no qemu-system-mips-rtl838x in $BUILDDIR -- build $KAS_FILES first" >&2
     exit 1
 fi
-if [ ! -e "$IMAGE" ]; then
-    echo "$IMAGE is missing -- build $KAS_FILES first" >&2
-    exit 1
-fi
+for f in "$FIRMWARE" "$DATA"; do
+    if [ ! -e "$f" ]; then
+        echo "$f is missing -- build $KAS_FILES first" >&2
+        exit 1
+    fi
+done
+
+echo "switch $SWITCH: booting $(readlink -f "$FIRMWARE")"
+
+# The 16 MiB SPI-NOR as a factory install leaves it (partition map in
+# meta-rtl83xx-bsp's zyxel-gs1900-8-a1.conf): erased, an empty JFFS2 in
+# "data" at 0x60000 and the firmware in "firmware" at 0x260000, where the
+# emulator boots from. Written anew on every start, one per switch, so that
+# switches running at the same time do not share one.
+mkdir -p "$(dirname "$FLASH")"
+tr '\000' '\377' < /dev/zero | head -c 16M > "$FLASH"
+dd if="$DATA" of="$FLASH" bs=64k seek=$((0x60000 / 0x10000)) conv=notrunc status=none
+dd if="$FIRMWARE" of="$FLASH" bs=64k seek=$((0x260000 / 0x10000)) conv=notrunc status=none
 
 # UDP port of front port $2 (2..8) of switch $1.
 port() {
@@ -136,8 +158,11 @@ fi
 
 echo "switch $SWITCH: $ADDRESS forwarded: ssh -p $ssh_port cli@127.0.0.1, http://127.0.0.1:$http_port/, SWUpdate http://127.0.0.1:$swupdate_port/, SNMP udp 127.0.0.1:$snmp_port"
 
+# A reboot resets the machine, which boots the flash again; the watchdog does
+# the same when the switch hangs.
 exec "$QEMU" \
     -name "rtl838x-switch$SWITCH" \
-    -M rtl838x -m 128 -no-reboot \
-    -kernel "$IMAGE" \
+    -M rtl838x -m 128 \
+    -drive "if=mtd,format=raw,file=$FLASH" \
+    -snapshot \
     "$@"

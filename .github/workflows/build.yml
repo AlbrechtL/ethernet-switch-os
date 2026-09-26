@@ -125,8 +125,9 @@ jobs:
           ./kas-container --kvm --runtime-args "--network=host" \
             shell kas/board/${{ matrix.board }}.yml:kas/opt/ci.yml -c /work/scripts/x86-64-q35-qemu-test
 
-      # The GS1900-8 image in rtl838x-qemu: boot it and check that RESTCONF
-      # lists all eight ports. No KVM, the emulated CPU is a MIPS.
+      # The GS1900-8 firmware in rtl838x-qemu: boot it from the emulated
+      # flash, check that RESTCONF lists all eight ports, then update it with
+      # the .swu and check again. No KVM, the emulated CPU is a MIPS.
       - name: Boot test in rtl838x-qemu
         if: success() && matrix.board == 'zyxel-gs1900-8-a1'
         run: |

@@ -6,8 +6,11 @@
 #   ./kas-container --runtime-args "--network=host" \
 #       shell kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml -c /work/scripts/mips-rtl838x-qemu-test
 #
-# Boots the initramfs image and waits until RESTCONF lists the front ports
-# lan1..lan8. There is no update test: the emulated switch has no flash.
+# 1. Boots the built firmware from the emulated flash and waits until
+#    RESTCONF lists the front ports lan1..lan8.
+# 2. Uploads the built upgrade .swu to SWUpdate, which rewrites the firmware
+#    partition and reboots.
+# 3. Waits until the switch has booted again from flash and RESTCONF answers.
 #
 # Uses switch 9 (ports 2312, 8090, 8170, 1251), so it does not disturb
 # switches started with scripts/mips-rtl838x-qemu. Exits non-zero on the first
@@ -17,8 +20,11 @@ set -eu
 
 here=$(cd "$(dirname "$0")" && pwd)
 BUILDDIR=${BUILDDIR:-$here/../build}
+MACHINE=zyxel-gs1900-8-a1
+SWU=$BUILDDIR/tmp/deploy/images/$MACHINE/ethernet-switch-os-swu-upgrade-$MACHINE.swu
 LOG=$BUILDDIR/qemu/rtl838x-switch9.log
 HTTP=http://127.0.0.1:8090
+SWUPDATE=http://127.0.0.1:8170
 
 mkdir -p "$BUILDDIR/qemu"
 rm -f "$LOG"
@@ -45,6 +51,17 @@ wait_log() {
     done
 }
 
+# Waits up to $1 seconds until the serial console shows $2 boots.
+wait_boots() {
+    t=0
+    while [ "$(grep -c 'Kernel command line' "$LOG" 2>/dev/null)" -lt "$2" ]; do
+        kill -0 $qemu 2>/dev/null || fail "QEMU exited while waiting for boot $2"
+        [ $t -lt "$1" ] || fail "no boot $2 after $1 s"
+        sleep 2
+        t=$((t + 2))
+    done
+}
+
 # Waits up to $1 seconds until RESTCONF lists lan1..lan8.
 wait_restconf() {
     t=0
@@ -60,9 +77,17 @@ wait_restconf() {
     done
 }
 
-echo "== boot"
+echo "== boot from flash"
 wait_log 300 'login:'
 wait_restconf 300
 echo "ok: switch up, lan1..lan8 in RESTCONF"
+
+echo "== update"
+[ -e "$SWU" ] || fail "$SWU missing"
+curl -sf -F "file=@$SWU" "$SWUPDATE/upload" >/dev/null || fail "upload of $SWU failed"
+wait_log 600 'SWUPDATE successful'
+wait_boots 120 2
+wait_restconf 300
+echo "ok: updated firmware booted from flash, lan1..lan8 in RESTCONF"
 
 echo "PASS"

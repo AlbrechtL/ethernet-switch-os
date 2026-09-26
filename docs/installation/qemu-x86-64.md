@@ -7,8 +7,7 @@ virtual network cards. Its board name is `qemux86-64-switch`. Unlike the
 
 - runs in the standard QEMU of your Linux distribution, so nothing has to
   be compiled,
-- boots in seconds, because it runs at full speed with KVM,
-- keeps its configuration on a virtual disk, and
+- boots in seconds, because it runs at full speed with KVM, and
 - has two firmware slots (A/B) with automatic rollback, so
   [firmware updates](../maintenance.md#firmware-update) work as they will
   on hardware that has two slots.
