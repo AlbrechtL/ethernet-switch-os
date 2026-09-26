@@ -42,3 +42,10 @@ artifacts:
   disk: build/tmp/deploy/images/qemux86-64-switch/qemu-switch-image-qemux86-64-switch.rootfs.wic
   disk-bmap: build/tmp/deploy/images/qemux86-64-switch/qemu-switch-image-qemux86-64-switch.rootfs.wic.bmap
   swu-upgrade: build/tmp/deploy/images/qemux86-64-switch/ethernet-switch-os-swu-upgrade-qemux86-64-switch.swu
+  # Published with the images: the SPDX SBOM of the root filesystem, the
+  # open-source licenses, and the YANG modules and SNMP MIBs the switch
+  # serves.
+  sbom: build/tmp/deploy/images/qemux86-64-switch/qemu-switch-image-qemux86-64-switch.rootfs.spdx.json
+  licenses: build/tmp/deploy/images/qemux86-64-switch/ethernet-switch-os-licenses-qemux86-64-switch.tar.gz
+  yang: build/tmp/deploy/images/qemux86-64-switch/ethernet-switch-os-yang-qemux86-64-switch.tar.gz
+  mibs: build/tmp/deploy/images/qemux86-64-switch/ethernet-switch-os-mibs-qemux86-64-switch.tar.gz

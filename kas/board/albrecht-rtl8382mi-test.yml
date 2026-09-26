@@ -24,3 +24,11 @@ artifacts:
   swu-upgrade: build/tmp/deploy/images/albrecht-rtl8382mi-test/ethernet-switch-os-swu-upgrade-albrecht-rtl8382mi-test.swu
   initramfs: build/tmp/deploy/images/albrecht-rtl8382mi-test/ethernet-switch-os-initramfs-albrecht-rtl8382mi-test.bin
   initramfs-rt-loader: build/tmp/deploy/images/albrecht-rtl8382mi-test/ethernet-switch-os-initramfs-albrecht-rtl8382mi-test-rt-loader.bin
+  # Published with the images: the SPDX SBOMs of the root filesystem and of
+  # the initramfs bundled into the kernel, the open-source licenses, and the
+  # YANG modules and SNMP MIBs the switch serves.
+  sbom: build/tmp/deploy/images/albrecht-rtl8382mi-test/rtl83xx-image-albrecht-rtl8382mi-test.rootfs.spdx.json
+  sbom-initramfs: build/tmp/deploy/images/albrecht-rtl8382mi-test/rtl83xx-image-initramfs-albrecht-rtl8382mi-test.spdx.json
+  licenses: build/tmp/deploy/images/albrecht-rtl8382mi-test/ethernet-switch-os-licenses-albrecht-rtl8382mi-test.tar.gz
+  yang: build/tmp/deploy/images/albrecht-rtl8382mi-test/ethernet-switch-os-yang-albrecht-rtl8382mi-test.tar.gz
+  mibs: build/tmp/deploy/images/albrecht-rtl8382mi-test/ethernet-switch-os-mibs-albrecht-rtl8382mi-test.tar.gz

@@ -27,3 +27,11 @@ artifacts:
   swu-upgrade: build/tmp/deploy/images/zyxel-gs1900-8-a1/ethernet-switch-os-swu-upgrade-zyxel-gs1900-8-a1.swu
   initramfs: build/tmp/deploy/images/zyxel-gs1900-8-a1/ethernet-switch-os-initramfs-zyxel-gs1900-8-a1.bin
   initramfs-rt-loader: build/tmp/deploy/images/zyxel-gs1900-8-a1/ethernet-switch-os-initramfs-zyxel-gs1900-8-a1-rt-loader.bin
+  # Published with the images: the SPDX SBOMs of the root filesystem and of
+  # the initramfs bundled into the kernel, the open-source licenses, and the
+  # YANG modules and SNMP MIBs the switch serves.
+  sbom: build/tmp/deploy/images/zyxel-gs1900-8-a1/rtl83xx-image-zyxel-gs1900-8-a1.rootfs.spdx.json
+  sbom-initramfs: build/tmp/deploy/images/zyxel-gs1900-8-a1/rtl83xx-image-initramfs-zyxel-gs1900-8-a1.spdx.json
+  licenses: build/tmp/deploy/images/zyxel-gs1900-8-a1/ethernet-switch-os-licenses-zyxel-gs1900-8-a1.tar.gz
+  yang: build/tmp/deploy/images/zyxel-gs1900-8-a1/ethernet-switch-os-yang-zyxel-gs1900-8-a1.tar.gz
+  mibs: build/tmp/deploy/images/zyxel-gs1900-8-a1/ethernet-switch-os-mibs-zyxel-gs1900-8-a1.tar.gz

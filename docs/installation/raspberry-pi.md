@@ -5,9 +5,8 @@ The Raspberry Pi Zero with the
 (experimental) has 4 Gigabit Ethernet ports on a Realtek RTL8367S switch
 chip. Its board name is `rpi-managed-switch-rpi0`.
 
-!!! note "Not built by CI"
-    There is no [download](download.md) for this board. Build the image
-    yourself, see [Building the firmware](../development/building.md).
+The images are in the `ethernet-switch-os-rpi-managed-switch-rpi0`
+[download](download.md), or [build them yourself](../development/building.md).
 
 ## First installation
 

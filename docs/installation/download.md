@@ -29,9 +29,7 @@ left.
 | `ethernet-switch-os-zyxel-gs1900-8-a1` | [Zyxel GS1900-8](zyxel-gs1900-8.md) (rev A1) |
 | `ethernet-switch-os-albrecht-rtl8382mi-test` | [Albrecht RTL8382MI test switch](albrecht-rtl8382mi-test.md) |
 | `ethernet-switch-os-qemux86-64-switch` | [QEMU x86-64 switch](qemu-x86-64.md) |
-
-The [Raspberry Pi switch](raspberry-pi.md) is not built by CI. Its image
-has to be [built yourself](../development/building.md).
+| `ethernet-switch-os-rpi-managed-switch-rpi0` | [Raspberry Pi switch](raspberry-pi.md) |
 
 ## Files
 
@@ -45,6 +43,7 @@ in the artifact's name:
 | `ethernet-switch-os-swu-factory-<board>.swu` | Zyxel, Albrecht test switch | First installation. Uploaded while the TFTP image runs. Writes the firmware and **erases** the configuration partition. |
 | `ethernet-switch-os-swu-upgrade-<board>.swu` | All | [Update](../maintenance.md#firmware-update) of an installed switch. Writes the firmware and **keeps** the configuration. |
 | `qemu-switch-image-<board>.rootfs.wic`, `.wic.bmap` | QEMU x86-64 switch | The virtual disk. |
+| `rpi-switch-image-<board>.rootfs.wic.bz2`, `.wic.bmap` | Raspberry Pi switch | The SD card image, for the first installation. |
 
 Next to the images, every artifact describes the firmware it contains:
 

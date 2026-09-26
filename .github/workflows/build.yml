@@ -22,7 +22,8 @@ jobs:
       fail-fast: false
       matrix:
         # One job per file in kas/board/.
-        board: [zyxel-gs1900-8-a1, albrecht-rtl8382mi-test, qemux86-64-switch]
+        board: [zyxel-gs1900-8-a1, albrecht-rtl8382mi-test, qemux86-64-switch,
+                rpi-managed-switch-rpi0]
         # kas/opt fragments a board is built with on top of kas/opt/ci.yml.
         # The GS1900-8 also gets its emulator, to boot the image below.
         include:
@@ -94,9 +95,10 @@ jobs:
         run: ./kas-container build kas/board/${{ matrix.board }}.yml:kas/opt/ci.yml${{ matrix.opt }}
 
       # The deliverables, exactly the files the board file lists under
-      # "artifacts:" (the .swu packages, and boot or disk images), under their
-      # stable symlink names. The paths there are relative to the checkout,
-      # with the build directory as build/; here it is $KAS_BUILD_DIR. cp -L
+      # "artifacts:" (the .swu packages, and boot or disk images, and with them
+      # the SBOM, license, YANG and MIB archives), under their stable symlink
+      # names. The paths there are relative to the checkout, with the build
+      # directory as build/; here it is $KAS_BUILD_DIR. cp -L
       # because they are symlinks into the same directory and upload-artifact
       # would otherwise store dangling links. yq is on the runner image.
       - name: Collect images
