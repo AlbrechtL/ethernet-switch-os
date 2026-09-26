@@ -129,8 +129,10 @@ For the Zyxel GS1900-8, in `build/tmp/deploy/images/zyxel-gs1900-8-a1/`:
 | `ethernet-switch-os-swu-upgrade-zyxel-gs1900-8-a1.swu` | Update in place. Rewrites `firmware`, keeps user data. |
 
 The flash layout, the TFTP procedure and what to type at the stock bootloader
-are in [meta-rtl83xx-bsp](https://github.com/AlbrechtL/meta-rtl83xx-bsp)'s
-README and summarized in [Installation](../installation/zyxel-gs1900-8.md#real-switch).
+are in [Installation](../installation/zyxel-gs1900-8.md#real-switch). How the
+images are put together is in the
+[TECHNICAL.md](https://github.com/AlbrechtL/meta-rtl83xx-bsp/blob/master/TECHNICAL.md)
+of meta-rtl83xx-bsp.
 
 The Raspberry Pi switch is different: its board builds an SD card image,
 `rpi-switch-image-rpi-managed-switch-rpi0.rootfs.wic.bz2` with its
@@ -138,8 +140,8 @@ The Raspberry Pi switch is different: its board builds an SD card image,
 `ethernet-switch-os-swu-upgrade-rpi-managed-switch-rpi0.swu` for updates.
 There is no factory `.swu` and no TFTP image. The SD card layout and the A/B
 update are in
-[meta-rpi-managed-switch-bsp](https://github.com/AlbrechtL/meta-rpi-managed-switch-bsp)'s
-README. Once the switch is up: `ssh cli@192.168.1.1` for the CLI,
+[Raspberry Pi switch](../installation/raspberry-pi.md#sd-card-layout-and-ab-boot).
+Once the switch is up: `ssh cli@192.168.1.1` for the CLI,
 `http://192.168.1.1/` for the status and settings page,
 `http://192.168.1.1:8080` for SWUpdate. [First login](../installation/first-login.md)
 takes it from there.

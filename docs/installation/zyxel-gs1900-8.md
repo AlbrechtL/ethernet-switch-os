@@ -8,6 +8,23 @@ You can run it on the [real switch](#real-switch), or try the very same
 image without a switch in the [emulated GS1900-8](#qemu) in QEMU. Both
 start from the downloaded images; there is no need to build the firmware.
 
+## Hardware
+
+| | |
+|---|---|
+| SoC | Realtek RTL8380M, MIPS 4KEc, big endian, with the switch core |
+| Ports | 8 × Gigabit Ethernet, `lan1` … `lan8` |
+| RAM | 128 MB |
+| Flash | 16 MB SPI NOR |
+| Serial console | On the board, 115200 8N1 |
+| Bootloader | The original U-Boot, which stays in place |
+
+The [OpenWrt device page](https://openwrt.org/toh/zyxel/gs1900-8) has the
+rest: photos, how to open the case, the serial pin-out (the labels on the
+PCB name the signal to connect, not the signal on the pin) and how to tell
+revision A1 from B1. Ethernet Switch OS is built for the rev A1 board
+(`zyxel-gs1900-8-a1`).
+
 ## Real switch
 
 Ethernet Switch OS replaces the original firmware. The first installation
@@ -15,23 +32,128 @@ is done once, over the serial console and TFTP. After that, updates go
 through a web page or the `swupdate` command (see
 [Firmware update](../maintenance.md#firmware-update)).
 
-You need the `initramfs` image and the **factory** `.swu` from the
-`ethernet-switch-os-zyxel-gs1900-8-a1` artifact, see [Download](download.md).
+!!! warning "The original firmware is replaced"
+    The factory `.swu` overwrites both firmware slots of the original
+    firmware and its configuration with one Ethernet Switch OS system. The
+    bootloader is not touched. If you want to be able to go back, copy the
+    flash first, before the installation. The
+    [OpenWrt device page](https://openwrt.org/toh/zyxel/gs1900-8) has a
+    "Return to factory firmware" section, which sends you on to the
+    [GS1900-8HP page](https://openwrt.org/toh/zyxel/gs1900-8hp_v1#oem_easy_installation).
 
-### First installation, in short
+### What you need
 
-1. Connect a serial console (115200 8N1) to the switch, and a PC with a TFTP
-   server to one of its ports.
-2. Stop the original bootloader and boot the `initramfs` image over TFTP.
-3. The switch comes up at `192.168.1.1`, running from RAM. Open
-   `http://192.168.1.1:8080` and upload the **factory** `.swu`.
-4. Reboot. The switch now starts Ethernet Switch OS from flash.
+- A serial adapter for the console (115200 8N1).
+- A PC with a TFTP server, connected to one of the switch's ports.
+- From the `ethernet-switch-os-zyxel-gs1900-8-a1` artifact, see
+  [Download](download.md):
 
-The exact steps (serial settings, bootloader commands, flash layout, how to
-go back to the original firmware) are in the
-[meta-rtl83xx-bsp README](https://github.com/AlbrechtL/meta-rtl83xx-bsp).
+| File | Used for |
+|---|---|
+| `ethernet-switch-os-initramfs-zyxel-gs1900-8-a1.bin` | Booted over TFTP with `bootm`. The kernel with its initramfs, running entirely from RAM. For the first installation, and for recovery. |
+| `ethernet-switch-os-initramfs-zyxel-gs1900-8-a1-rt-loader.bin` | The same without the uImage header, booted with `go`. |
+| `ethernet-switch-os-swu-factory-zyxel-gs1900-8-a1.swu` | The **factory** `.swu`: writes the firmware into the flash and erases the configuration. |
+| `ethernet-switch-os-swu-upgrade-zyxel-gs1900-8-a1.swu` | The [update](#update) of a switch that is already installed. Keeps the configuration. |
+
+Put the `initramfs` image into the directory of the TFTP server. The
+other files in the artifact are intermediate results of the build; see
+[For developers](#for-developers).
+
+### First installation
+
+1. Connect the serial console to the switch and the PC with the TFTP
+   server to one of its ports. Give the PC a fixed address; the example
+   below uses `192.168.1.12`.
+2. Power the switch on and stop the original bootloader: press SPACE when
+   it says `Press SPACE to abort boot script`. Its prompt appears.
+3. Boot the `initramfs` image over TFTP. Pass the address to `bootm`
+   explicitly, because a bare `bootm` uses `$loadaddr`:
+
+    ```text
+    rtk network on
+    tftpboot 0x84f00000 192.168.1.12:ethernet-switch-os-initramfs-zyxel-gs1900-8-a1.bin
+    bootm 0x84f00000
+    ```
+
+    The switch has 128 MB of RAM, so addresses stop at `0x88000000`; do
+    not use `0x8f000000` or higher, that is past the end of RAM.
+
+    If you prefer the headerless image, use `go` instead:
+
+    ```text
+    tftpboot 0x84f00000 192.168.1.12:ethernet-switch-os-initramfs-zyxel-gs1900-8-a1-rt-loader.bin
+    go 0x84f00000
+    ```
+
+    The two files are **not** interchangeable: `bootm` on the headerless
+    one gives `Bad Header Checksum`, because it has no uImage header.
+
+4. The switch comes up at `192.168.1.1`, running from RAM. Check that the
+   bootloader will start the firmware from the first slot. The setting
+   `bootpartition` is in the second bootloader environment, which
+   `/etc/fw_env.config` does not list on purpose, so read it explicitly on
+   the switch's console:
+
+    ```sh
+    echo '/dev/mtd2 0x0 0x1000 0x10000' > /tmp/env2.config
+    fw_printenv -c /tmp/env2.config bootpartition   # must print bootpartition=0
+    ```
+
+5. Open `http://192.168.1.1:8080` and upload the **factory** `.swu`. It
+   writes `firmware`, wipes `data` and does not touch either bootloader
+   environment.
+6. Reboot. The switch now starts Ethernet Switch OS from flash.
 
 Continue with [First login](first-login.md).
+
+### Update
+
+Later updates are uploaded to the running switch as the **upgrade** `.swu`,
+on the [firmware update page](../maintenance.md#firmware-update) or with
+`swupdate`. The switch reboots by itself, and your configuration is kept.
+
+There is only one firmware slot (see
+[Non-A/B updates](../maintenance.md#non-ab-updates)): an update rewrites
+the running firmware in place. If it is interrupted, boot the `initramfs`
+image over TFTP again and repeat the first installation.
+
+### Flash layout
+
+The 16 MB flash is divided like this:
+
+| Offset | Partition | Size | Content |
+|---|---|---|---|
+| `0x000000` | `u-boot` | 256 kB | The bootloader; read-only, never written |
+| `0x040000` | `u-boot-env` | 64 kB | Bootloader environment |
+| `0x050000` | `u-boot-env2` | 64 kB | Second environment; `bootpartition` must be `0` |
+| `0x060000` | `data` | 2 MB | JFFS2, the writable part of the root filesystem and the saved configuration; kept on update |
+| `0x260000` | `firmware` | 13952 kB | The kernel (uImage, padded to 64 kB), then the squashfs root filesystem |
+
+`firmware` is the two firmware slots of the original firmware merged into
+one (as in OpenWrt), and `data` its two JFFS2 partitions. So there is no
+A/B here.
+
+### For developers
+
+How the boot image is put together, how the kernel configuration is
+maintained and what went wrong on the way is in the
+[TECHNICAL.md](https://github.com/AlbrechtL/meta-rtl83xx-bsp/blob/master/TECHNICAL.md)
+of [meta-rtl83xx-bsp](https://github.com/AlbrechtL/meta-rtl83xx-bsp), the
+Yocto layer for the hardware. The userspace is described in the
+[TECHNICAL.md of meta-ethernet-switch-os](https://github.com/AlbrechtL/meta-ethernet-switch-os/blob/master/TECHNICAL.md).
+To build the images yourself, see [Building the firmware](../development/building.md).
+
+A build leaves more files than you need for an installation, in
+`build/tmp/deploy/images/zyxel-gs1900-8-a1/`:
+
+| File | What it is |
+|---|---|
+| `ethernet-switch-os-kernel-zyxel-gs1900-8-a1.bin` | The kernel of the flash, without initramfs. The head of `firmware`. |
+| `rtl83xx-image-zyxel-gs1900-8-a1.rootfs.rtl83xx-fw` | The `firmware` partition: the kernel padded to 64 kB, then the squashfs. Inside both `.swu` files. |
+| `rtl83xx-image-zyxel-gs1900-8-a1.rootfs.rtl83xx-data` | An empty JFFS2 filling the whole `data` partition. Inside the factory `.swu`. |
+| `rtl83xx-image-zyxel-gs1900-8-a1.rootfs.squashfs-xz` | The root filesystem of the flash. |
+| `rtl83xx-image-initramfs-zyxel-gs1900-8-a1.cpio.gz` | The initramfs that is built into the TFTP kernel. |
+| `vmlinux.bin-*.bin`, `rtl8380_zyxel_gs1900-8-a1.dtb` | The raw kernels before compression, and the device tree that is appended to them. |
 
 ## QEMU
 
@@ -89,6 +211,11 @@ tr '\000' '\377' < /dev/zero | head -c 16M > gs1900-flash.bin
 The switch keeps its firmware and its saved configuration in this file.
 You decide when to start over: delete the file, create it again and repeat
 the installation.
+
+To try something without changing the file, add `,snapshot=on` to the
+`-drive` option in the commands below: the switch keeps its writes in a
+temporary file, so the flash file is as it was when QEMU exits, while a
+`reboot` inside QEMU still sees them.
 
 ### 4. First installation
 
@@ -298,6 +425,13 @@ is gone when QEMU exits. A `reboot` keeps it. To try a firmware update,
 upload the upgrade `.swu` file from the same directory to the update page;
 the switch reboots into the new firmware and keeps it until QEMU exits.
 
+The emulator is built by the recipe `qemu-rtl838x-native` of
+[meta-rtl83xx-bsp](https://github.com/AlbrechtL/meta-rtl83xx-bsp), which
+takes the QEMU release that rtl838x-qemu pins as its submodule and applies
+rtl838x-qemu's models and patch to it. The binary is called
+`qemu-system-mips-rtl838x`, so that it does not collide with the
+`qemu-system-native` of OpenEmbedded.
+
 The script gives every port a link, including `lan2` … `lan8` without a
 cable. For more switches, start each one with its own number in `SWITCH`
 and the same list of cables in `CABLES`, written as
@@ -326,3 +460,18 @@ add `ADDRESS=...` in front of `/work/scripts/mips-rtl838x-qemu`.
 
 Start the two terminals a few seconds apart: two `kas-container` commands
 that start at the same moment can collide while checking out `layers/`.
+
+### A flash like a factory install
+
+Instead of booting the `initramfs` image and uploading the factory `.swu`,
+you can write the flash file of a factory install directly from the build
+result (see [Flash layout](#flash-layout) for the offsets):
+
+```sh
+d=build/tmp/deploy/images/zyxel-gs1900-8-a1
+tr '\000' '\377' < /dev/zero | head -c 16M > flash.bin
+dd if=$d/rtl83xx-image-zyxel-gs1900-8-a1.rootfs.rtl83xx-data of=flash.bin bs=64k seek=6 conv=notrunc
+dd if=$d/rtl83xx-image-zyxel-gs1900-8-a1.rootfs.rtl83xx-fw of=flash.bin bs=64k seek=38 conv=notrunc
+```
+
+Start the switch with it as in [step 5](#5-start-the-switch).

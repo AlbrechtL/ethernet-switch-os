@@ -235,6 +235,71 @@ firmware on the next start, and your configuration is still there.
 Which slot is running is shown by `cat /proc/cmdline` in a root shell:
 `root=/dev/vda4` is slot A, `root=/dev/vda5` slot B.
 
+## Disk layout and boot
+
+The virtual disk is a GPT image:
+
+| Partition | Label | Content | Size |
+|---|---|---|---|
+| `/dev/vda1` | `efi` | The EFI system partition with [EFI Boot Guard](https://github.com/siemens/efibootguard), the bootloader | 32 MiB |
+| `/dev/vda2` | `BOOT0` | Config partition of slot A: `bzImage`, the boot environment `BGENV.DAT` | 32 MiB |
+| `/dev/vda3` | `BOOT1` | Config partition of slot B: the same | 32 MiB |
+| `/dev/vda4` | | Slot A: squashfs root filesystem | 128 MiB |
+| `/dev/vda5` | | Slot B: squashfs root filesystem | 128 MiB |
+| `/dev/vda6` | `data` | ext4; the writable part of the root filesystem and the saved configuration, shared by both slots | 128 MiB |
+
+The kernel is not in the squashfs but on the config partition of its slot.
+Both slots start out identical, and a new disk starts slot A.
+
+The virtual PC starts the UEFI firmware (OVMF), which starts EFI Boot
+Guard. EFI Boot Guard reads the boot environments of `BOOT0` and `BOOT1`,
+picks the one with the **highest revision**, and starts the kernel that
+environment names, with the root filesystem of its slot on the command
+line. It also arms the watchdog of the virtual PC with a timeout of 60 s;
+it refuses to boot without a watchdog it can arm, which is why the commands
+above have `-device i6300esb`. The kernel runs with `panic=5`.
+
+The eight virtio network cards become `lan1` … `lan8`, in the order of
+their PCI slots (`0x10` for `lan1`, up to `0x17`).
+
+### A/B update and rollback
+
+EFI Boot Guard keeps the state of an update in the boot environment, as
+`ustate`: `OK`, `INSTALLED`, `TESTING` or `FAILED`.
+
+An update writes the slot that is not running and its kernel, then a new
+boot environment, with the next revision, in place of the one with the
+lower revision. That is always the idle slot's, so slot A stays paired with
+`BOOT0` and slot B with `BOOT1`. Its state is `INSTALLED`.
+
+At the next start, EFI Boot Guard picks the new environment, sets it to
+`TESTING` and boots it. Then either
+
+- **the system comes up**, and confirms itself at the end of the start
+  (`A/B: slot on /dev/vda5 confirmed`). The state is `OK` again and the
+  slot stays, or
+- **it does not**. Any reset before the confirmation (the watchdog firing
+  because the system hangs, `panic=5` after a kernel panic, a reboot) finds
+  the environment still in `TESTING`. EFI Boot Guard marks it `FAILED` and
+  boots the other one, the previous slot, with the configuration from the
+  shared data partition.
+
+The next update goes to the failed slot again. See
+[A/B updates](../maintenance.md#ab-updates) for how updates work on all
+boards. In a root shell, `bg_printenv` shows both environments and
+`bg_printenv -c` the one that booted.
+
+### For developers
+
+The layer
+[meta-qemu-switch-bsp](https://github.com/AlbrechtL/meta-qemu-switch-bsp)
+builds this board on OpenEmbedded's `qemux86-64` machine and
+[meta-efibootguard](https://github.com/siemens/meta-efibootguard). Its
+kernel is `linux-yocto-tiny` with the virtio devices, EFI, the watchdog,
+the file systems of the disk and the VLAN-aware bridge, and no modules. The
+distribution is musl-based, which EFI Boot Guard does not build against as
+it is, so the layer patches it.
+
 ## With a firmware build of your own
 
 If you [build the firmware](../development/building.md) yourself, the build

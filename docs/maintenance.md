@@ -118,7 +118,7 @@ slots next to the bootloader and the configuration.
     second copy to fall back to. If the switch loses power or is reset
     while the new firmware is being written, it will no longer start. To
     get it back you need the serial console, a TFTP server and a new
-    [first installation](installation/zyxel-gs1900-8.md#first-installation-in-short), which **erases
+    [first installation](installation/zyxel-gs1900-8.md#first-installation), which **erases
     the configuration**.
 
     - Do not update during a thunderstorm or while someone is working on
@@ -129,13 +129,13 @@ slots next to the bootloader and the configuration.
     - Back up the configuration first (see
       [Backing up and restoring the configuration](#backing-up-and-restoring-the-configuration)).
 
-!!! warning "Not tested in QEMU"
+!!! tip "Trying it in QEMU"
     The [emulated Zyxel GS1900-8](installation/zyxel-gs1900-8.md#qemu) has
-    the same update page and `swupdate` command, but updates there are not
-    tested. The emulation has no flash, so an update cannot be written
-    there in any case. The A/B update of the
-    [QEMU x86-64 switch](installation/qemu-x86-64.md) is tested in
-    CI.
+    a flash of its own, the same update page and the same `swupdate`
+    command, see
+    [Update the firmware](installation/zyxel-gs1900-8.md#6-update-the-firmware).
+    CI updates it too. So does the A/B update of the
+    [QEMU x86-64 switch](installation/qemu-x86-64.md).
 
 ### Which file
 
@@ -219,7 +219,7 @@ the reboot.
       incomplete. **Do not reboot or power off.** Upload the upgrade file
       again right away: the update service keeps running from RAM and can
       still write the firmware. Once the switch reboots, it needs a new
-      [first installation](installation/zyxel-gs1900-8.md#first-installation-in-short).
+      [first installation](installation/zyxel-gs1900-8.md#first-installation).
 
 !!! warning "The Restart System button"
     The **Restart System** button in the top right corner of the page
@@ -377,4 +377,4 @@ and save.
 |---|---|
 | A committed but unsaved change cut you off | Power-cycle the switch. It boots with the saved configuration. |
 | A saved configuration cut you off | Connect to a port that is still in the management VLAN, or use the serial console (115200 8N1, login `root`) and fix it with `clixon_cli`, or do a factory reset. |
-| The switch does not boot | Boot the TFTP image and reinstall with the factory `.swu`, see the installation of the [Zyxel GS1900-8](installation/zyxel-gs1900-8.md#first-installation-in-short) or the [Albrecht RTL8382MI test switch](installation/albrecht-rtl8382mi-test.md#first-installation). |
+| The switch does not boot | Boot the TFTP image and reinstall with the factory `.swu`, see the installation of the [Zyxel GS1900-8](installation/zyxel-gs1900-8.md#first-installation) or the [Albrecht RTL8382MI test switch](installation/albrecht-rtl8382mi-test.md#first-installation). |

@@ -29,8 +29,7 @@ models, at the QEMU version rtl838x-qemu pins.
 
 The disk layout of the QEMU x86-64 switch, EFI Boot Guard and how an update
 is confirmed or rolled back are in
-[meta-qemu-switch-bsp](https://github.com/AlbrechtL/meta-qemu-switch-bsp)'s
-README.
+[QEMU x86-64 switch](../installation/qemu-x86-64.md#disk-layout-and-boot).
 
 ## Continuous integration
 

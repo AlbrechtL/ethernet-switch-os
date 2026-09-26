@@ -44,7 +44,7 @@ Read that page before you rely on the switch for anything.
 | Zyxel GS1900-8 (rev A1) | Realtek RTL8380 | `lan1` … `lan8`, Gigabit Ethernet | Supported. See [Installation](installation/zyxel-gs1900-8.md#real-switch). | `zyxel-gs1900-8-a1` |
 | Albrecht RTL8382MI test switch | Realtek RTL8382M | 20 × Gigabit Ethernet | Experimental. See [Installation](installation/albrecht-rtl8382mi-test.md). | `albrecht-rtl8382mi-test` |
 | Raspberry Pi Zero with the [4-port managed switch HAT](https://github.com/AlbrechtL/rpi-managed-switch-4-port) | Realtek RTL8367S, Broadcom BCM2835 | 4 × Gigabit Ethernet | Experimental. See [Installation](installation/raspberry-pi.md). | `rpi-managed-switch-rpi0` |
-| Zyxel GS1900-8 emulated in QEMU ([rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu)) | Realtek RTL8380 (emulated) | `lan1` … `lan8` | Supported. Same image as the real switch; no flash, so nothing is kept across reboots. See [Zyxel GS1900-8 in QEMU](installation/zyxel-gs1900-8.md#qemu). | `zyxel-gs1900-8-a1` |
+| Zyxel GS1900-8 emulated in QEMU ([rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu)) | Realtek RTL8380 (emulated) | `lan1` … `lan8` | Supported. Same image as the real switch, with an emulated flash that keeps the configuration in a file. See [Zyxel GS1900-8 in QEMU](installation/zyxel-gs1900-8.md#qemu). | `zyxel-gs1900-8-a1` |
 | Switch emulated in QEMU x86-64 | x86-64 (emulated) | `lan1` … `lan8` | Experimental. A board of its own, with two firmware slots and rollback; the configuration is kept on a virtual disk. See [QEMU x86-64 switch](installation/qemu-x86-64.md). | `qemux86-64-switch` |
 
 The board file is what you name when you [build the firmware](development/building.md).

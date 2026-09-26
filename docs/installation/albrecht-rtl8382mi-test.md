@@ -6,7 +6,7 @@ ports on a Realtek RTL8382M switch chip. Its board name is
 
 ## First installation
 
-Like the [Zyxel GS1900-8](zyxel-gs1900-8.md#first-installation-in-short),
+Like the [Zyxel GS1900-8](zyxel-gs1900-8.md#first-installation),
 it is installed once over the serial console and TFTP, and updated through
 the [firmware update](../maintenance.md#firmware-update) page after that.
 You need the `initramfs` image and the **factory** `.swu` from the
@@ -30,8 +30,8 @@ first installation differs from the GS1900 in two ways:
     RTL838x# bootm
     ```
 
-Then continue with step 3 of the
-[Zyxel GS1900-8](zyxel-gs1900-8.md#first-installation-in-short)
+Then continue with step 5 of the
+[Zyxel GS1900-8](zyxel-gs1900-8.md#first-installation)
 installation. The factory `.swu` merges the original `JFFS2_CFG` and
 `JFFS2_LOG` partitions into the configuration partition, and both firmware
 slots (`RUNTIME1`, `RUNTIME2`) into one.
