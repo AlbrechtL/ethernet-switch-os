@@ -66,6 +66,16 @@ changed first. The
 [contributing guide](https://albrechtl.github.io/ethernet-switch-os/development/contributing/)
 has the details.
 
+## TODO
+
+- Remove the zlib.net workaround in [kas/base.yml](kas/base.yml)
+  (`local_conf_header: zlib-net`) once zlib.net serves GitHub's hosted runners
+  the real tarballs again. Since September 2026 the CI got a different file
+  on every try for zlib and pigz, from zlib.net and from
+  downloads.yoctoproject.org, and the build failed with a checksum mismatch
+  whenever the downloads cache was cold. The workaround fetches zlib from its
+  GitHub release and pigz from its GitHub git tag instead.
+
 ## License
 
 [MIT](LICENSE)

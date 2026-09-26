@@ -49,3 +49,20 @@ local_conf_header:
     # "distro/" ones: those assign MACHINE and DISTRO themselves and bitbake
     # aborts when something else has already set them, which kas does.
     OE_FRAGMENTS += "core/yocto/root-login-with-empty-password"
+  zlib-net: |
+    # zlib.net, and downloads.yoctoproject.org behind it in MIRRORS, answer
+    # GitHub's hosted runners with something other than the tarball -- a
+    # different file on every try -- so do_fetch of zlib and pigz fails with
+    # a checksum mismatch. It only shows up on a cold downloads cache. Both
+    # are Mark Adler's, and both have a source on GitHub:
+    #
+    # zlib's GitHub release carries the identical tarball; bitbake falls back
+    # to it once zlib.net has failed. ${PV} is expanded per recipe.
+    MIRRORS:append = " https?://zlib\.net/zlib-.* https://github.com/madler/zlib/releases/download/v${PV}/"
+    # pigz has no release tarball there, so it is fetched from git instead;
+    # the v2.8 tag checks out the same files as the zlib.net tarball. Keep
+    # the tag in step with the pigz recipe in openembedded-core.
+    SRC_URI:pn-pigz = "git://github.com/madler/pigz.git;protocol=https;branch=master;tag=v2.8"
+    SRC_URI:pn-pigz-native = "git://github.com/madler/pigz.git;protocol=https;branch=master;tag=v2.8"
+    SRCREV:pn-pigz = "fe4894f57739e3039a2ffc2a2a360d35e19bacbe"
+    SRCREV:pn-pigz-native = "fe4894f57739e3039a2ffc2a2a360d35e19bacbe"
