@@ -45,7 +45,7 @@
 # whichever switch answers the ARP first. A cabled switch N therefore
 # forwards to 192.168.1.N+1, which it has to be given on its serial console
 # after every boot -- without flash it forgets it (see
-# docs/getting-started/installation.md). For the same reason every switch's user
+# docs/installation/zyxel-gs1900-8.md). For the same reason every switch's user
 # network has addresses of its own: slirp derives its MAC addresses from
 # them, and two slirps answering for the same address on one VLAN would
 # take each other's traffic.

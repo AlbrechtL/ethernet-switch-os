@@ -63,11 +63,15 @@ has a complete example.
 
 ## Firmware update
 
-- **One firmware slot, no fallback.** An update overwrites the running
-  system in place. A power failure or reset while it is written leaves the
-  switch unable to start. Recovery needs the serial console and TFTP, and
-  erases the configuration. See [Firmware update](getting-started/firmware-update.md).
-- No automatic rollback if the new firmware does not work.
+- **One firmware slot, no fallback** on the Zyxel GS1900-8 and the Albrecht
+  RTL8382MI test switch. An update overwrites the running system in place.
+  A power failure or reset while it is written leaves the switch unable to
+  start. Recovery needs the serial console and TFTP, and erases the
+  configuration. See [Firmware update](maintenance.md#non-ab-updates).
+- On the same switches, no automatic rollback if the new firmware does not
+  work. The Raspberry Pi and QEMU x86-64 switches have two slots (A/B) and
+  roll back by themselves; the Raspberry Pi has no watchdog yet, so a
+  firmware that hangs needs a power cycle first.
 - Update files are not signed.
 
 ## IP and management
@@ -112,7 +116,7 @@ has a complete example.
 
 ## CLI
 
-- No factory-reset command (see [Maintenance](getting-started/maintenance.md#factory-reset)).
+- No factory-reset command (see [Maintenance](maintenance.md#factory-reset)).
 - No reboot command; use the root shell.
 - Error messages include internal details (timestamps, function names) in
   front of the actual reason.
@@ -146,7 +150,7 @@ missing; requirements already met are not listed.
 | 3 | Confidentiality of data in transit (2e) | RESTCONF, the web page and firmware upload use plain HTTP, no TLS. |
 | 4 | Integrity of data and firmware (2f) | Update files are not signed and not checked before installation. No verified or secure boot. |
 | 5 | Minimised attack surface (2j) | SSH, RESTCONF with the web page, and the firmware update page always run on every management address. The configuration cannot turn them off or limit them to a management VLAN. |
-| 6 | Resilience, availability of essential functions (2h, 2i) | One firmware slot without fallback: an interrupted update leaves the switch unable to start. No automatic rollback. |
+| 6 | Resilience, availability of essential functions (2h, 2i) | Zyxel GS1900-8 and Albrecht test switch: one firmware slot without fallback, so an interrupted update leaves the switch unable to start, and no automatic rollback. The A/B boards roll back, the Raspberry Pi only after a power cycle when a firmware hangs (no watchdog yet). |
 | 7 | Security-relevant logging and monitoring (2l) | No record of logins or configuration changes, no syslog forwarding, no real time (no NTP, fixed clock at boot), so log entries cannot be dated. |
 | 8 | Secure deletion of data and settings (2m) | No factory-reset command that removes the configuration and credentials. |
 | 9 | Security updates, automatic where possible, with user notification and opt-out (2c) | Updates are manual only. The switch does not check for or notify about new firmware. Any older version can be installed, so a downgrade to a vulnerable version is not prevented. |
@@ -156,7 +160,7 @@ missing; requirements already met are not listed.
 
 | # | Requirement | Gap |
 |---|---|---|
-| 11 | Software bill of materials (1) | Yocto writes SPDX files during the build, but they are not published with the images and not maintained per release. |
+| 11 | Software bill of materials (1) | Every build publishes the SPDX SBOM of the root filesystem (and the initramfs) with the images, but the kernel and the bootloader are not in it, and there are no releases whose SBOM is kept. |
 | 12 | Address and remediate vulnerabilities without delay (2) | No CVE monitoring of the included components (Linux kernel, busybox, dropbear, clixon, SWUpdate, ...). No `cve-check` or equivalent in CI. |
 | 13 | Regular security testing (3) | CI builds and boots images, but runs no security tests (port scans, fuzzing of RESTCONF/CLI, static analysis). |
 | 14 | Public disclosure of fixed vulnerabilities (4) | No security advisories, no changelog of security fixes. |
@@ -174,5 +178,5 @@ missing; requirements already met are not listed.
 | 21 | Reporting of actively exploited vulnerabilities and severe incidents to ENISA / the CSIRT within 24 h, 72 h and 14 days (Art. 14), **applies since 11 September 2026** | No process and no responsible party. |
 | 22 | Due diligence for third-party components (Art. 13(5)) | No review or tracking of upstream component security. |
 | 23 | User information and instructions (Annex II) | Missing: support end date, security contact, secure setup and hardening guide, how to receive security updates, how to securely decommission the switch. |
-| 24 | Technical documentation (Annex VII) | Missing: security architecture description, risk assessment, SBOM, list of applied standards, test reports. |
+| 24 | Technical documentation (Annex VII) | Missing: security architecture description, risk assessment, an SBOM per release (see #11), list of applied standards, test reports. |
 | 25 | Conformity assessment, EU declaration of conformity and CE marking (Art. 28, 30, 32) | Not done. As a class I important product this needs harmonised standards (Module A) or a notified body. |

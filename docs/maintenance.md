@@ -1,4 +1,51 @@
-# Firmware update
+# Firmware update and maintenance
+
+Keeping a switch running: saving and backing up its configuration,
+installing new firmware, and getting back in when something went wrong.
+
+
+## Saving the configuration
+
+Changes take effect with `commit`, but only `save` makes them survive a
+reboot (see [CLI basics](cli/basics.md#candidate-running-startup)).
+
+```text
+switch> save
+switch> show startup
+```
+
+`show startup` shows what the switch will load on the next boot.
+
+!!! note "RESTCONF changes are not saved automatically either"
+    Changes made over RESTCONF also only reach the running configuration.
+    A `save` in the CLI saves them together with everything else.
+
+## Backing up and restoring the configuration
+
+To back up, copy the output of `show configuration cli` into a file.
+
+To restore on the same or another switch, put `set ` in front of every
+line, paste the lines into the CLI, then `commit` and `save`. If the
+target switch has a different configuration, start with `delete all` in
+the same session, so nothing from before is left over. The commit
+then replaces everything at once.
+
+!!! note "SNMP access lines need two edits"
+    `show configuration cli` prints the SNMP access entries like this:
+
+    ```text
+    snmp vacm group readers access (null) usm auth-priv
+    snmp vacm group readers access (null) usm auth-priv read-view all
+    ```
+
+    Before pasting:
+
+    1. Replace `(null)` with `""` (the empty context), or the commit fails
+       with `context (null) is not supported`.
+    2. Remove the first, shorter line. Once the entry exists, the CLI no
+       longer parses the second line (`'usm' is not a number`).
+
+## Firmware update
 
 Firmware updates use [SWUpdate](https://sbabic.github.io/swupdate/). An
 update is a single `.swu` file. There are three ways to install it:
@@ -20,14 +67,14 @@ interrupted update; the others have [non-A/B updates](#non-ab-updates):
 
 !!! tip "Back up the configuration first"
     A backup of the configuration is highly recommended before every
-    update. See [Maintenance](maintenance.md#backing-up-and-restoring-the-configuration).
+    update. See [Backing up and restoring the configuration](#backing-up-and-restoring-the-configuration).
 
-## Update types
+### Update types
 
 There are two types of update. Which one a switch uses depends on its
 hardware, see the table above.
 
-### A/B updates
+#### A/B updates
 
 A switch with **A/B** updates has two firmware slots, A and B. It runs from
 one of them, and an update writes the other one. The running firmware is
@@ -40,7 +87,7 @@ because it hangs, crashes or loses power, the switch goes back to the
 previous firmware by itself. The configuration is shared by both slots and
 is kept either way.
 
-#### Which slot is written
+##### Which slot is written
 
 In the [switch's shell](#update-in-the-switchs-shell), `swupdate` needs,
 instead of `-e ethernet-switch-os,upgrade`, the slot that is **not** running:
@@ -57,7 +104,7 @@ instead of `-e ethernet-switch-os,upgrade`, the slot that is **not** running:
 Naming the running slot would overwrite the running firmware. The update
 page picks the right slot by itself.
 
-### Non-A/B updates
+#### Non-A/B updates
 
 A switch **without** A/B has only one firmware slot, and an update
 overwrites the running firmware in place.
@@ -71,7 +118,7 @@ slots next to the bootloader and the configuration.
     second copy to fall back to. If the switch loses power or is reset
     while the new firmware is being written, it will no longer start. To
     get it back you need the serial console, a TFTP server and a new
-    [first installation](installation.md#zyxel-gs1900-8), which **erases
+    [first installation](installation/zyxel-gs1900-8.md#first-installation-in-short), which **erases
     the configuration**.
 
     - Do not update during a thunderstorm or while someone is working on
@@ -80,21 +127,21 @@ slots next to the bootloader and the configuration.
     - Do not unplug the switch or press its reset button until it has
       rebooted and answers again.
     - Back up the configuration first (see
-      [Maintenance](maintenance.md#backing-up-and-restoring-the-configuration)).
+      [Backing up and restoring the configuration](#backing-up-and-restoring-the-configuration)).
 
 !!! warning "Not tested in QEMU"
-    The [emulated Zyxel GS1900-8](installation.md#qemu-zyxel-gs1900-8) has
+    The [emulated Zyxel GS1900-8](installation/zyxel-gs1900-8.md#qemu) has
     the same update page and `swupdate` command, but updates there are not
     tested. The emulation has no flash, so an update cannot be written
     there in any case. The A/B update of the
-    [QEMU x86-64 switch](installation.md#qemu-x86-64-switch) is tested in
+    [QEMU x86-64 switch](installation/qemu-x86-64.md) is tested in
     CI.
 
-## Which file
+### Which file
 
 Every build produces an upgrade `.swu` file. The Zyxel GS1900-8 and the
 Albrecht RTL8382MI test switch also get a factory `.swu` (see
-[Installation](installation.md#images)):
+[Download](installation/download.md#files)):
 
 | File | Use it for |
 |---|---|
@@ -108,7 +155,7 @@ different hardware is rejected as well.
 
 Any version can be installed, including an older one.
 
-## What happens during an update
+### What happens during an update
 
 1. **Upload.** The file is copied onto the switch. The switch works as
    usual.
@@ -148,7 +195,7 @@ partition, and it erases it.
 The switch comes back with its **saved** configuration. Changes that were committed but not saved are lost with
 the reboot.
 
-## Update in the browser
+### Update in the browser
 
 1. Open `http://<switch-ip>:8080/`. The status page at `http://<switch-ip>/`
    links there with its **Firmware update** button.
@@ -172,14 +219,14 @@ the reboot.
       incomplete. **Do not reboot or power off.** Upload the upgrade file
       again right away: the update service keeps running from RAM and can
       still write the firmware. Once the switch reboots, it needs a new
-      [first installation](installation.md#zyxel-gs1900-8).
+      [first installation](installation/zyxel-gs1900-8.md#first-installation-in-short).
 
 !!! warning "The Restart System button"
     The **Restart System** button in the top right corner of the page
     reboots the switch immediately. Committed but unsaved configuration
     changes are lost.
 
-## Update with curl
+### Update with curl
 
 The update page accepts the file with a plain HTTP upload, so `curl` on
 your computer can do the same as the browser:
@@ -232,7 +279,7 @@ shows messages of updates that run while it is open, so repeat the update
 in the browser to see the reason, and continue as in step 5 of
 [the browser update](#update-in-the-browser).
 
-## Update in the switch's shell
+### Update in the switch's shell
 
 As `root`, the switch has the `swupdate` command, which installs a `.swu`
 file that is already on the switch.
@@ -298,3 +345,36 @@ away.
     until the switch reboots. Restarting the update service does not help.
     After a successful update you reboot anyway; after a check or a failed
     attempt, reboot before you use the update page.
+
+## Factory reset
+
+There is no CLI command for a factory reset. Log in as `root` and delete
+the saved configuration, then reboot:
+
+```text
+$ ssh root@<switch-ip>
+# rm /var/lib/clixon/clixon-switch/startup_db
+# reboot
+```
+
+The switch comes back with the [factory settings](installation/first-login.md#factory-settings),
+at `192.168.1.1`.
+
+On the [Albrecht RTL8382MI test switch](installation/albrecht-rtl8382mi-test.md#leds-and-dip-switches), DIP switch 6 does the same: switch it
+on, wait at least 5 seconds, and switch it off again.
+
+## When the saved configuration cannot be loaded
+
+If the saved configuration fails to apply at boot, for example after an
+update that no longer accepts part of it, the switch starts with the factory
+settings instead. It is then at `192.168.1.1`. The saved configuration is
+still there: `show startup` shows it. Fix the problem in the CLI, commit
+and save.
+
+## Recovering access
+
+| Situation | What to do |
+|---|---|
+| A committed but unsaved change cut you off | Power-cycle the switch. It boots with the saved configuration. |
+| A saved configuration cut you off | Connect to a port that is still in the management VLAN, or use the serial console (115200 8N1, login `root`) and fix it with `clixon_cli`, or do a factory reset. |
+| The switch does not boot | Boot the TFTP image and reinstall with the factory `.swu`, see the installation of the [Zyxel GS1900-8](installation/zyxel-gs1900-8.md#first-installation-in-short) or the [Albrecht RTL8382MI test switch](installation/albrecht-rtl8382mi-test.md#first-installation). |

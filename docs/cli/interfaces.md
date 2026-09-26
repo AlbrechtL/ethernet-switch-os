@@ -69,7 +69,7 @@ The rest of the output shows the fixed values of settings the switch does
 not implement (see below).
 
 To see all ports at once, use `show state text interfaces`. The
-[status page](../getting-started/first-login.md#web-pages) at
+[status page](../installation/first-login.md#web-pages) at
 `http://<switch-ip>/` shows the ports in a table.
 
 ## Remove a port from the configuration

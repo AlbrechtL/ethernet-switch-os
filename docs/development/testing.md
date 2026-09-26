@@ -6,10 +6,10 @@ There are two ways to run a built image without a switch:
 
 - The **QEMU x86-64 switch** is a board of its own. It boots in seconds under
   KVM and exercises the A/B update. See
-  [QEMU: x86-64 switch](../getting-started/installation.md#qemu-x86-64-switch).
+  [QEMU x86-64 switch](../installation/qemu-x86-64.md).
 - **rtl838x-qemu** runs the GS1900-8's own image on an emulated RTL8380.
   Frames really cross between the eight emulated front ports, so VLANs and
-  spanning tree can be exercised. See [QEMU: Zyxel GS1900-8](../getting-started/installation.md#qemu-zyxel-gs1900-8).
+  spanning tree can be exercised. See [Zyxel GS1900-8 in QEMU](../installation/zyxel-gs1900-8.md#qemu).
 
 Both pages cover the build, the forwarded ports, and cabling several switches
 together with `SWITCH` and `CABLES`.

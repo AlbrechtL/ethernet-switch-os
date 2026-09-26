@@ -28,8 +28,11 @@ one is visible in the other.
 - **SNMP**: a read-only SNMPv3 agent (system group, IF-MIB, BRIDGE-MIB,
   Q-BRIDGE-MIB, RSTP-MIB).
 - **Firmware update** through a web page, `curl` or the `swupdate` command,
-  with the configuration kept. There is only one firmware slot: read
-  [Firmware update](getting-started/firmware-update.md) before the first update.
+  with the configuration kept. The Raspberry Pi and QEMU x86-64 switches
+  have two firmware slots (A/B) and roll back a failed update by
+  themselves. The Zyxel GS1900-8 and the Albrecht test switch have only one:
+  read [Firmware update](maintenance.md#firmware-update) before their first
+  update.
 
 What it cannot do (yet) is listed under [Limitations](limitations.md).
 Read that page before you rely on the switch for anything.
@@ -38,20 +41,21 @@ Read that page before you rely on the switch for anything.
 
 | Hardware | SoC | Ports | Status | Board file |
 |---|---|---|---|---|
-| Zyxel GS1900-8 (rev A1) | Realtek RTL8380 | `lan1` … `lan8`, Gigabit Ethernet | Supported. See [Installation](getting-started/installation.md). | `zyxel-gs1900-8-a1` |
-| Albrecht RTL8382MI test switch | Realtek RTL8382M | 20 × Gigabit Ethernet | Experimental. See [Installation](getting-started/installation.md#albrecht-rtl8382mi-test-switch). | `albrecht-rtl8382mi-test` |
-| Raspberry Pi Zero with the [4-port managed switch HAT](https://github.com/AlbrechtL/rpi-managed-switch-4-port) | Realtek RTL8367S, Broadcom BCM2835 | 4 × Gigabit Ethernet | Experimental. See [Installation](getting-started/installation.md#raspberry-pi-switch). | `rpi-managed-switch-rpi0` |
-| Zyxel GS1900-8 emulated in QEMU ([rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu)) | Realtek RTL8380 (emulated) | `lan1` … `lan8` | Supported. Same image as the real switch; no flash, so nothing is kept across reboots. See [QEMU: Zyxel GS1900-8](getting-started/installation.md#qemu-zyxel-gs1900-8). | `zyxel-gs1900-8-a1` |
-| Switch emulated in QEMU x86-64 | x86-64 (emulated) | `lan1` … `lan8` | Experimental. A board of its own, with two firmware slots and rollback; the configuration is kept on a virtual disk. See [QEMU: x86-64 switch](getting-started/installation.md#qemu-x86-64-switch). | `qemux86-64-switch` |
+| Zyxel GS1900-8 (rev A1) | Realtek RTL8380 | `lan1` … `lan8`, Gigabit Ethernet | Supported. See [Installation](installation/zyxel-gs1900-8.md#real-switch). | `zyxel-gs1900-8-a1` |
+| Albrecht RTL8382MI test switch | Realtek RTL8382M | 20 × Gigabit Ethernet | Experimental. See [Installation](installation/albrecht-rtl8382mi-test.md). | `albrecht-rtl8382mi-test` |
+| Raspberry Pi Zero with the [4-port managed switch HAT](https://github.com/AlbrechtL/rpi-managed-switch-4-port) | Realtek RTL8367S, Broadcom BCM2835 | 4 × Gigabit Ethernet | Experimental. See [Installation](installation/raspberry-pi.md). | `rpi-managed-switch-rpi0` |
+| Zyxel GS1900-8 emulated in QEMU ([rtl838x-qemu](https://github.com/AlbrechtL/rtl838x-qemu)) | Realtek RTL8380 (emulated) | `lan1` … `lan8` | Supported. Same image as the real switch; no flash, so nothing is kept across reboots. See [Zyxel GS1900-8 in QEMU](installation/zyxel-gs1900-8.md#qemu). | `zyxel-gs1900-8-a1` |
+| Switch emulated in QEMU x86-64 | x86-64 (emulated) | `lan1` … `lan8` | Experimental. A board of its own, with two firmware slots and rollback; the configuration is kept on a virtual disk. See [QEMU x86-64 switch](installation/qemu-x86-64.md). | `qemux86-64-switch` |
 
 The board file is what you name when you [build the firmware](development/building.md).
 
 ## Where to start
 
-1. [Installation](getting-started/installation.md): getting Ethernet Switch OS
-   onto the switch, or [QEMU: Zyxel GS1900-8](getting-started/installation.md#qemu-zyxel-gs1900-8) or the
-   [QEMU: x86-64 switch](getting-started/installation.md#qemu-x86-64-switch) to try it without one.
-2. [First login](getting-started/first-login.md): factory settings and how to
+1. [Installation](installation/download.md): downloading the images and
+   getting Ethernet Switch OS onto the switch, or the emulated
+   [Zyxel GS1900-8](installation/zyxel-gs1900-8.md#qemu) or
+   [QEMU x86-64 switch](installation/qemu-x86-64.md) to try it without one.
+2. [First login](installation/first-login.md): factory settings and how to
    connect.
 3. [CLI basics](cli/basics.md): how the CLI works. Read this before the task
    chapters.

@@ -52,8 +52,8 @@ On the serial console (115200 8N1), the same users log in at the
 `zyxel-gs1900-8-a1 login:` prompt.
 
 !!! tip "In QEMU"
-    With the [QEMU setup](installation.md#2-boot-the-switch),
-    use `ssh -p 2222 cli@127.0.0.1` and `http://127.0.0.1:8000/` instead of
+    In the emulated [Zyxel GS1900-8](zyxel-gs1900-8.md#3-boot-the-switch)
+    or the [QEMU x86-64 switch](qemu-x86-64.md#3-start-the-switch), use `ssh -p 2222 cli@127.0.0.1` and `http://127.0.0.1:8000/` instead of
     `192.168.1.1`.
 
 !!! danger "No security"
@@ -67,7 +67,7 @@ On the serial console (115200 8N1), the same users log in at the
 | URL | Content |
 |---|---|
 | `http://192.168.1.1/` | Status and settings page: firmware version, uptime, management address, ports, VLANs, spanning tree, SNMP. See [Web UI](../web-ui.md). |
-| `http://192.168.1.1:8080/` | Firmware update (SWUpdate). See [Firmware update](firmware-update.md). |
+| `http://192.168.1.1:8080/` | Firmware update (SWUpdate). See [Firmware update](../maintenance.md#firmware-update). |
 
 ## Next steps
 

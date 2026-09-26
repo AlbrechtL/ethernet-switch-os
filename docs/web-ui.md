@@ -160,7 +160,7 @@ A few changes need care:
 
 The update page is SWUpdate's own web interface. How to use it, and what
 to watch out for, is described in
-[Firmware update](getting-started/firmware-update.md#update-in-the-browser).
+[Firmware update](maintenance.md#update-in-the-browser).
 In short:
 
 - **Software Update**: drop a `.swu` file here, or click to choose one. The

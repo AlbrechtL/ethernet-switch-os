@@ -23,7 +23,7 @@ source is in [`docs/`](docs/).
 
 | I want to … | Go to |
 |---|---|
-| Install it on a switch or try it in QEMU | [Getting started](https://albrechtl.github.io/ethernet-switch-os/getting-started/installation/) |
+| Install it on a switch or try it in QEMU | [Installation](https://albrechtl.github.io/ethernet-switch-os/installation/download/) |
 | Configure the switch | [CLI](https://albrechtl.github.io/ethernet-switch-os/cli/basics/), [Web UI](https://albrechtl.github.io/ethernet-switch-os/web-ui/), [RESTCONF](https://albrechtl.github.io/ethernet-switch-os/restconf/) |
 | Build the firmware | [Building the firmware](https://albrechtl.github.io/ethernet-switch-os/development/building/) |
 | Know what does not work yet | [Limitations](https://albrechtl.github.io/ethernet-switch-os/reference/limitations/) |
@@ -33,11 +33,11 @@ source is in [`docs/`](docs/).
 The full list, with the SoC, the status and the board file of each, is in
 [Supported hardware](https://albrechtl.github.io/ethernet-switch-os/#supported-hardware).
 
-- [Zyxel GS1900-8](https://albrechtl.github.io/ethernet-switch-os/getting-started/installation/) (rev A1), Realtek RTL8380
-- [Albrecht RTL8382MI test switch](https://albrechtl.github.io/ethernet-switch-os/getting-started/installation/#albrecht-rtl8382mi-test-switch) (experimental)
-- [Raspberry Pi Zero with the 4-port managed switch HAT](https://albrechtl.github.io/ethernet-switch-os/getting-started/installation/#raspberry-pi-switch) (experimental)
-- [Zyxel GS1900-8 emulated in QEMU](https://albrechtl.github.io/ethernet-switch-os/getting-started/qemu/) with rtl838x-qemu
-- [8 port switch emulated in QEMU x86-64](https://albrechtl.github.io/ethernet-switch-os/getting-started/qemu-x86-64/) (experimental)
+- [Zyxel GS1900-8](https://albrechtl.github.io/ethernet-switch-os/installation/zyxel-gs1900-8/) (rev A1), Realtek RTL8380
+- [Albrecht RTL8382MI test switch](https://albrechtl.github.io/ethernet-switch-os/installation/albrecht-rtl8382mi-test/) (experimental)
+- [Raspberry Pi Zero with the 4-port managed switch HAT](https://albrechtl.github.io/ethernet-switch-os/installation/raspberry-pi/) (experimental)
+- [Zyxel GS1900-8 emulated in QEMU](https://albrechtl.github.io/ethernet-switch-os/installation/zyxel-gs1900-8/#qemu) with rtl838x-qemu
+- [8 port switch emulated in QEMU x86-64](https://albrechtl.github.io/ethernet-switch-os/installation/qemu-x86-64/) (experimental)
 
 ## Components and repositories
 

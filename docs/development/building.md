@@ -130,7 +130,7 @@ For the Zyxel GS1900-8, in `build/tmp/deploy/images/zyxel-gs1900-8-a1/`:
 
 The flash layout, the TFTP procedure and what to type at the stock bootloader
 are in [meta-rtl83xx-bsp](https://github.com/AlbrechtL/meta-rtl83xx-bsp)'s
-README and summarized in [Installation](../getting-started/installation.md).
+README and summarized in [Installation](../installation/zyxel-gs1900-8.md#real-switch).
 
 The Raspberry Pi switch is different: its board builds an SD card image,
 `rpi-switch-image-rpi-managed-switch-rpi0.rootfs.wic.bz2` with its
@@ -141,7 +141,7 @@ update are in
 [meta-rpi-managed-switch-bsp](https://github.com/AlbrechtL/meta-rpi-managed-switch-bsp)'s
 README. Once the switch is up: `ssh cli@192.168.1.1` for the CLI,
 `http://192.168.1.1/` for the status and settings page,
-`http://192.168.1.1:8080` for SWUpdate. [First login](../getting-started/first-login.md)
+`http://192.168.1.1:8080` for SWUpdate. [First login](../installation/first-login.md)
 takes it from there.
 
 The QEMU switch builds a disk image in the same A/B shape, with EFI Boot
@@ -149,7 +149,7 @@ Guard instead of U-Boot: `qemu-switch-image-qemux86-64-switch.rootfs.wic`
 with its `.wic.bmap`, and
 `ethernet-switch-os-swu-upgrade-qemux86-64-switch.swu`. The build also leaves
 the UEFI firmware (`ovmf.*.qcow2`) and a QEMU for running it; see
-[QEMU: x86-64 switch](../getting-started/installation.md#qemu-x86-64-switch).
+[QEMU x86-64 switch](../installation/qemu-x86-64.md).
 
 ## Building this documentation
 
