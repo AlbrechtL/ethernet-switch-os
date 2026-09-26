@@ -249,15 +249,12 @@ also produces a QEMU and the UEFI firmware to run it with, and
 ```
 
 `--network=host` makes the forwarded ports appear on your computer. The
-switch keeps its disk in `build/qemu/switch0.wic`; a new build reaches it
-through a firmware update, with the `.swu` file from
-`build/tmp/deploy/images/qemux86-64-switch/`. To start over with the
-factory settings and the image you built last, add `RESET=1`:
-
-```sh
-./kas-container --kvm --runtime-args "--network=host" \
-    shell kas/board/qemux86-64-switch.yml -c "RESET=1 /work/scripts/x86-64-q35-qemu"
-```
+script always boots the image the last build left in
+`build/tmp/deploy/images/qemux86-64-switch/`, and never changes it: the
+switch starts with the factory settings every time, and what you configure
+is gone when QEMU exits. To try a firmware update, upload the `.swu` file from
+the same directory to the update page; the switch reboots into the new
+firmware and keeps it until QEMU exits.
 
 For more switches, start each one with its own number in `SWITCH` and the
 same list of cables in `CABLES`, written as `switch:port-switch:port`. Here
@@ -275,8 +272,8 @@ two cables, so that spanning tree has a loop to break:
 
 Switch N uses the addresses and ports of the table above, counted on by N:
 `192.168.1.N+1`, SSH on 2222 + 10·N, web pages on 8000 + 10·N and the
-update page on 8080 + 10·N. It needs its address set once, as above, and
-again after `RESET=1`. A switch without cables is always reached at
+update page on 8080 + 10·N. It needs its address set as above after every
+start. A switch without cables is always reached at
 `192.168.1.1`; to forward to another address, add `ADDRESS=...` in front of
 `/work/scripts/x86-64-q35-qemu`.
 

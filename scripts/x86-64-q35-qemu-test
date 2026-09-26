@@ -6,7 +6,7 @@
 #   ./kas-container --kvm --runtime-args "--network=host" \
 #       shell kas/board/qemux86-64-switch.yml -c /work/scripts/x86-64-q35-qemu-test
 #
-# 1. Boots a fresh copy of the built disk (slot A) and waits until RESTCONF
+# 1. Boots the built disk (slot A) and waits until RESTCONF
 #    lists the front ports lan1..lan8.
 # 2. Uploads the built .swu to SWUpdate, which writes slot B and reboots.
 # 3. Waits until slot B is up and confirmed, and RESTCONF answers again.
@@ -28,7 +28,7 @@ SWUPDATE=http://127.0.0.1:8170
 mkdir -p "$BUILDDIR/qemu"
 rm -f "$LOG"
 
-SWITCH=9 RESET=1 LOG="$LOG" "$here/x86-64-q35-qemu" &
+SWITCH=9 LOG="$LOG" "$here/x86-64-q35-qemu" &
 qemu=$!
 trap 'kill $qemu 2>/dev/null || true' EXIT INT TERM
 

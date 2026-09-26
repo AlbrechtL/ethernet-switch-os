@@ -18,7 +18,7 @@ together with `SWITCH` and `CABLES`.
 
 | Script | What it does |
 |---|---|
-| `scripts/x86-64-q35-qemu` | Boots a copy of the built QEMU x86-64 disk with the QEMU and UEFI firmware from the build, on the serial console of the terminal (`Ctrl-a x` quits). Every switch keeps its disk in `build/qemu/switchN.wic` from run to run; `RESET=1` starts over from the built image. |
+| `scripts/x86-64-q35-qemu` | Boots a copy of the built QEMU x86-64 disk with the QEMU and UEFI firmware from the build, on the serial console of the terminal (`Ctrl-a x` quits). It always boots the image of the last build and never modifies it: every start is the factory state, and changes are lost when QEMU exits. |
 | `scripts/x86-64-q35-qemu-test` | Boots a fresh disk, installs the `.swu` and checks that the other slot comes up and is confirmed. This is what CI runs. |
 | `scripts/mips-rtl838x-qemu` | Boots the TFTP boot image with `qemu-rtl838x-native`, uImage header and all: the machine parses the header the same way the stock bootloader does, so `rt-loader` runs exactly as it does on the real switch. There is no flash, so every boot starts from the factory settings and `reboot` ends QEMU. |
 | `scripts/mips-rtl838x-qemu-test` | Boots the image and checks that RESTCONF lists all eight ports. This is what CI runs. |

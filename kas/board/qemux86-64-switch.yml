@@ -36,7 +36,7 @@ local_conf_header:
     PACKAGECONFIG:remove:pn-qemu-system-native = "sdl alsa"
 
 # What a build is expected to leave behind. "kas build --update" and CI read
-# these; scripts/x86-64-q35-qemu boots a copy of the .wic, the .swu goes to
+# these; scripts/x86-64-q35-qemu boots the .wic without changing it, the .swu goes to
 # SWUpdate.
 artifacts:
   disk: build/tmp/deploy/images/qemux86-64-switch/qemu-switch-image-qemux86-64-switch.rootfs.wic

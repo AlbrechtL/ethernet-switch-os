@@ -10,15 +10,15 @@
 # lets switches started from different containers reach each other. The
 # serial console is the terminal; Ctrl-a x quits QEMU.
 #
-# Every switch boots its own copy of the disk image, build/qemu/switch<N>.wic,
-# which keeps the A/B slots, the boot environments and the saved
-# configuration from run to run -- a new build reaches it through a firmware
-# update, the way it reaches a real switch. RESET=1 starts over from the
-# freshly built image.
+# It always boots the image the last build left in build/tmp/deploy. QEMU's
+# -snapshot keeps every write, A/B slots and saved configuration included, in a
+# temporary file that goes away with QEMU, so the built image is never
+# modified and every start is the factory state of the latest build. A reboot,
+# after a firmware update too, does not restart QEMU and so keeps them.
 #
 # Environment:
-#   SWITCH=N     which switch, 0..9 (default 0). Picks the disk copy, the
-#                MAC addresses and the ports below.
+#   SWITCH=N     which switch, 0..9 (default 0). Picks the MAC addresses and
+#                the ports below.
 #   CABLES=...   space separated cables between front ports lan2..lan8 of
 #                switches started with this script, e.g. "0:2-1:2 0:3-1:3"
 #                connects lan2 and lan3 of switch 0 to lan2 and lan3 of
@@ -26,7 +26,6 @@
 #   ADDRESS=IP   the switch address the forwarded ports below go to.
 #                Default: the factory address 192.168.1.1, or 192.168.1.N+1
 #                for a switch that is cabled to another one (see below).
-#   RESET=1      replace the disk copy with the built image.
 #   LOG=FILE     serial console into FILE instead of the terminal, no
 #                interaction (for scripts and CI).
 #
@@ -46,8 +45,9 @@
 # Cabled switches share VLAN 1, lan1 and its user network included, so they
 # cannot all keep the factory address: the forwarded ports would reach
 # whichever switch answers the ARP first. A cabled switch N therefore
-# forwards to 192.168.1.N+1, which it has to be given once, on its serial
-# console (see docs/installation/qemu-x86-64.md); its disk keeps it.
+# forwards to 192.168.1.N+1, which it has to be given on its serial console
+# after every start (see docs/installation/qemu-x86-64.md), because it forgets
+# it on the next.
 # For the same reason every switch's user network has addresses of its own:
 # slirp derives its MAC addresses from them, and two slirps answering for the
 # same address on one VLAN would take each other's traffic.
@@ -56,7 +56,6 @@ set -eu
 
 SWITCH=${SWITCH:-0}
 CABLES=${CABLES:-}
-RESET=${RESET:-}
 LOG=${LOG:-}
 
 case "$SWITCH" in
@@ -68,7 +67,6 @@ BUILDDIR=${BUILDDIR:-$(cd "$(dirname "$0")/.." && pwd)/build}
 MACHINE=qemux86-64-switch
 DEPLOY=$BUILDDIR/tmp/deploy/images/$MACHINE
 IMAGE=$DEPLOY/qemu-switch-image-$MACHINE.rootfs.wic
-STATE=$BUILDDIR/qemu
 
 QEMU=$(ls "$BUILDDIR"/tmp/work/x86_64-linux/qemu-helper-native/*/recipe-sysroot-native/usr/bin/qemu-system-x86_64 2>/dev/null | head -n 1)
 if [ -z "$QEMU" ]; then
@@ -83,15 +81,7 @@ for f in "$IMAGE" "$DEPLOY/ovmf.code.qcow2" "$DEPLOY/ovmf.vars.qcow2"; do
     fi
 done
 
-mkdir -p "$STATE"
-disk=$STATE/switch$SWITCH.wic
-vars=$STATE/switch$SWITCH-ovmf-vars.qcow2
-if [ -n "$RESET" ] || [ ! -e "$disk" ]; then
-    echo "switch $SWITCH: new disk from $(readlink -f "$IMAGE")"
-    cp --sparse=always -L "$IMAGE" "$disk"
-    cp -L "$DEPLOY/ovmf.vars.qcow2" "$vars"
-fi
-[ -e "$vars" ] || cp -L "$DEPLOY/ovmf.vars.qcow2" "$vars"
+echo "switch $SWITCH: booting $(readlink -f "$IMAGE")"
 
 # UDP port of front port $2 (2..8) of switch $1.
 port() {
@@ -166,10 +156,11 @@ exec "$QEMU" \
     -machine q35,i8042=off \
     -smp 2 -m 512 \
     -drive "if=pflash,format=qcow2,unit=0,readonly=on,file=$DEPLOY/ovmf.code.qcow2" \
-    -drive "if=pflash,format=qcow2,unit=1,file=$vars" \
-    -drive "if=none,id=disk,format=raw,file=$disk" \
+    -drive "if=pflash,format=qcow2,unit=1,file=$DEPLOY/ovmf.vars.qcow2" \
+    -drive "if=none,id=disk,format=raw,file=$IMAGE" \
     -device virtio-blk-pci,drive=disk \
     -device virtio-rng-pci \
     -device i6300esb \
     -action watchdog=reset \
+    -snapshot \
     "$@"
