@@ -1,0 +1,291 @@
+name: System test
+
+# The images this repository builds are tested by a black-box system test suite
+# that lives in a repository of its own, which is not public: it boots several
+# emulated switches, cables them together and drives them over their serial
+# consoles. This workflow is the whole connection between the two. It consumes
+# what "Build images" published -- nothing from the build tree -- and calls one
+# documented entry point in the suite, so how the tests work is none of this
+# file's business.
+#
+# The report is public. It is printed into the run summary and uploaded as an
+# artifact of this run, so anybody can see which cases passed. The serial
+# consoles and packet captures behind it are not: they amount to a transcript
+# of the tests themselves. The suite decides what goes into the report
+# directory; this workflow only uploads it.
+#
+# Without credentials for that repository -- a pull request from a fork, or
+# somebody else's clone -- the tests are skipped and nothing else changes.
+
+on:
+  workflow_run:
+    workflows: [Build images]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Build images run to test (default: the latest successful one)"
+        required: false
+      suite:
+        description: Which tests to run
+        default: quick
+        type: choice
+        options: [quick, smoke, rstp-conformance, mstp-conformance]
+      logs:
+        description: Also publish the serial consoles and packet captures
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  actions: read          # to download the artifacts of the build run
+  statuses: write        # to put the verdict on the commit that was built
+
+# A newer build of the same commit supersedes this run.
+concurrency:
+  group: systemtest-${{ github.event.workflow_run.head_sha || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  # What to run, on which build, and whether it can run at all. Everything that
+  # depends on the event is decided here, so the job below reads the same for a
+  # push, a weekly run and a manual one.
+  plan:
+    runs-on: ubuntu-latest
+    # Never hand secrets to a build of code from a fork, and never test a build
+    # that failed.
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    outputs:
+      available: ${{ steps.pick.outputs.available }}
+      suites: ${{ steps.pick.outputs.suites }}
+      run_id: ${{ steps.pick.outputs.run_id }}
+      sha: ${{ steps.pick.outputs.sha }}
+      level: ${{ steps.pick.outputs.level }}
+      minutes: ${{ steps.pick.outputs.minutes }}
+      seconds: ${{ steps.pick.outputs.seconds }}
+    steps:
+      - id: pick
+        env:
+          # A secret cannot be read in an "if:", so it is read here and the
+          # decision travels as an output.
+          KEY: ${{ secrets.SYSTEMTEST_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          EVENT: ${{ github.event_name == 'workflow_dispatch' && 'workflow_dispatch' || github.event.workflow_run.event }}
+          DISPATCH_SUITE: ${{ inputs.suite }}
+          DISPATCH_RUN: ${{ inputs.run_id }}
+          DISPATCH_LOGS: ${{ inputs.logs }}
+          RUN: ${{ github.event.workflow_run.id }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -eu
+
+          if [ -n "$KEY" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            # A weekly or a manual run asked for these tests, so a missing
+            # credential is a failure: an expired token must not switch the
+            # system test off quietly. Anywhere else it is expected.
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo '_System test skipped: no credentials for the test repository._' \
+              >> "$GITHUB_STEP_SUMMARY"
+            case "$EVENT" in
+              schedule|workflow_dispatch)
+                echo "no SYSTEMTEST_TOKEN, but $EVENT asked for the system test" >&2
+                exit 1 ;;
+            esac
+            exit 0
+          fi
+
+          # The weekly build is what the long suites are for; everything else
+          # gets the quick one. One job per suite: together they are hours.
+          case "$EVENT" in
+            workflow_dispatch) suites="[\"${DISPATCH_SUITE:-quick}\"]" ;;
+            schedule)          suites='["rstp-conformance","mstp-conformance"]' ;;
+            *)                 suites='["quick"]' ;;
+          esac
+          echo "suites=$suites" >> "$GITHUB_OUTPUT"
+
+          case "$suites" in
+            *conformance*) minutes=210; seconds=12000 ;;   # the tool stops first
+            *)             minutes=75;  seconds=4200 ;;
+          esac
+          echo "minutes=$minutes" >> "$GITHUB_OUTPUT"
+          echo "seconds=$seconds" >> "$GITHUB_OUTPUT"
+
+          # A dispatch may name a run; otherwise take the newest successful
+          # build of master.
+          run_id=${DISPATCH_RUN:-$RUN}
+          if [ -z "$run_id" ]; then
+            run_id=$(gh run list --workflow "Build images" --branch master \
+                       --status success --limit 1 --json databaseId \
+                       --jq '.[0].databaseId')
+          fi
+          [ -n "$run_id" ] || { echo "no successful build to test" >&2; exit 1; }
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+
+          sha=${SHA:-$(gh run view "$run_id" --json headSha --jq .headSha)}
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+          # Raw logs only when a person asked for them on a dispatch.
+          if [ "${DISPATCH_LOGS:-false}" = "true" ]; then
+            echo "level=full" >> "$GITHUB_OUTPUT"
+          else
+            echo "level=summary" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "suite(s) $suites on build $run_id ($sha)" >> "$GITHUB_STEP_SUMMARY"
+
+  systemtest:
+    needs: plan
+    if: needs.plan.outputs.available == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: ${{ fromJSON(needs.plan.outputs.suites) }}
+    env:
+      BOARD: zyxel-gs1900-8-a1
+
+    steps:
+      # The deliverables of the build run, under the names the board file gave
+      # them: the initramfs image the switches boot, and the version file that
+      # says which firmware this is.
+      - name: Download the images
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ethernet-switch-os-*-zyxel-gs1900-8-a1
+          merge-multiple: true
+          run-id: ${{ needs.plan.outputs.run_id }}
+          github-token: ${{ github.token }}
+          path: images
+
+      - name: Firmware version
+        id: version
+        run: |
+          echo "version=$(cat images/ethernet-switch-os-version-*.txt)" >> "$GITHUB_OUTPUT"
+          ls -l images
+
+      # No credentials are written into the checkout: this is a public
+      # workspace, and a token in systemtest/.git/config is one careless upload
+      # away from being published.
+      - name: Check out the system tests
+        uses: actions/checkout@v4
+        with:
+          repository: AlbrechtL/ethernet-switch-os-test
+          token: ${{ secrets.SYSTEMTEST_TOKEN }}
+          persist-credentials: false
+          path: systemtest
+
+      # The emulator is built here rather than taken from the build: the one
+      # bitbake builds is a native binary whose ELF interpreter is an absolute
+      # path inside the build directory, so it cannot leave it. Branch tips,
+      # like the layers in kas/.
+      - name: Check out rtl838x-qemu
+        uses: actions/checkout@v4
+        with:
+          repository: AlbrechtL/rtl838x-qemu
+          persist-credentials: false
+          path: rtl838x-qemu
+
+      # The QEMU revision the models are built against, read from the
+      # superproject: no need to fetch the submodule to know it.
+      - name: Emulator revision
+        id: emulator
+        working-directory: rtl838x-qemu
+        run: echo "qemu=$(git rev-parse HEAD:qemu)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the emulator
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            rtl838x-qemu/out/qemu
+            rtl838x-qemu/out/ccache
+          key: rtl838x-qemu-${{ steps.emulator.outputs.qemu }}-${{ hashFiles('rtl838x-qemu/src/**', 'rtl838x-qemu/patches/**', 'rtl838x-qemu/scripts/*.sh', 'rtl838x-qemu/docker/Dockerfile.builder') }}
+
+      # Only when it has to be built: QEMU is a large clone, and a cached
+      # out/qemu makes the whole checkout unnecessary. A shallow fetch works
+      # while the pinned revision is recent, so fall back to a full one.
+      - name: Fetch QEMU
+        if: steps.cache.outputs.cache-hit != 'true'
+        working-directory: rtl838x-qemu
+        run: |
+          git submodule update --init --depth 1 qemu ||
+            git submodule update --init qemu
+
+      # Builds the emulator first if the cache missed (rtl838x.sh does that on
+      # its own), then packs it into a small image. On top of that image the
+      # suite's own Dockerfile adds pytest and the two libraries it needs.
+      - name: Build the test runner
+        run: |
+          (cd rtl838x-qemu && ./rtl838x.sh runtime-image)
+          docker build --build-arg BASE=rtl838x-qemu-runtime \
+            -t ethernet-switch-os-test systemtest
+          docker run --rm ethernet-switch-os-test qemu-system-mips -M help |
+            grep '^rtl838x '
+
+      # Every switch of a test is a QEMU process in this one container, cabled
+      # to the others over its loopback: no host network, no /dev/kvm, no
+      # privileges. The suite stops itself before the step's own timeout, so
+      # that it still writes a report.
+      - name: System test
+        id: run
+        timeout-minutes: ${{ fromJSON(needs.plan.outputs.minutes) }}
+        run: |
+          mkdir -p systemtest-out systemtest-report
+          docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp \
+            -v "$PWD/systemtest:/work/ethernet-switch-os-test" \
+            -v "$PWD/images:/images:ro" \
+            -v "$PWD/systemtest-out:/out" \
+            -v "$PWD/systemtest-report:/report" \
+            ethernet-switch-os-test \
+            ./ethernet-switch-os-test \
+              --suite "${{ matrix.suite }}" \
+              --image "/images/ethernet-switch-os-initramfs-$BOARD.bin" \
+              --out /out --report /report \
+              --report-level "${{ needs.plan.outputs.level }}" \
+              --timeout "${{ needs.plan.outputs.seconds }}"
+
+      # always(): the report matters most when the tests failed.
+      - name: Report
+        if: always()
+        run: cat systemtest-report/summary.md >> "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Upload the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: systemtest-${{ steps.version.outputs.version }}-${{ matrix.suite }}
+          path: systemtest-report/
+          # A missing report would read like a passing one.
+          if-no-files-found: error
+
+      # Only on request: these are the serial consoles and the captures, which
+      # are not normally published.
+      - name: Upload the logs
+        if: always() && needs.plan.outputs.level == 'full'
+        uses: actions/upload-artifact@v4
+        with:
+          name: systemtest-logs-${{ steps.version.outputs.version }}-${{ matrix.suite }}
+          path: systemtest-out/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      # A workflow_run job appears on no pull request, so the verdict is put on
+      # the commit that was built, with a link to the report.
+      - name: Verdict on the commit
+        if: always() && needs.plan.outputs.sha != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STATE: ${{ steps.run.outcome == 'success' && 'success' || 'failure' }}
+        run: |
+          gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/${{ needs.plan.outputs.sha }}" \
+            -f state="$STATE" \
+            -f context="system test (${{ matrix.suite }})" \
+            -f description="${{ steps.version.outputs.version }}" \
+            -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"

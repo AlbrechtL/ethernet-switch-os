@@ -49,3 +49,20 @@ pinned, that run doubles as a check that the upstream branches still build.
 `.github/workflows/docs.yml` builds this documentation with
 `mkdocs build --strict` on every change to it, so a broken link fails the
 build, and publishes it to GitHub Pages from `master`.
+
+## System test
+
+Beyond the boot tests above, the GS1900-8 image is exercised by a black-box
+system test suite that lives in a repository of its own, which is not public.
+It boots several emulated switches, cables them together, drives them over
+their serial consoles and checks spanning tree against the published RSTP and
+MSTP conformance suites. `.github/workflows/systemtest.yml` runs it on the
+images of every successful build: a quick set on each build, the two
+conformance suites, which take hours, on the weekly one.
+
+The report is public. The verdict is in the run's summary and the case-by-case
+result is a `systemtest-…` artifact of the run, so anybody can see which cases
+passed and why one failed without having access to the suite itself. The serial
+consoles and packet captures behind it are not published: they amount to a
+transcript of the tests. Where the suite is not available — a pull request from
+a fork, for instance — it is skipped, and nothing else about the build changes.
