@@ -12,10 +12,21 @@ network interface (`lan1`, `lan2`, ...), and the switch is configured the
 way any Linux bridge is configured: a VLAN-aware bridge, bridge VLAN
 entries, VLAN interfaces with IP addresses. The kernel's **switchdev** and
 **DSA** frameworks pass that configuration on to the switch chip, which then
-forwards frames in hardware. On top sits [clixon](https://www.clicon.org/),
-which turns a YANG configuration into those kernel settings through a
-backend plugin. There is **no switch ASIC SDK and no proprietary driver**
-anywhere in the firmware.
+forwards frames in hardware. There is **no switch ASIC SDK and no
+proprietary driver** anywhere in the firmware.
+
+## Built on clixon
+
+Ethernet Switch OS is based massively on [clixon](https://www.clicon.org/),
+an open-source configuration management framework driven by YANG models.
+Clixon provides the datastores, YANG validation, transactions, and the
+RESTCONF server, CLI and SNMP frontends. Ethernet Switch OS adds only the
+switch-specific part: a backend plugin that turns a committed YANG
+configuration into those kernel settings. The plugin is written in Rust and
+lives in [clixon-switch-rs](https://github.com/AlbrechtL/clixon-switch-rs).
+
+Many thanks to the clixon developers for this foundation. Without their work
+this project would not exist.
 
 ## Overview
 
