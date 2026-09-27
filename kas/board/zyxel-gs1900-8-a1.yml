@@ -26,7 +26,6 @@ artifacts:
   swu-factory: build/tmp/deploy/images/zyxel-gs1900-8-a1/ethernet-switch-os-swu-factory-zyxel-gs1900-8-a1.swu
   swu-upgrade: build/tmp/deploy/images/zyxel-gs1900-8-a1/ethernet-switch-os-swu-upgrade-zyxel-gs1900-8-a1.swu
   initramfs: build/tmp/deploy/images/zyxel-gs1900-8-a1/ethernet-switch-os-initramfs-zyxel-gs1900-8-a1.bin
-  initramfs-rt-loader: build/tmp/deploy/images/zyxel-gs1900-8-a1/ethernet-switch-os-initramfs-zyxel-gs1900-8-a1-rt-loader.bin
   # The version this firmware was built as, the same string as in
   # /etc/os-release. CI names its artifacts after it.
   version: build/tmp/deploy/images/zyxel-gs1900-8-a1/ethernet-switch-os-version-zyxel-gs1900-8-a1.txt

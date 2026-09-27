@@ -124,7 +124,6 @@ For the Zyxel GS1900-8, in `build/tmp/deploy/images/zyxel-gs1900-8-a1/`:
 | File | What it is for |
 |---|---|
 | `ethernet-switch-os-initramfs-zyxel-gs1900-8-a1.bin` | TFTP boot image; the first install and recovery run entirely from RAM. |
-| `ethernet-switch-os-initramfs-zyxel-gs1900-8-a1-rt-loader.bin` | The same payload without the uImage header, for booting with `go` instead of `bootm`. |
 | `ethernet-switch-os-swu-factory-zyxel-gs1900-8-a1.swu` | First install, uploaded from the TFTP initramfs. Writes `firmware`, wipes `data`. |
 | `ethernet-switch-os-swu-upgrade-zyxel-gs1900-8-a1.swu` | Update in place. Rewrites `firmware`, keeps user data. |
 

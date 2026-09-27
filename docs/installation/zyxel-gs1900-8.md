@@ -51,7 +51,6 @@ through a web page or the `swupdate` command (see
 | File | Used for |
 |---|---|
 | `ethernet-switch-os-initramfs-zyxel-gs1900-8-a1.bin` | Booted over TFTP with `bootm`. The kernel with its initramfs, running entirely from RAM. For the first installation, and for recovery. |
-| `ethernet-switch-os-initramfs-zyxel-gs1900-8-a1-rt-loader.bin` | The same without the uImage header, booted with `go`. |
 | `ethernet-switch-os-swu-factory-zyxel-gs1900-8-a1.swu` | The **factory** `.swu`: writes the firmware into the flash and erases the configuration. |
 | `ethernet-switch-os-swu-upgrade-zyxel-gs1900-8-a1.swu` | The [update](#update) of a switch that is already installed. Keeps the configuration. |
 
@@ -77,16 +76,6 @@ other files in the artifact are intermediate results of the build; see
 
     The switch has 128 MB of RAM, so addresses stop at `0x88000000`; do
     not use `0x8f000000` or higher, that is past the end of RAM.
-
-    If you prefer the headerless image, use `go` instead:
-
-    ```text
-    tftpboot 0x84f00000 192.168.1.12:ethernet-switch-os-initramfs-zyxel-gs1900-8-a1-rt-loader.bin
-    go 0x84f00000
-    ```
-
-    The two files are **not** interchangeable: `bootm` on the headerless
-    one gives `Bad Header Checksum`, because it has no uImage header.
 
 4. The switch comes up at `192.168.1.1`, running from RAM. Check that the
    bootloader will start the firmware from the first slot. The setting

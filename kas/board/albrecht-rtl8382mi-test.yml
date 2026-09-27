@@ -23,7 +23,6 @@ artifacts:
   swu-factory: build/tmp/deploy/images/albrecht-rtl8382mi-test/ethernet-switch-os-swu-factory-albrecht-rtl8382mi-test.swu
   swu-upgrade: build/tmp/deploy/images/albrecht-rtl8382mi-test/ethernet-switch-os-swu-upgrade-albrecht-rtl8382mi-test.swu
   initramfs: build/tmp/deploy/images/albrecht-rtl8382mi-test/ethernet-switch-os-initramfs-albrecht-rtl8382mi-test.bin
-  initramfs-rt-loader: build/tmp/deploy/images/albrecht-rtl8382mi-test/ethernet-switch-os-initramfs-albrecht-rtl8382mi-test-rt-loader.bin
   # The version this firmware was built as, the same string as in
   # /etc/os-release. CI names its artifacts after it.
   version: build/tmp/deploy/images/albrecht-rtl8382mi-test/ethernet-switch-os-version-albrecht-rtl8382mi-test.txt

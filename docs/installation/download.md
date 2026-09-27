@@ -7,15 +7,15 @@
     [Which firmware is installed](../maintenance.md#which-firmware-is-installed).
 
 Instead, every run of the
-[build workflow](https://github.com/AlbrechtL/ethernet-switch-os/actions)
+[build workflow](https://github.com/AlbrechtL/ethernet-switch-os/actions/workflows/build.yml)
 builds the firmware for each board and keeps the images as artifacts of
 that run. They are built from the current `master` of this repository and
 of every layer.
 
 ## Downloading the images
 
-1. Open the [Actions](https://github.com/AlbrechtL/ethernet-switch-os/actions)
-   page of the repository and choose the **Build images** workflow.
+1. Open the [Build images](https://github.com/AlbrechtL/ethernet-switch-os/actions/workflows/build.yml)
+   workflow page of the repository.
 2. Open a recent run with a green check mark. Runs on `master` are the
    ones to use; runs of pull requests contain changes that are not merged
    yet.
@@ -44,7 +44,6 @@ in the artifact's name:
 | File | Boards | Used for |
 |---|---|---|
 | `ethernet-switch-os-initramfs-<board>.bin` | Zyxel, Albrecht test switch | Booted over TFTP from the original bootloader with `bootm`. Runs entirely from RAM; used for the first installation and for recovery. |
-| `ethernet-switch-os-initramfs-<board>-rt-loader.bin` | Zyxel, Albrecht test switch | The same image without the uImage header, for booting with `go` instead of `bootm`. |
 | `ethernet-switch-os-swu-factory-<board>.swu` | Zyxel, Albrecht test switch | First installation. Uploaded while the TFTP image runs. Writes the firmware and **erases** the configuration partition. |
 | `ethernet-switch-os-swu-upgrade-<board>.swu` | All | [Update](../maintenance.md#firmware-update) of an installed switch. Writes the firmware and **keeps** the configuration. |
 | `qemu-switch-image-<board>.rootfs.wic`, `.wic.bmap` | QEMU x86-64 switch | The virtual disk. |
