@@ -56,7 +56,7 @@ nav:
       - Download: installation/download.md
       - Zyxel GS1900-8: installation/zyxel-gs1900-8.md
       - Albrecht RTL8382MI test switch: installation/albrecht-rtl8382mi-test.md
-      - Raspberry Pi switch: installation/raspberry-pi.md
+      - Raspberry Pi 4-port switch: installation/raspberry-pi.md
       - QEMU x86-64 switch: installation/qemu-x86-64.md
       - First login: installation/first-login.md
   - Firmware update and maintenance: maintenance.md

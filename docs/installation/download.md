@@ -29,7 +29,7 @@ left.
 | `ethernet-switch-os-zyxel-gs1900-8-a1` | [Zyxel GS1900-8](zyxel-gs1900-8.md) (rev A1) |
 | `ethernet-switch-os-albrecht-rtl8382mi-test` | [Albrecht RTL8382MI test switch](albrecht-rtl8382mi-test.md) |
 | `ethernet-switch-os-qemux86-64-switch` | [QEMU x86-64 switch](qemu-x86-64.md) |
-| `ethernet-switch-os-rpi-managed-switch-rpi0` | [Raspberry Pi switch](raspberry-pi.md) |
+| `ethernet-switch-os-rpi-managed-switch-rpi0` | [Raspberry Pi 4-port switch](raspberry-pi.md) |
 
 ## Files
 

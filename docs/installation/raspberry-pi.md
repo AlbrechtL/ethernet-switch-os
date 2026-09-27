@@ -1,4 +1,4 @@
-# Raspberry Pi switch
+# Raspberry Pi 4-port switch
 
 The Raspberry Pi Zero with the
 [4-port managed switch HAT](https://github.com/AlbrechtL/rpi-managed-switch-4-port)

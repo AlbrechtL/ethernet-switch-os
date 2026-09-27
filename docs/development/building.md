@@ -140,7 +140,7 @@ The Raspberry Pi switch is different: its board builds an SD card image,
 `ethernet-switch-os-swu-upgrade-rpi-managed-switch-rpi0.swu` for updates.
 There is no factory `.swu` and no TFTP image. The SD card layout and the A/B
 update are in
-[Raspberry Pi switch](../installation/raspberry-pi.md#sd-card-layout-and-ab-boot).
+[Raspberry Pi 4-port switch](../installation/raspberry-pi.md#sd-card-layout-and-ab-boot).
 Once the switch is up: `ssh cli@192.168.1.1` for the CLI,
 `http://192.168.1.1/` for the status and settings page,
 `http://192.168.1.1:8080` for SWUpdate. [First login](../installation/first-login.md)
