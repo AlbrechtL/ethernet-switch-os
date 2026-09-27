@@ -156,7 +156,7 @@ jobs:
       # them: the initramfs image the switches boot, and the version file that
       # says which firmware this is.
       - name: Download the images
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: ethernet-switch-os-*-zyxel-gs1900-8-a1
           merge-multiple: true
@@ -174,7 +174,7 @@ jobs:
       # workspace, and a token in systemtest/.git/config is one careless upload
       # away from being published.
       - name: Check out the system tests
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: AlbrechtL/ethernet-switch-os-test
           token: ${{ secrets.SYSTEMTEST_TOKEN }}
@@ -186,7 +186,7 @@ jobs:
       # path inside the build directory, so it cannot leave it. Branch tips,
       # like the layers in kas/.
       - name: Check out rtl838x-qemu
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: AlbrechtL/rtl838x-qemu
           persist-credentials: false
@@ -201,7 +201,7 @@ jobs:
 
       - name: Restore the emulator
         id: cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             rtl838x-qemu/out/qemu
@@ -258,7 +258,7 @@ jobs:
 
       - name: Upload the report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: systemtest-${{ steps.version.outputs.version }}-${{ matrix.suite }}
           path: systemtest-report/
@@ -269,7 +269,7 @@ jobs:
       # are not normally published.
       - name: Upload the logs
         if: always() && needs.plan.outputs.level == 'full'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: systemtest-logs-${{ steps.version.outputs.version }}-${{ matrix.suite }}
           path: systemtest-out/
