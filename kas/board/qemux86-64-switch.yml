@@ -42,6 +42,9 @@ artifacts:
   disk: build/tmp/deploy/images/qemux86-64-switch/qemu-switch-image-qemux86-64-switch.rootfs.wic
   disk-bmap: build/tmp/deploy/images/qemux86-64-switch/qemu-switch-image-qemux86-64-switch.rootfs.wic.bmap
   swu-upgrade: build/tmp/deploy/images/qemux86-64-switch/ethernet-switch-os-swu-upgrade-qemux86-64-switch.swu
+  # The version this firmware was built as, the same string as in
+  # /etc/os-release. CI names its artifacts after it.
+  version: build/tmp/deploy/images/qemux86-64-switch/ethernet-switch-os-version-qemux86-64-switch.txt
   # Published with the images: the SPDX SBOM of the root filesystem, the
   # open-source licenses, and the YANG modules and SNMP MIBs the switch
   # serves.

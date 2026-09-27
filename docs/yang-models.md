@@ -63,7 +63,7 @@ Paths are written as in the CLI. `{…}` lists the supported leaves.
 
 These show up in `show state` but cannot be configured:
 
-- `system state`: host name, firmware, uptime, load, memory, clock
+- `system state`: host name, firmware version and the revision it was built from, uptime, load, memory, clock
 - port counters, `oper-status`, MAC address
 - `routed-vlan ipv4 state dhcp-lease` and each address's `origin`
 - `stp ... state`: roles, port states, root bridge

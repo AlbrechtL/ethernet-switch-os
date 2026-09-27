@@ -69,6 +69,31 @@ interrupted update; the others have [non-A/B updates](#non-ab-updates):
     A backup of the configuration is highly recommended before every
     update. See [Backing up and restoring the configuration](#backing-up-and-restoring-the-configuration).
 
+### Which firmware is installed
+
+There are no releases and no tags yet, so the firmware version is a base
+version and the git revision of `meta-ethernet-switch-os` the firmware was
+built from, for example `0.0.0-3eae8394`. Two builds from different commits
+therefore have different versions, and every version names its commit.
+
+Where to read it:
+
+- the CLI: `show state text system` ([System status](cli/system.md#system-status)),
+  as `os-version`, with the revision on its own in `os-build-id`,
+- the [status page](web-ui.md#system) of the web UI, as **Firmware**,
+- RESTCONF:
+
+    ```sh
+    curl -s http://192.168.1.1/restconf/data/clixon-switch:system/state/os-version
+    ```
+
+- in a `root` shell: `/etc/os-release` (`VERSION`, `BUILD_ID`), and
+  `/etc/buildinfo`, which names the branch and revision of *every* layer the
+  firmware was built from; the version can only name one of them.
+
+The same version is in the `.swu` file's `sw-description`, and CI publishes it
+next to the images as `ethernet-switch-os-version-<machine>.txt`.
+
 ### Update types
 
 There are two types of update. Which one a switch uses depends on its
@@ -262,7 +287,8 @@ To tell whether it worked:
     ```
 
     With A/B, the old version after the reboot means the new firmware was
-    not confirmed and the switch went back.
+    not confirmed and the switch went back. See
+    [Which firmware is installed](#which-firmware-is-installed).
 
 - **Follow the progress** live, if you have a WebSocket client such as
   [websocat](https://github.com/vi/websocat). Start it before the upload.

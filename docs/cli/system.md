@@ -29,7 +29,8 @@ clixon-switch:system {
       location "Rack 3, room 101";
       hostname zyxel-gs1900-8-a1;
       os-name "Ethernet Switch OS";
-      os-version "6.0.3 (wrynose)";
+      os-version 0.0.0-3eae8394;
+      os-build-id 3eae8394;
       kernel-release 6.18.39-yocto-tiny;
       current-datetime 2018-03-09T12:36:02Z;
       uptime 67;
@@ -45,7 +46,8 @@ clixon-switch:system {
 | Field | Meaning |
 |---|---|
 | `hostname` | The switch's host name. Fixed by the firmware; it cannot be configured yet. |
-| `os-name`, `os-version` | The firmware and its version. |
+| `os-name`, `os-version` | The firmware and its version. There are no releases yet, so the version is a base version and the git revision of `meta-ethernet-switch-os` the firmware was built from. |
+| `os-build-id` | That revision on its own. Once releases are tagged, `os-version` is the tag and this stays the commit. |
 | `kernel-release` | Linux kernel version. |
 | `current-datetime` | The clock, in UTC. The switch has no battery-backed clock and no time synchronisation, so it starts at the same fixed time on every boot (2018-03-09 12:34:56 UTC in the current firmware). |
 | `uptime` | Seconds since boot. |
@@ -57,3 +59,7 @@ same information.
 
 `show version` shows the version of the configuration software (clixon),
 not the firmware version.
+
+A switch also carries `/etc/buildinfo`, which names the branch and revision
+of every layer the firmware was built from, not just the one in the version.
+It is readable in the `root` shell.

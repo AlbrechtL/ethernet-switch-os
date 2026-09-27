@@ -395,6 +395,17 @@ datastores on every edit. Deleting `startup_db` is a factory reset.
   [Firmware update](../maintenance.md#firmware-update).
 - **Rust** for the plugin, cross-compiled by Yocto. On the RTL83xx boards
   that is `mips32r2` big endian with musl, a tier 3 Rust target.
+- **Version**: `DISTRO_VERSION` is a base version set by hand plus the output
+  of `git describe` on `meta-ethernet-switch-os`, the layer that holds the
+  distro configuration, every recipe and the images
+  (`conf/distro/include/ethernet-switch-os-version.inc`). Without tags that is
+  `0.0.0-3eae8394`; a tag `v0.1.0` makes it `0.1.0`, and a commit after it
+  `0.1.0-1-g1a2b3c4d`, so a release number takes a tag and no change to the
+  metadata. The revision alone is `BUILD_ID` in `/etc/os-release`. It reaches
+  the login banner, `/etc/os-release`, the RESTCONF `os-version`, the SNMP
+  `sysDescr` and the `version` field of every `sw-description`. One revision
+  cannot describe a build made from six repositories, so `image-buildinfo`
+  writes the branch and revision of all layers to `/etc/buildinfo`.
 
 ## Where the code is
 

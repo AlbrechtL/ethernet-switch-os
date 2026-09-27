@@ -40,7 +40,7 @@ it at once, and the time of the last update is next to it.
 | Field | Meaning |
 |---|---|
 | Host name | The switch's host name. |
-| Firmware | Name and version of the installed firmware. |
+| Firmware | Name and version of the installed firmware. The version is a base version and the git revision it was built from, see [Which firmware is installed](maintenance.md#which-firmware-is-installed). |
 | Kernel | Linux kernel version. |
 | Uptime | Time since the last boot. |
 | Switch clock | The switch's clock, in your browser's time zone. It is not synchronised and starts at the same fixed date on every boot. |

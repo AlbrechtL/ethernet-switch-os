@@ -167,7 +167,7 @@ missing; requirements already met are not listed.
 | 15 | Coordinated vulnerability disclosure policy (5) | No `SECURITY.md` or other published policy. |
 | 16 | Contact address for reporting vulnerabilities (6) | No security contact. |
 | 17 | Secure distribution of updates (7) | Images are GitHub Actions build artifacts, not signed releases. |
-| 18 | Security updates free of charge, separate from feature updates (8) | No releases and no versioning policy: CI builds the tip of every layer branch, so security fixes cannot be delivered on their own. |
+| 18 | Security updates free of charge, separate from feature updates (8) | No releases and no tags: CI builds the tip of every layer branch, so security fixes cannot be delivered on their own. Every build is at least identified by its version, the git revision of `meta-ethernet-switch-os` behind a base version, with the revision of every layer in `/etc/buildinfo`. |
 
 ### Manufacturer obligations (Articles 13, 14, 31, 32 and Annexes II, VII)
 

@@ -29,6 +29,9 @@ artifacts:
   sdcard: build/tmp/deploy/images/rpi-managed-switch-rpi0/rpi-switch-image-rpi-managed-switch-rpi0.rootfs.wic.bz2
   sdcard-bmap: build/tmp/deploy/images/rpi-managed-switch-rpi0/rpi-switch-image-rpi-managed-switch-rpi0.rootfs.wic.bmap
   swu-upgrade: build/tmp/deploy/images/rpi-managed-switch-rpi0/ethernet-switch-os-swu-upgrade-rpi-managed-switch-rpi0.swu
+  # The version this firmware was built as, the same string as in
+  # /etc/os-release. CI names its artifacts after it.
+  version: build/tmp/deploy/images/rpi-managed-switch-rpi0/ethernet-switch-os-version-rpi-managed-switch-rpi0.txt
   # Published with the images: the SPDX SBOM of the root filesystem, the
   # open-source licenses, and the YANG modules and SNMP MIBs the switch
   # serves.

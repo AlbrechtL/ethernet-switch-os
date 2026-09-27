@@ -111,6 +111,15 @@ jobs:
           done
           ls -l artifacts
 
+      # The firmware version, as bitbake computed it: the base version and the
+      # revision of meta-ethernet-switch-os (see its
+      # conf/distro/include/ethernet-switch-os-version.inc). Read from the
+      # deployed file rather than computed here, so there is one definition.
+      - name: Firmware version
+        id: version
+        if: success()
+        run: echo "version=$(cat artifacts/ethernet-switch-os-version-*.txt)" >> "$GITHUB_OUTPUT"
+
       # The emulated switch can be booted right here: boot the disk image,
       # install the .swu into the other A/B slot and check that it comes up
       # and gets confirmed. /dev/kvm exists on the hosted runners, but only
@@ -137,7 +146,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: ethernet-switch-os-${{ matrix.board }}
+          name: ethernet-switch-os-${{ steps.version.outputs.version }}-${{ matrix.board }}
           path: artifacts/
           if-no-files-found: error
 
