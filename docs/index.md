@@ -31,7 +31,7 @@ one is visible in the other.
   with the configuration kept. The Raspberry Pi and QEMU x86-64 switches
   have two firmware slots (A/B) and roll back a failed update by
   themselves. The Zyxel GS1900-8 and the Albrecht test switch have only one:
-  read [Firmware update](maintenance.md#firmware-update) before their first
+  read [Firmware update](installation/update.md#firmware-update) before their first
   update.
 
 What it cannot do (yet) is listed under [Limitations](limitations.md).
@@ -55,7 +55,7 @@ The board file is what you name when you [build the firmware](development/buildi
    getting Ethernet Switch OS onto the switch, or the emulated
    [Zyxel GS1900-8](installation/zyxel-gs1900-8.md#qemu) or
    [QEMU x86-64 switch](installation/qemu-x86-64.md) to try it without one.
-2. [First login](installation/first-login.md): factory settings and how to
+2. [Getting started](getting-started.md): factory settings and how to
    connect.
 3. [CLI basics](cli/basics.md): how the CLI works. Read this before the task
    chapters.

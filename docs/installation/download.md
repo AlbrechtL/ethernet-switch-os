@@ -3,8 +3,7 @@
 !!! note "No releases yet"
     Ethernet Switch OS has no releases so far. There are no versioned
     downloads, and there is no release page. Every build does carry a
-    version that names the commit it was built from, see
-    [Which firmware is installed](../maintenance.md#which-firmware-is-installed).
+    version that names the commit it was built from.
 
 Instead, every run of the
 [build workflow](https://github.com/AlbrechtL/ethernet-switch-os/actions/workflows/build.yml)
@@ -45,7 +44,7 @@ in the artifact's name:
 |---|---|---|
 | `ethernet-switch-os-initramfs-<board>.bin` | Zyxel, Albrecht test switch | Booted over TFTP from the original bootloader with `bootm`. Runs entirely from RAM; used for the first installation and for recovery. |
 | `ethernet-switch-os-swu-factory-<board>.swu` | Zyxel, Albrecht test switch | First installation. Uploaded while the TFTP image runs. Writes the firmware and **erases** the configuration partition. |
-| `ethernet-switch-os-swu-upgrade-<board>.swu` | All | [Update](../maintenance.md#firmware-update) of an installed switch. Writes the firmware and **keeps** the configuration. |
+| `ethernet-switch-os-swu-upgrade-<board>.swu` | All | [Update](update.md#firmware-update) of an installed switch. Writes the firmware and **keeps** the configuration. |
 | `qemu-switch-image-<board>.rootfs.wic`, `.wic.bmap` | QEMU x86-64 switch | The virtual disk. |
 | `rpi-switch-image-<board>.rootfs.wic.bz2`, `.wic.bmap` | Raspberry Pi switch | The SD card image, for the first installation. |
 

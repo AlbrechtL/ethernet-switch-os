@@ -1,5 +1,7 @@
 # ethernet-switch-os
 
+[![Documentation](https://img.shields.io/badge/📖_Documentation-albrechtl.github.io-blue?style=for-the-badge)](https://albrechtl.github.io/ethernet-switch-os/)
+
 > **⚠️ Proof of concept.** This project is a proof of concept, built to see how
 > far AI assistance gets on a real embedded Linux product. It was created with
 > the help of AI, has not undergone thorough review or hardening, and should
@@ -15,7 +17,7 @@ system is a custom distro on top of OpenEmbedded, assembled per board from
 Yocto layers, and the result is a flashable firmware image rather than a
 general-purpose Linux installation.
 
-## Documentation
+## 📖 Documentation
 
 Everything about using, building and developing Ethernet Switch OS is in the
 **[documentation](https://albrechtl.github.io/ethernet-switch-os/)**. Its

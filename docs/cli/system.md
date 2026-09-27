@@ -54,7 +54,7 @@ clixon-switch:system {
 | `load-average-*` | CPU load over 1, 5 and 15 minutes. |
 | `memory-total`, `memory-available` | RAM in kilobytes. |
 
-The [status page](../installation/first-login.md#web-pages) shows the
+The [status page](../web-ui.md#system) shows the
 same information.
 
 `show version` shows the version of the configuration software (clixon),

@@ -392,7 +392,7 @@ datastores on every edit. Deleting `startup_db` is a factory reset.
   host keys).
 - **SWUpdate** installs `.swu` update files: in place on the RTL83xx boards
   (one firmware slot), A/B with rollback on the Raspberry Pi and QEMU. See
-  [Firmware update](../maintenance.md#firmware-update).
+  [Firmware update](../installation/update.md#firmware-update).
 - **Rust** for the plugin, cross-compiled by Yocto. On the RTL83xx boards
   that is `mips32r2` big endian with musl, a tier 3 Rust target.
 - **Version**: `DISTRO_VERSION` is a base version set by hand plus the output

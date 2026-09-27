@@ -40,7 +40,7 @@ it at once, and the time of the last update is next to it.
 | Field | Meaning |
 |---|---|
 | Host name | The switch's host name. |
-| Firmware | Name and version of the installed firmware. The version is a base version and the git revision it was built from, see [Which firmware is installed](maintenance.md#which-firmware-is-installed). |
+| Firmware | Name and version of the installed firmware. The version is a base version and the git revision it was built from. |
 | Kernel | Linux kernel version. |
 | Uptime | Time since the last boot. |
 | Switch clock | The switch's clock, in your browser's time zone. It is not synchronised and starts at the same fixed date on every boot. |
@@ -160,7 +160,7 @@ A few changes need care:
 
 The update page is SWUpdate's own web interface. How to use it, and what
 to watch out for, is described in
-[Firmware update](maintenance.md#update-in-the-browser).
+[Firmware update](installation/update.md#update-in-the-browser).
 In short:
 
 - **Software Update**: drop a `.swu` file here, or click to choose one. The

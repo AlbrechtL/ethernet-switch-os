@@ -29,8 +29,7 @@ revision A1 from B1. Ethernet Switch OS is built for the rev A1 board
 
 Ethernet Switch OS replaces the original firmware. The first installation
 is done once, over the serial console and TFTP. After that, updates go
-through a web page or the `swupdate` command (see
-[Firmware update](../maintenance.md#firmware-update)).
+through a web page or the `swupdate` command.
 
 !!! warning "The original firmware is replaced"
     The factory `.swu` overwrites both firmware slots of the original
@@ -93,16 +92,16 @@ other files in the artifact are intermediate results of the build; see
    environment.
 6. Reboot. The switch now starts Ethernet Switch OS from flash.
 
-Continue with [First login](first-login.md).
+Continue with [Getting started](../getting-started.md).
 
 ### Update
 
 Later updates are uploaded to the running switch as the **upgrade** `.swu`,
-on the [firmware update page](../maintenance.md#firmware-update) or with
+on the [firmware update page](update.md#firmware-update) or with
 `swupdate`. The switch reboots by itself, and your configuration is kept.
 
 There is only one firmware slot (see
-[Non-A/B updates](../maintenance.md#non-ab-updates)): an update rewrites
+[Non-A/B updates](update.md#non-ab-updates)): an update rewrites
 the running firmware in place. If it is interrupted, boot the `initramfs`
 image over TFTP again and repeat the first installation.
 
@@ -275,7 +274,7 @@ From your computer, the switch is reached through the forwarded ports:
 | `ssh -p 2222 root@127.0.0.1` | A root shell |
 | `http://127.0.0.1:8000/` | [Status page](../web-ui.md) |
 | `http://127.0.0.1:8000/restconf/` | RESTCONF |
-| `http://127.0.0.1:8080/` | [Firmware update page](../maintenance.md#firmware-update) |
+| `http://127.0.0.1:8080/` | Firmware update page |
 | UDP `127.0.0.1:1161` | [SNMP](../snmp/index.md), e.g. `snmpwalk ... 127.0.0.1:1161 1.3.6.1.2.1.1` |
 
 So wherever this guide says `192.168.1.1`, use `127.0.0.1` with these
@@ -292,7 +291,7 @@ the next time you start the switch with the same file.
 
 The emulated switch is updated like the real one: upload the **upgrade**
 `.swu` of a newer [download](download.md) on the
-[firmware update page](../maintenance.md#firmware-update) at
+firmware update page at
 `http://127.0.0.1:8080/`, or with `curl`:
 
 ```sh
@@ -302,7 +301,7 @@ curl -F file=@ethernet-switch-os-swu-upgrade-zyxel-gs1900-8-a1.swu \
 
 The switch rewrites its firmware in the flash and reboots into it. Your
 configuration is kept. As on the real switch there is only one firmware
-slot (see [Non-A/B updates](../maintenance.md#non-ab-updates)): if an update
+slot: if an update
 is interrupted, delete the flash file and install again from step 3.
 
 ### 7. Connect switches

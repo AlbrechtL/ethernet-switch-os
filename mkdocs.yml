@@ -51,15 +51,14 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Limitations: limitations.md
+  - Getting started: getting-started.md
   - Installation:
       - Download: installation/download.md
       - Zyxel GS1900-8: installation/zyxel-gs1900-8.md
       - Albrecht RTL8382MI test switch: installation/albrecht-rtl8382mi-test.md
       - Raspberry Pi 4-port switch: installation/raspberry-pi.md
       - QEMU x86-64 switch: installation/qemu-x86-64.md
-      - First login: installation/first-login.md
-  - Firmware update and maintenance: maintenance.md
+      - Update: installation/update.md
   - Web UI: web-ui.md
   - CLI:
       - Basics: cli/basics.md
@@ -78,3 +77,4 @@ nav:
       - Layers and kas files: development/kas.md
       - Testing and CI: development/testing.md
       - Contributing: development/contributing.md
+  - Limitations: limitations.md

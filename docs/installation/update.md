@@ -1,4 +1,4 @@
-# Firmware update and maintenance
+# Update
 
 Keeping a switch running: saving and backing up its configuration,
 installing new firmware, and getting back in when something went wrong.
@@ -7,7 +7,7 @@ installing new firmware, and getting back in when something went wrong.
 ## Saving the configuration
 
 Changes take effect with `commit`, but only `save` makes them survive a
-reboot (see [CLI basics](cli/basics.md#candidate-running-startup)).
+reboot (see [CLI basics](../cli/basics.md#candidate-running-startup)).
 
 ```text
 switch> save
@@ -78,9 +78,9 @@ therefore have different versions, and every version names its commit.
 
 Where to read it:
 
-- the CLI: `show state text system` ([System status](cli/system.md#system-status)),
+- the CLI: `show state text system` ([System status](../cli/system.md#system-status)),
   as `os-version`, with the revision on its own in `os-build-id`,
-- the [status page](web-ui.md#system) of the web UI, as **Firmware**,
+- the [status page](../web-ui.md#system) of the web UI, as **Firmware**,
 - RESTCONF:
 
     ```sh
@@ -143,7 +143,7 @@ slots next to the bootloader and the configuration.
     second copy to fall back to. If the switch loses power or is reset
     while the new firmware is being written, it will no longer start. To
     get it back you need the serial console, a TFTP server and a new
-    [first installation](installation/zyxel-gs1900-8.md#first-installation), which **erases
+    [first installation](zyxel-gs1900-8.md#first-installation), which **erases
     the configuration**.
 
     - Do not update during a thunderstorm or while someone is working on
@@ -155,18 +155,18 @@ slots next to the bootloader and the configuration.
       [Backing up and restoring the configuration](#backing-up-and-restoring-the-configuration)).
 
 !!! tip "Trying it in QEMU"
-    The [emulated Zyxel GS1900-8](installation/zyxel-gs1900-8.md#qemu) has
+    The [emulated Zyxel GS1900-8](zyxel-gs1900-8.md#qemu) has
     a flash of its own, the same update page and the same `swupdate`
     command, see
-    [Update the firmware](installation/zyxel-gs1900-8.md#6-update-the-firmware).
+    [Update the firmware](zyxel-gs1900-8.md#6-update-the-firmware).
     CI updates it too. So does the A/B update of the
-    [QEMU x86-64 switch](installation/qemu-x86-64.md).
+    [QEMU x86-64 switch](qemu-x86-64.md).
 
 ### Which file
 
 Every build produces an upgrade `.swu` file. The Zyxel GS1900-8 and the
 Albrecht RTL8382MI test switch also get a factory `.swu` (see
-[Download](installation/download.md#files)):
+[Download](download.md#files)):
 
 | File | Use it for |
 |---|---|
@@ -244,7 +244,7 @@ the reboot.
       incomplete. **Do not reboot or power off.** Upload the upgrade file
       again right away: the update service keeps running from RAM and can
       still write the firmware. Once the switch reboots, it needs a new
-      [first installation](installation/zyxel-gs1900-8.md#first-installation).
+      [first installation](zyxel-gs1900-8.md#first-installation).
 
 !!! warning "The Restart System button"
     The **Restart System** button in the top right corner of the page
@@ -383,10 +383,10 @@ $ ssh root@<switch-ip>
 # reboot
 ```
 
-The switch comes back with the [factory settings](installation/first-login.md#factory-settings),
+The switch comes back with the [factory settings](../getting-started.md#factory-settings),
 at `192.168.1.1`.
 
-On the [Albrecht RTL8382MI test switch](installation/albrecht-rtl8382mi-test.md#leds-and-dip-switches), DIP switch 6 does the same: switch it
+On the [Albrecht RTL8382MI test switch](albrecht-rtl8382mi-test.md#leds-and-dip-switches), DIP switch 6 does the same: switch it
 on, wait at least 5 seconds, and switch it off again.
 
 ## When the saved configuration cannot be loaded
@@ -403,4 +403,4 @@ and save.
 |---|---|
 | A committed but unsaved change cut you off | Power-cycle the switch. It boots with the saved configuration. |
 | A saved configuration cut you off | Connect to a port that is still in the management VLAN, or use the serial console (115200 8N1, login `root`) and fix it with `clixon_cli`, or do a factory reset. |
-| The switch does not boot | Boot the TFTP image and reinstall with the factory `.swu`, see the installation of the [Zyxel GS1900-8](installation/zyxel-gs1900-8.md#first-installation) or the [Albrecht RTL8382MI test switch](installation/albrecht-rtl8382mi-test.md#first-installation). |
+| The switch does not boot | Boot the TFTP image and reinstall with the factory `.swu`, see the installation of the [Zyxel GS1900-8](zyxel-gs1900-8.md#first-installation) or the [Albrecht RTL8382MI test switch](albrecht-rtl8382mi-test.md#first-installation). |

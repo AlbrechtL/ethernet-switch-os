@@ -1,4 +1,7 @@
-# First login
+# Getting started
+
+Don't have Ethernet Switch OS on the switch yet? Start with
+[Download](installation/download.md) instead.
 
 ## Factory settings
 
@@ -52,29 +55,29 @@ On the serial console (115200 8N1), the same users log in at the
 `zyxel-gs1900-8-a1 login:` prompt.
 
 !!! tip "In QEMU"
-    In the emulated [Zyxel GS1900-8](zyxel-gs1900-8.md#5-start-the-switch)
-    or the [QEMU x86-64 switch](qemu-x86-64.md#3-start-the-switch), use `ssh -p 2222 cli@127.0.0.1` and `http://127.0.0.1:8000/` instead of
+    In the emulated [Zyxel GS1900-8](installation/zyxel-gs1900-8.md#5-start-the-switch)
+    or the [QEMU x86-64 switch](installation/qemu-x86-64.md#3-start-the-switch), use `ssh -p 2222 cli@127.0.0.1` and `http://127.0.0.1:8000/` instead of
     `192.168.1.1`.
 
 !!! danger "No security"
     Anyone who can reach the switch over the network can log in as `root`,
     change the configuration over RESTCONF, and upload firmware. Only connect
     the management address to a network you trust. See
-    [Limitations](../limitations.md#security).
+    [Limitations](limitations.md#security).
 
 ## Web pages
 
 | URL | Content |
 |---|---|
-| `http://192.168.1.1/` | Status and settings page: firmware version, uptime, management address, ports, VLANs, spanning tree, SNMP. See [Web UI](../web-ui.md). |
-| `http://192.168.1.1:8080/` | Firmware update (SWUpdate). See [Firmware update](../maintenance.md#firmware-update). |
+| `http://192.168.1.1/` | Status and settings page: firmware version, uptime, management address, ports, VLANs, spanning tree, SNMP. See [Web UI](web-ui.md). |
+| `http://192.168.1.1:8080/` | Firmware update (SWUpdate). See [Firmware update](installation/update.md#firmware-update). |
 
 ## Next steps
 
 Most people first want to:
 
-1. Read [CLI basics](../cli/basics.md), especially the part about
+1. Read [CLI basics](cli/basics.md), especially the part about
    `commit` and `save`.
 2. Give the switch an address in their own network, or turn on the DHCP
-   client: [Management IP address](../cli/ip.md).
-3. Set up VLANs: [VLANs](../cli/vlans.md).
+   client: [Management IP address](cli/ip.md).
+3. Set up VLANs: [VLANs](cli/vlans.md).

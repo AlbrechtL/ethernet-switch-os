@@ -9,7 +9,7 @@ virtual network cards. Its board name is `qemux86-64-switch`. Unlike the
   be compiled,
 - boots in seconds, because it runs at full speed with KVM, and
 - has two firmware slots (A/B) with automatic rollback, so
-  [firmware updates](../maintenance.md#firmware-update) work as they will
+  firmware updates work as they will
   on hardware that has two slots.
 
 !!! note "Tested on"
@@ -84,7 +84,7 @@ What the options do:
 | `-drive if=pflash,…,file=…/OVMF_CODE_4M.fd` | The UEFI firmware, read-only. It starts the bootloader on the disk. |
 | `-drive if=pflash,…,file=switch0-vars.fd` | The UEFI settings of this switch, writable. |
 | `-drive if=virtio,format=raw,file=switch0.wic` | The switch's disk. |
-| `-device i6300esb -action watchdog=reset` | A hardware watchdog, which resets the switch when it hangs. The bootloader refuses to start without it, and it is what lets a hanging [firmware update](../maintenance.md#ab-updates) roll back. |
+| `-device i6300esb -action watchdog=reset` | A hardware watchdog, which resets the switch when it hangs. The bootloader refuses to start without it, and it is what lets a hanging firmware update roll back. |
 | `-netdev user,id=lan1,…` | QEMU's built-in user network, the network behind port `lan1`. |
 | `net=192.168.1.0/24` | The user network uses the switch's factory network. |
 | `host=…,dns=…,dhcpstart=…` | The addresses of QEMU's virtual gateway, DNS server and DHCP pool in that network. Without them QEMU would take `192.168.1.2` for itself. |
@@ -108,7 +108,7 @@ From your computer, the switch is reached through the forwarded ports:
 | `ssh -p 2222 root@127.0.0.1` | A root shell |
 | `http://127.0.0.1:8000/` | [Status page](../web-ui.md) |
 | `http://127.0.0.1:8000/restconf/` | RESTCONF |
-| `http://127.0.0.1:8080/` | [Firmware update page](../maintenance.md#firmware-update) |
+| `http://127.0.0.1:8080/` | Firmware update page |
 
 So wherever this guide says `192.168.1.1`, use `127.0.0.1` with these
 ports. `scp` needs `-P 2222`. The ports only listen on `127.0.0.1`.
@@ -210,7 +210,7 @@ Then start switch 0 in a second terminal.
 
 The switch is updated like a real one: with the `.swu` file of a newer
 [download](download.md) on the
-[firmware update page](../maintenance.md#firmware-update) at
+[firmware update page](update.md#update-in-the-browser) at
 `http://127.0.0.1:8080/`, or with `curl`:
 
 ```sh
@@ -284,9 +284,7 @@ At the next start, EFI Boot Guard picks the new environment, sets it to
   boots the other one, the previous slot, with the configuration from the
   shared data partition.
 
-The next update goes to the failed slot again. See
-[A/B updates](../maintenance.md#ab-updates) for how updates work on all
-boards. In a root shell, `bg_printenv` shows both environments and
+The next update goes to the failed slot again. In a root shell, `bg_printenv` shows both environments and
 `bg_printenv -c` the one that booted.
 
 ### For developers

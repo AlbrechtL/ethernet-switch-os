@@ -48,16 +48,15 @@ sync
     device, its data is gone. Check the device name and size with `lsblk`
     before you press Enter.
 
-Put the SD card into the Pi and power it on. It starts at `192.168.1.1`, as
-described in [First login](first-login.md). Both firmware slots on the card
+Put the SD card into the Pi and power it on. It starts at `192.168.1.1`. Both firmware slots on the card
 are identical at first; later updates use the `.swu` file (see
-[Firmware update](../maintenance.md#firmware-update)).
+[Firmware update](update.md#firmware-update)).
 
 !!! tip "Faster flashing"
     `bmaptool copy <image>.wic.bz2 /dev/sdX` unpacks and writes only the used
     blocks in one step, using the `.wic.bmap` file next to the image.
 
-Continue with [First login](first-login.md).
+Continue with [Getting started](../getting-started.md).
 
 ## SD card layout and A/B boot
 
@@ -78,8 +77,7 @@ U-Boot switches back to the previous slot. The kernel runs with `panic=5`,
 so a slot that cannot mount its root filesystem fails over as well.
 
 The device tree and the overlays in the boot partition are shared by both
-slots and are not part of an update. See
-[A/B updates](../maintenance.md#ab-updates) for how an update works.
+slots and are not part of an update.
 
 ## Known limitations
 

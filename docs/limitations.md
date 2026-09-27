@@ -67,7 +67,7 @@ has a complete example.
   RTL8382MI test switch. An update overwrites the running system in place.
   A power failure or reset while it is written leaves the switch unable to
   start. Recovery needs the serial console and TFTP, and erases the
-  configuration. See [Firmware update](maintenance.md#non-ab-updates).
+  configuration. See [Firmware update](installation/update.md#non-ab-updates).
 - On the same switches, no automatic rollback if the new firmware does not
   work. The Raspberry Pi and QEMU x86-64 switches have two slots (A/B) and
   roll back by themselves; the Raspberry Pi has no watchdog yet, so a
@@ -116,7 +116,7 @@ has a complete example.
 
 ## CLI
 
-- No factory-reset command (see [Maintenance](maintenance.md#factory-reset)).
+- No factory-reset command (see [Factory reset](installation/update.md#factory-reset)).
 - No reboot command; use the root shell.
 - Error messages include internal details (timestamps, function names) in
   front of the actual reason.
