@@ -41,7 +41,7 @@ flowchart TB
         lighttpd["lighttpd<br/>HTTPS port 443, login"]
         restconf["clixon_restconf<br/>127.0.0.1 port 80"]
         swupdate["SWUpdate<br/>127.0.0.1 port 8080"]
-        cli["clixon_cli<br/>login shell of user cli"]
+        cli["clixon_cli<br/>login shell of the admin account"]
         snmpd["snmpd (net-snmp)<br/>UDP port 161"]
         clixon_snmp["clixon_snmp<br/>AgentX subagent"]
         backend["clixon_backend<br/>datastores, YANG validation, transactions"]
@@ -78,10 +78,10 @@ flowchart TB
 | Web UI | Static HTML, CSS and JavaScript, no build step. Talks to the switch only through RESTCONF. | [meta-ethernet-switch-os](https://github.com/AlbrechtL/meta-ethernet-switch-os) `recipes-webui/` |
 | HTTPS front end | lighttpd: TLS, the password check, the web UI's files, and forwarding to RESTCONF and SWUpdate. See [Access and security](#access-and-security). | meta-ethernet-switch-os `recipes-extended/lighttpd/` |
 | RESTCONF | `clixon_restconf`, clixon's native HTTP/1 server, on 127.0.0.1 only. | clixon, recipe in meta-ethernet-switch-os `recipes-clixon/` |
-| CLI | `clixon_cli`, generated from the YANG models (clixon's autocli), plus `password` and `factory-reset` from a small C plugin. It is the login shell of the user `cli`. | clixon; CLI spec and plugin in [clixon-switch-rs](https://github.com/AlbrechtL/clixon-switch-rs) `clixon/` |
+| CLI | `clixon_cli`, generated from the YANG models (clixon's autocli), plus `password` and `factory-reset` from a small C plugin. It is the login shell of the admin account. | clixon; CLI spec and plugin in [clixon-switch-rs](https://github.com/AlbrechtL/clixon-switch-rs) `clixon/` |
 | SNMP | net-snmp's `snmpd` and `clixon_snmp` as its AgentX subagent. Read-only. | net-snmp, clixon |
 | Configuration backend | `clixon_backend`: holds the datastores, validates against YANG, runs transactions, loads the plugin. | clixon |
-| Backend plugin | `clixon-switch`, a Rust shared library. Validates each commit and brings the kernel in line with it. Runs the RPCs `set-password` and `factory-reset`. | [clixon-switch-rs](https://github.com/AlbrechtL/clixon-switch-rs) |
+| Backend plugin | `clixon-switch`, a Rust shared library. Validates each commit and brings the kernel in line with it. Runs the RPCs `set-password` (which also creates the admin account) and `factory-reset`. | [clixon-switch-rs](https://github.com/AlbrechtL/clixon-switch-rs) |
 | Linux networking | Bridge, VLANs, addresses, spanning tree states. Configured over rtnetlink. | Linux kernel |
 | Hardware offload | switchdev and DSA, and the switch chip's DSA driver. | Linux kernel, BSP layer |
 
@@ -356,7 +356,7 @@ everything else on the `data` partition.
 ## Factory reset
 
 A factory reset puts the switch back into the state of a fresh install: the
-factory configuration at `192.168.1.1`, no admin password (the
+factory configuration at `192.168.1.1`, no admin account (the
 [first-login setup](#first-login-setup) runs again), new SSH host keys and a
 new HTTPS certificate. The firmware stays.
 
@@ -430,7 +430,7 @@ which is a factory reset as well.
 | `clixon_backend` | init script | `/var/run/clixon-switch.sock` | Configuration, with the plugin loaded |
 | `clixon_restconf` | init script | TCP 80 on 127.0.0.1 | RESTCONF |
 | `lighttpd` | init script | TCP 443 | HTTPS and the login for the web interface, RESTCONF and SWUpdate |
-| `clixon_cli` | SSH or serial login of `cli` | — | CLI |
+| `clixon_cli` | SSH or serial login of the admin account | — | CLI |
 | `dropbear` | init script | TCP 22 | SSH |
 | `swupdate` | init script | TCP 8080 on 127.0.0.1 | Firmware update and its web page |
 | `mstpd` | plugin, while spanning tree is enabled | — | STP, RSTP, MSTP |
@@ -449,37 +449,83 @@ from the bootloader's serial console.
 | Account | Password | Serial console | SSH | Web, RESTCONF |
 |---|---|---|---|---|
 | `root` | none | yes, a shell | refused | no |
-| `cli` (admin) | set at the first login | yes, the CLI | yes, the CLI | yes |
+| admin, name chosen in the setup, UID 1000 | chosen in the setup | yes, the CLI | yes, the CLI | yes |
+
+A fresh switch has no admin account at all: the
+[first-login setup](#first-login-setup) creates it. Until then SSH has no
+account to let in, and the web interface shows only the setup form.
 
 `root` has an empty password, but can only log in where someone has the
 hardware in hand. dropbear runs with `-w` (no root logins), `/etc/securetty`
 lists the console devices only, not the pseudo terminals of SSH sessions,
-and `su` is restricted to the `wheel` group, which nobody is in. `cli`'s login
-shell is the clixon CLI, so it never gets a shell to try.
+and `su` is restricted to the `wheel` group, which nobody is in. The admin's
+login shell is the clixon CLI (`ethernet-switch-os-cli`, which prints a joke
+and execs `clixon_cli`), so it never gets a shell to try.
 
 The image sets this up in `ethernet-switch-os-image-common.inc`: the image
-features `empty-root-password` and `allow-empty-password` (dropbear's `-B`,
-for the first login of `cli`), but not `allow-root-login`, which would drop
-`-w`.
+feature `empty-root-password`, but neither `allow-empty-password` (dropbear's
+`-B`; no account has an empty password that SSH would need to accept) nor
+`allow-root-login`, which would drop `-w`.
 
 ### First-login setup
 
-The firmware ships with `/etc/ethernet-switch-os/setup-required` and no
-password for `cli`. While the file exists:
+The firmware ships with `/etc/ethernet-switch-os/setup-required` and no admin
+account. While the file exists:
 
-- A login as `cli`, on the serial console or over SSH, asks for a new
-  password twice before the CLI starts (the login shell
-  `ethernet-switch-os-cli` runs `clixon_cli -1 password`). A command on the
-  ssh command line is refused.
-- The web interface shows only a form for the password. lighttpd answers
-  two RESTCONF requests without a login: reading `setup-required` and the
-  `set-password` RPC.
+- The web interface shows only a form for the username and password of the
+  admin account. lighttpd answers two RESTCONF requests without a login:
+  reading `setup-required` and the `set-password` RPC. A script can do the
+  same with the RPC directly:
 
-The first password that is set deletes the file, which leaves a whiteout in
-the overlay. A factory reset erases the overlay, and the file is back.
+  ```sh
+  curl -k -H 'Content-Type: application/yang-data+json' \
+    -d '{"clixon-switch:input":{"username":"ops","new-password":"a good password"}}' \
+    https://192.168.1.1/restconf/operations/clixon-switch:set-password
+  ```
 
-Until then anyone who reaches the switch can set the password. Set it before
-connecting the switch to a network others use.
+- There is no SSH login, and on the serial console only `root`. `root` can
+  set the switch up from there too: `ethernet-switch-os-set-password` asks
+  for the username and the password.
+
+The setup creates the account with `useradd -u 1000 -N -g users -G clicon`
+(the `clicon` group opens clixon's backend socket to the CLI; `users` as the
+primary group, so no group of the admin's name is made), sets the password
+and deletes the file, which leaves a whiteout in the overlay. A factory reset
+erases the overlay: the account is gone and the file is back.
+
+The username:
+
+- a lower case letter or `_`, then up to 31 lower case letters, digits, `_`
+  or `-`: the part of the POSIX portable set that useradd, `login`, dropbear
+  and htpasswd (no `:`) all take;
+- not the name of an existing user or group (`root`, `clicon`, `lighttpd`,
+  `users` and the rest of `/etc/passwd` and `/etc/group`);
+- fixed until a factory reset. `set-password` refuses `username` after the
+  setup.
+
+The backend plugin (`switch_net::account` in clixon-switch-rs), the script
+and, for the form's hints, the YANG model (`pattern`) and the web interface
+check the same rules.
+
+Until the setup anyone who reaches the switch can create the admin account.
+Do it before connecting the switch to a network others use.
+
+**The admin is UID 1000, not a name.** Nothing in the firmware knows the
+name the user picked, and nothing needs to: the set-password script, the
+backend plugin's current-password check and the migration below look up the
+user with UID 1000 in `/etc/passwd`; lighttpd lets in any user in its
+htpasswd file (`valid-user`), which only ever holds the admin's line; and
+the CLI runs as whoever logged in.
+
+**Switches updated from older firmware keep `cli`.** Before the username
+could be chosen, the image had a fixed admin account `cli`. After an update,
+the data partition still has the old `/etc/shadow` with `cli`'s password,
+and `setup-required` is deleted there, but the new image's `/etc/passwd` has
+no `cli`: nobody could log in, and there would be no setup either. The init
+script `ethernet-switch-os-auth` (before dropbear) sees exactly that, a
+`cli` in `/etc/shadow` and no UID 1000 in `/etc/passwd`, and adds `cli` back
+as UID 1000 and to `clicon`. The switch then works as before, with the old
+password. A factory reset ends that, and the setup asks for a name.
 
 ### Passwords
 
@@ -487,20 +533,23 @@ connecting the switch to a network others use.
 same script does the work:
 
 ```text
-CLI "password"   ─┐
-web form         ─┼─► RPC clixon-switch:set-password ─► backend plugin ─► ethernet-switch-os-set-password
-setup at login   ─┘      (checks current-password,       (root)            ├─ chpasswd -c BCRYPT  → /etc/shadow
-                          unless setup-required)                           ├─ copy of the hash    → /etc/lighttpd/htpasswd
+web setup form   ─┐
+CLI "password"   ─┼─► RPC clixon-switch:set-password ─► backend plugin ─► ethernet-switch-os-set-password
+web "Change      ─┘      (setup: checks username;        (root)            ├─ setup: useradd -u 1000 NAME
+ password"               later: checks                                     ├─ chpasswd -c BCRYPT  → /etc/shadow
+                         current-password)                                 ├─ copy of name, hash  → /etc/lighttpd/htpasswd
 root on serial   ─────────────────────────────────────────────────────────►├─ rm setup-required
                                                                            └─ restart lighttpd
 ```
 
-The backend plugin checks `current-password` against `/etc/shadow` with
-`crypt()` before it runs the script, and the password rules (8 to 128
-characters, no control characters). The RPC answers `access-denied` (HTTP
-403) for a missing or wrong current password. `root` on the serial console
-runs `ethernet-switch-os-set-password cli` directly, to regain access without
-a factory reset.
+The backend plugin checks the rules before it runs the script: the username
+in the setup, afterwards `current-password` against `/etc/shadow` with
+`crypt()`, and always the password rules (8 to 128 characters, no control
+characters). The RPC answers `access-denied` (HTTP 403) for a missing or
+wrong current password, and `invalid-value` (HTTP 400) for a username it
+does not take. `root` on the serial console runs
+`ethernet-switch-os-set-password` directly, to regain access without a
+factory reset: it changes the password of UID 1000, whatever its name.
 
 The hash is **bcrypt** (`$2b$`, cost 8, `BCRYPT_MIN_ROUNDS` and
 `BCRYPT_MAX_ROUNDS` in `/etc/login.defs`). Every program that checks a
@@ -529,19 +578,19 @@ network ──443/tcp──► lighttpd ─┬─ /            static files, /us
                       basic    ├─ /.well-known 127.0.0.1:80    clixon_restconf
                       auth)    └─ /update/     127.0.0.1:8080  SWUpdate (prefix stripped)
         ──22/tcp───► dropbear (-w)
-UART    ──────────► login: root or cli
+UART    ──────────► login: root or the admin
 ```
 
 | URL on port 443 | Login | Goes to | Notes |
 |---|---|---|---|
 | `/`, the web interface's files | no | `/usr/share/ethernet-switch-os/www` | The files hold no data; the setup form has to load without a password. |
 | `/restconf/...` | yes | `127.0.0.1:80` | |
-| `POST /restconf/operations/clixon-switch:set-password` | no | `127.0.0.1:80` | Needs `current-password` once a password is set. |
+| `POST /restconf/operations/clixon-switch:set-password` | no | `127.0.0.1:80` | Creates the admin account in the setup; needs `current-password` once it exists. |
 | `GET /restconf/data/clixon-switch:system/state/setup-required` | no | `127.0.0.1:80` | The web interface asks it to choose between setup form and normal page. |
 | `/.well-known/...` | no | `127.0.0.1:80` | RESTCONF root discovery (RFC 8040). |
 | `/update/...` | yes | `127.0.0.1:8080` | `map-urlpath` strips `/update`; WebSocket upgrade for the progress messages; the `.swu` is streamed through, not stored first. |
 
-The login is HTTP basic auth, user `cli`, realm "Ethernet Switch OS",
+The login is HTTP basic auth for the admin account, realm "Ethernet Switch OS",
 checked against `/etc/lighttpd/htpasswd` (mode 0640, group `lighttpd`).
 lighttpd binds port 443 as root, reads the certificate and key, and then runs
 as the user `lighttpd`. It is built without pcre, so its configuration

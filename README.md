@@ -71,8 +71,9 @@ has the details.
 ## TODO
 
 - User roles with NACM (RFC 8341), for example an admin and a read-only
-  monitor role mapped from Linux groups. Today there is one admin account,
-  `cli`, and whoever logs in may do everything. clixon has NACM: rules in a
+  monitor role mapped from Linux groups. Today there is one admin account
+  (UID 1000, named in the first-login setup), and whoever logs in may do
+  everything. clixon has NACM: rules in a
   fixed file in the squashfs (`CLICON_NACM_MODE` `external`,
   `CLICON_NACM_FILE`), with `CLICON_NACM_CREDENTIALS` `except` so that a
   local client cannot pose as another user. For RESTCONF, clixon has to learn

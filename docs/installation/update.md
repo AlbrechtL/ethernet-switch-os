@@ -84,7 +84,7 @@ Where to read it:
 - RESTCONF:
 
     ```sh
-    curl -sk -u cli https://192.168.1.1/restconf/data/clixon-switch:system/state/os-version
+    curl -sk -u <username> https://192.168.1.1/restconf/data/clixon-switch:system/state/os-version
     ```
 
 - in a `root` shell: `/etc/os-release` (`VERSION`, `BUILD_ID`), and
@@ -220,10 +220,16 @@ partition, and it erases it.
 The switch comes back with its **saved** configuration. Changes that were committed but not saved are lost with
 the reboot.
 
+!!! note "Updating from firmware with the fixed admin account `cli`"
+    Older firmware had a fixed admin account, `cli`, instead of one named in
+    the [first-login setup](../getting-started.md#first-login-create-the-admin-account).
+    An update keeps it: `cli` logs in as before, with its password. Only a
+    factory reset replaces it with the setup.
+
 ### Update in the browser
 
-1. Open `https://<switch-ip>/update/` and log in as `cli` with the admin
-   password. The status page at `https://<switch-ip>/` links there with its
+1. Open `https://<switch-ip>/update/` and log in with the admin username
+   and password. The status page at `https://<switch-ip>/` links there with its
    **Firmware update** button.
 2. Drop the **upgrade** `.swu` file on the "Software Update" area, or click
    the area and choose the file. The upload starts at once; there is no
@@ -255,11 +261,11 @@ the reboot.
 ### Update with curl
 
 The update page accepts the file with a plain HTTP upload, so `curl` on
-your computer can do the same as the browser. `-u cli` asks for the admin
-password, `-k` accepts the switch's self-signed certificate:
+your computer can do the same as the browser. `-u <username>` asks for the
+admin password, `-k` accepts the switch's self-signed certificate:
 
 ```sh
-curl -k -u cli -F "file=@ethernet-switch-os-swu-upgrade-zyxel-gs1900-8-a1.swu" \
+curl -k -u <username> -F "file=@ethernet-switch-os-swu-upgrade-zyxel-gs1900-8-a1.swu" \
      https://192.168.1.1/update/upload
 ```
 
@@ -285,7 +291,7 @@ To tell whether it worked:
   before:
 
     ```sh
-    curl -sk -u cli https://192.168.1.1/restconf/data/clixon-switch:system/state/os-version
+    curl -sk -u <username> https://192.168.1.1/restconf/data/clixon-switch:system/state/os-version
     ```
 
     With A/B, the old version after the reboot means the new firmware was
@@ -376,11 +382,12 @@ away.
 ## Factory reset
 
 A factory reset erases everything the switch has stored: the saved
-configuration, the admin password, the SSH host keys and the HTTPS
+configuration, the admin account, the SSH host keys and the HTTPS
 certificate. The firmware stays. The switch reboots and comes back like a
 freshly installed one: with the
 [factory settings](../getting-started.md#factory-settings) at `192.168.1.1`,
-asking for a new admin password at the first login, with a new SSH host key
+without an admin account until the [first-login setup](../getting-started.md#first-login-create-the-admin-account)
+creates one, with a new SSH host key
 (ssh warns that it changed) and a new certificate.
 
 It is also the way back in when the admin password is lost. Any of these
@@ -396,7 +403,7 @@ starts it:
 
 ```text
 switch> factory-reset
-All settings, the admin password, the SSH host keys and the HTTPS certificate
+All settings, the admin account, the SSH host keys and the HTTPS certificate
 will be erased, and the switch reboots. Continue? [y/N] y
 Rebooting. The switch comes back with the factory settings.
 ```
@@ -408,12 +415,13 @@ are deleted, but an SD card may keep the old blocks.
 ### Lost password, but keep the settings
 
 With a serial cable, `root` can set a new admin password without a factory
-reset:
+reset. It changes the password of the admin account, whatever its name (here
+`ops`):
 
 ```text
 zyxel-gs1900-8-a1 login: root
-# ethernet-switch-os-set-password cli
-New password for cli:
+# ethernet-switch-os-set-password
+New password for ops:
 Repeat new password:
 ```
 

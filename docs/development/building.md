@@ -140,9 +140,9 @@ The Raspberry Pi switch is different: its board builds an SD card image,
 There is no factory `.swu` and no TFTP image. The SD card layout and the A/B
 update are in
 [Raspberry Pi 4-port switch](../installation/raspberry-pi.md#sd-card-layout-and-ab-boot).
-Once the switch is up: `ssh cli@192.168.1.1` for the CLI (the first login
-sets the admin password), `https://192.168.1.1/` for the status and settings
-page, `https://192.168.1.1/update/` for SWUpdate. [Getting started](../getting-started.md)
+Once the switch is up: `https://192.168.1.1/` for the status and settings
+page (the first visit creates the admin account), then
+`ssh <username>@192.168.1.1` for the CLI, `https://192.168.1.1/update/` for SWUpdate. [Getting started](../getting-started.md)
 takes it from there.
 
 The QEMU switch builds a disk image in the same A/B shape, with EFI Boot

@@ -11,7 +11,7 @@ The whole configuration of the switch is described by
 
 | Interface | Where | What for |
 |---|---|---|
-| **CLI** | `ssh cli@<switch-ip>` | Interactive configuration. Described in this guide. |
+| **CLI** | `ssh <username>@<switch-ip>` | Interactive configuration. Described in this guide. |
 | **RESTCONF** | `https://<switch-ip>/restconf` | Configuration by scripts and tools. [Coming later](restconf/index.md). |
 | **Web page** | `https://<switch-ip>/` | Status and settings: system, management address, ports, VLANs, spanning tree, SNMP. See [Web UI](web-ui.md). |
 

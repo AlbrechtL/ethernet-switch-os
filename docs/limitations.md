@@ -6,15 +6,15 @@ do yet, so you can decide whether it fits your use.
 ## Security
 
 SSH, the web pages, RESTCONF and the firmware update need the admin
-password, and the web traffic is HTTPS (see
+login, and the web traffic is HTTPS (see
 [Access and security](development/architecture.md#access-and-security)).
 What is missing:
 
 - **One admin account.** There are no other users, no roles and no
   read-only access: whoever logs in may do everything.
-- **First login open to everyone.** Until the admin password is set, after
-  the first boot and after a factory reset, anyone who reaches the switch
-  can set it.
+- **First login open to everyone.** Until the admin account is created in
+  the web page, after the first boot and after a factory reset, anyone who
+  reaches the switch can create it.
 - **Self-signed certificate.** The switch makes its own HTTPS certificate;
   browsers warn about it, and a certificate of your own cannot be
   installed.
@@ -153,7 +153,7 @@ missing; requirements already met are not listed.
 
 | # | Requirement | Gap |
 |---|---|---|
-| 1 | Secure by default configuration (2b) | The admin password is set at the first login, but until then anyone on the network can set it. `root` has an empty password on the serial console. |
+| 1 | Secure by default configuration (2b) | There are no default credentials: the admin account is created at the first login, but until then anyone on the network can create it. `root` has an empty password on the serial console. |
 | 2 | Protection from unauthorised access, authentication and access management (2d) | One admin account only: no roles or read-only access, no brute-force protection or lockout, no log of failed logins. |
 | 3 | Confidentiality of data in transit (2e) | HTTPS with a self-signed certificate that cannot be replaced, so a browser cannot tell the switch from an impostor on first contact. |
 | 4 | Integrity of data and firmware (2f) | Update files are not signed and not checked before installation. No verified or secure boot. |

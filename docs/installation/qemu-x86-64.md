@@ -97,15 +97,17 @@ QEMU warns `nic virtio-net-pci.1 has no peer` for every port without a
 cable; that is expected.
 
 The terminal shows the serial console. After a few seconds the login prompt
-appears. Log in as `root` (no password) and start the CLI with `clixon_cli`,
-or log in as `cli`, which asks for a new admin password the first time (see
-[Logging in](../getting-started.md#logging-in)). **Ctrl-A x** quits QEMU.
+appears. Log in as `root` (no password) and start the CLI with `clixon_cli`.
+Once you have created the admin account at `https://127.0.0.1:8443/` (see
+[First login](../getting-started.md#first-login-create-the-admin-account)),
+you can log in with it here too, straight into the CLI. **Ctrl-A x** quits
+QEMU.
 
 From your computer, the switch is reached through the forwarded ports:
 
 | On your computer | On the switch |
 |---|---|
-| `ssh -p 2222 cli@127.0.0.1` | The CLI |
+| `ssh -p 2222 <username>@127.0.0.1` | The CLI, once the admin account exists |
 | `https://127.0.0.1:8443/` | [Status page](../web-ui.md) |
 | `https://127.0.0.1:8443/restconf/` | RESTCONF |
 | `https://127.0.0.1:8443/update/` | Firmware update page |
@@ -184,8 +186,8 @@ told otherwise, which is why switch 1 needs its own. For switch 1, the
 ```
 
 Switch 1 has to be given its address before switch 0 runs; until then both
-would answer at `192.168.1.1`. Start switch 1 first, alone. Log in as `cli`
-on its console (the terminal) and enter:
+would answer at `192.168.1.1`. Start switch 1 first, alone. Log in as `root`
+on its console (the terminal), start `clixon_cli` and enter:
 
 ```text
 switch> set interfaces interface vlan1 routed-vlan ipv4 addresses address 192.168.1.2 config ip 192.168.1.2
@@ -215,7 +217,7 @@ The switch is updated like a real one: with the `.swu` file of a newer
 `https://127.0.0.1:8443/update/`, or with `curl`:
 
 ```sh
-curl -k -u cli -F file=@ethernet-switch-os-swu-upgrade-qemux86-64-switch.swu \
+curl -k -u <username> -F file=@ethernet-switch-os-swu-upgrade-qemux86-64-switch.swu \
     https://127.0.0.1:8443/update/upload
 ```
 

@@ -49,7 +49,7 @@ Example: move the switch from `192.168.1.1/24` to `10.0.0.2/24`.
     ```
 
 2. Change your PC to the new network, and log in again with
-   `ssh cli@10.0.0.2`.
+   `ssh <username>@10.0.0.2`.
 
 3. Remove the old address and save:
 

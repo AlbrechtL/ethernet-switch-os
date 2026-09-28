@@ -262,8 +262,10 @@ carrier.
 The terminal shows the serial console, which is what you would see on the
 real switch's console port. After about 20 seconds the login prompt
 appears. Log in as `root` (no password) and start the CLI with
-`clixon_cli`, or log in as `cli`, which asks for a new admin password the
-first time (see [Logging in](../getting-started.md#logging-in)). **Ctrl-A x** quits QEMU. The update
+`clixon_cli`. Once you have created the admin account at
+`https://127.0.0.1:8443/` (see
+[First login](../getting-started.md#first-login-create-the-admin-account)),
+you can log in with it here too, straight into the CLI. **Ctrl-A x** quits QEMU. The update
 service writes its log to the console as well, so its lines can appear
 between yours; press Enter to get a fresh prompt.
 
@@ -271,7 +273,7 @@ From your computer, the switch is reached through the forwarded ports:
 
 | On your computer | On the switch |
 |---|---|
-| `ssh -p 2222 cli@127.0.0.1` | The CLI |
+| `ssh -p 2222 <username>@127.0.0.1` | The CLI, once the admin account exists |
 | `https://127.0.0.1:8443/` | [Status page](../web-ui.md) |
 | `https://127.0.0.1:8443/restconf/` | RESTCONF |
 | `https://127.0.0.1:8443/update/` | Firmware update page |
@@ -296,7 +298,7 @@ firmware update page at
 `https://127.0.0.1:8443/update/`, or with `curl`:
 
 ```sh
-curl -k -u cli -F file=@ethernet-switch-os-swu-upgrade-zyxel-gs1900-8-a1.swu \
+curl -k -u <username> -F file=@ethernet-switch-os-swu-upgrade-zyxel-gs1900-8-a1.swu \
     https://127.0.0.1:8443/update/upload
 ```
 
@@ -358,7 +360,8 @@ switch needs addresses of its own:
 Otherwise your SSH session or browser would end up on whichever switch
 answers first. Switch 1 has to be given its address before switch 0 runs;
 until then both would answer at `192.168.1.1`. Start switch 1 first, alone.
-Log in as `cli` on its console (the terminal) and enter:
+Log in as `root` on its console (the terminal), start `clixon_cli` and
+enter:
 
 ```text
 switch> set interfaces interface vlan1 routed-vlan ipv4 addresses address 192.168.1.2 config ip 192.168.1.2

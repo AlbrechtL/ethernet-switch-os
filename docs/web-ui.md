@@ -17,12 +17,15 @@ switch's address; a factory reset makes a new certificate, and the browser
 warns again.
 
 - **First login.** A new switch, or one after a
-  [factory reset](installation/update.md#factory-reset), shows only a form
-  for the admin password: 8 to 128 characters, typed twice. It is the
-  password of the user `cli` for the web pages, SSH and the serial
-  console. **Continue** then reloads the page.
-- **Every other time**, the browser asks for a user name and password: `cli`
-  and the admin password. It remembers them until it is closed.
+  [factory reset](installation/update.md#factory-reset), has no admin
+  account and shows only a form to create it: a username (a lower case
+  letter or `_`, then up to 31 lower case letters, digits, `_` or `-`; not
+  a name the switch uses itself, such as `root`) and a password (8 to 128
+  characters, typed twice). They are the login for the web pages, SSH and
+  the serial console; SSH lets nobody in before. The username stays until a
+  factory reset. **Continue** then reloads the page.
+- **Every other time**, the browser asks for the admin username and
+  password. It remembers them until it is closed.
 
 If the page says "Not logged in", the login was cancelled or the password
 has changed: reload the page.
@@ -163,7 +166,7 @@ A few changes need care:
   chapter. For the first user, the dialog proposes an engine ID if none is
   set; use your own if you want, and give every switch a different one.
   Deleting the last user turns the agent off.
-- **Factory reset** erases all settings, the admin password, the SSH host
+- **Factory reset** erases all settings, the admin account, the SSH host
   keys and the HTTPS certificate, and reboots. The switch comes back at
   `https://192.168.1.1/` with the first-login form. See
   [Factory reset](installation/update.md#factory-reset).

@@ -213,7 +213,7 @@ While the candidate holds an invalid change, `show` commands may print
 
 | Command | What it does |
 |---|---|
-| `password` | Changes the admin password: asks for the current one and the new one twice, without echo. It is the password of `cli` for SSH, the serial console and the web pages. |
+| `password` | Changes the admin password: asks for the current one and the new one twice, without echo. It is the admin password for SSH, the serial console and the web pages. |
 | `factory-reset` | Asks for confirmation, then erases all settings, the admin password, the SSH host keys and the HTTPS certificate, and reboots. See [Factory reset](../installation/update.md#factory-reset). |
 
 Neither changes the configuration, so neither needs `commit` or `save`.
