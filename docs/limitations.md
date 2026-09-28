@@ -63,7 +63,7 @@ Routed VLAN interfaces can refer to their VLAN by **name** in the CLI
 (`routed-vlan config vlan office`), which is not affected.
 
 **`snmp` is missing from the CLI.** `set snmp ...` fails with
-`Unknown command`. Configure [SNMP](snmp/index.md) over RESTCONF; the
+`Unknown command`. Configure [SNMP](features/snmp.md) over RESTCONF; the
 [clixon-switch-rs README](https://github.com/AlbrechtL/clixon-switch-rs#snmp)
 has a complete example.
 

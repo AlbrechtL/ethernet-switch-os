@@ -99,7 +99,7 @@ cable; that is expected.
 The terminal shows the serial console. After a few seconds the login prompt
 appears. Log in as `root` (no password) and start the CLI with `clixon_cli`.
 Once you have created the admin account at `https://127.0.0.1:8443/` (see
-[First login](../getting-started.md#first-login-create-the-admin-account)),
+[First login](../getting-started/index.md#first-login-create-the-admin-account)),
 you can log in with it here too, straight into the CLI. **Ctrl-A x** quits
 QEMU.
 
@@ -108,7 +108,7 @@ From your computer, the switch is reached through the forwarded ports:
 | On your computer | On the switch |
 |---|---|
 | `ssh -p 2222 <username>@127.0.0.1` | The CLI, once the admin account exists |
-| `https://127.0.0.1:8443/` | [Status page](../web-ui.md) |
+| `https://127.0.0.1:8443/` | [Status page](../getting-started/web-ui.md) |
 | `https://127.0.0.1:8443/restconf/` | RESTCONF |
 | `https://127.0.0.1:8443/update/` | Firmware update page |
 
@@ -116,7 +116,7 @@ So wherever this guide says `192.168.1.1`, use `127.0.0.1` with these
 ports. The ports only listen on `127.0.0.1`. A root shell is only on the
 serial console, the terminal QEMU runs in.
 
-With [DHCP turned on](../cli/ip.md#use-a-dhcp-client) for `vlan1`, the
+With [DHCP turned on](../features/management-ip.md#turn-the-dhcp-client-on) for `vlan1`, the
 switch gets `192.168.1.100` from QEMU, the gateway `192.168.1.254` and the
 DNS server `192.168.1.244`.
 
@@ -199,14 +199,14 @@ switch> save
 
 Do this on the console, not over SSH: over SSH, the `commit` ends your
 session before you can `save` (see
-[Management IP address](../cli/ip.md#change-the-static-address)). The
+[Management IP address](../features/management-ip.md#change-the-static-address)). The
 switch keeps the address on `switch1.wic`, so this is needed only once.
 Then start switch 0 in a second terminal.
 
 !!! note
     With the factory settings, all ports of a switch are in VLAN 1. Two
     cables between two switches are then a loop. Turn on
-    [spanning tree](../cli/spanning-tree.md) on the first switch before you
+    [spanning tree](../features/spanning-tree.md) on the first switch before you
     start the second one, or connect only one cable.
 
 ## 5. Update the firmware

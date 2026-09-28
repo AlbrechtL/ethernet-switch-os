@@ -92,7 +92,7 @@ other files in the artifact are intermediate results of the build; see
    environment.
 6. Reboot. The switch now starts Ethernet Switch OS from flash.
 
-Continue with [Getting started](../getting-started.md).
+Continue with [Getting started](../getting-started/index.md).
 
 ### Update
 
@@ -264,7 +264,7 @@ real switch's console port. After about 20 seconds the login prompt
 appears. Log in as `root` (no password) and start the CLI with
 `clixon_cli`. Once you have created the admin account at
 `https://127.0.0.1:8443/` (see
-[First login](../getting-started.md#first-login-create-the-admin-account)),
+[First login](../getting-started/index.md#first-login-create-the-admin-account)),
 you can log in with it here too, straight into the CLI. **Ctrl-A x** quits QEMU. The update
 service writes its log to the console as well, so its lines can appear
 between yours; press Enter to get a fresh prompt.
@@ -274,16 +274,16 @@ From your computer, the switch is reached through the forwarded ports:
 | On your computer | On the switch |
 |---|---|
 | `ssh -p 2222 <username>@127.0.0.1` | The CLI, once the admin account exists |
-| `https://127.0.0.1:8443/` | [Status page](../web-ui.md) |
+| `https://127.0.0.1:8443/` | [Status page](../getting-started/web-ui.md) |
 | `https://127.0.0.1:8443/restconf/` | RESTCONF |
 | `https://127.0.0.1:8443/update/` | Firmware update page |
-| UDP `127.0.0.1:1161` | [SNMP](../snmp/index.md), e.g. `snmpwalk ... 127.0.0.1:1161 1.3.6.1.2.1.1` |
+| UDP `127.0.0.1:1161` | [SNMP](../features/snmp.md), e.g. `snmpwalk ... 127.0.0.1:1161 1.3.6.1.2.1.1` |
 
 So wherever this guide says `192.168.1.1`, use `127.0.0.1` with these
 ports. The ports only listen on `127.0.0.1`. A root shell is only on the
 serial console, the terminal QEMU runs in.
 
-With [DHCP turned on](../cli/ip.md#use-a-dhcp-client) for `vlan1`, the
+With [DHCP turned on](../features/management-ip.md#turn-the-dhcp-client-on) for `vlan1`, the
 switch gets `192.168.1.100` from QEMU, the gateway `192.168.1.254` and the
 DNS server `192.168.1.244`.
 
@@ -373,7 +373,7 @@ switch> save
 
 Do this on the console, not over SSH: over SSH, the `commit` ends your
 session before you can `save` (see
-[Management IP address](../cli/ip.md#change-the-static-address)). The
+[Management IP address](../features/management-ip.md#change-the-static-address)). The
 switch keeps the address in `gs1900-flash-1.bin`, so this is needed only
 once. Then start switch 0 in a second terminal.
 
@@ -381,7 +381,7 @@ once. Then start switch 0 in a second terminal.
     With the factory settings, all ports of a switch are in VLAN 1 and
     spanning tree is off. Two cables between two switches are then a loop
     that floods both switches until neither answers. Turn on
-    [spanning tree](../cli/spanning-tree.md) on the first switch before
+    [spanning tree](../features/spanning-tree.md) on the first switch before
     you start the second one, or connect only one cable.
 
 ### What is different from the real switch

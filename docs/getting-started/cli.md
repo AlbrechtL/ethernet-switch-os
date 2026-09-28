@@ -1,4 +1,4 @@
-# CLI basics
+# Using the CLI
 
 !!! bug "Known problem"
     In the current firmware the CLI on the switch rejects most numbers (VLAN ids, spanning tree timers), `snmp` is missing, and `show compare` fails. See [Known problems](../limitations.md#known-problems-in-the-current-firmware) for workarounds.
@@ -51,7 +51,7 @@ documentation, so what you learn here carries over.
 
 The model offers more settings than the switch implements.
 `?` also shows settings that the switch rejects when you commit.
-[YANG models](../yang-models.md) lists
+[YANG models](../reference/yang-models.md) lists
 what works.
 
 ## Candidate, running, startup
@@ -88,7 +88,7 @@ it to the running configuration.
 
 Because the candidate is only checked as a whole, you can make changes that
 depend on each other in any order. For example, you can switch
-[VLAN modes](vlans.md#port-based-vlans), which changes almost everything at
+[VLAN modes](../features/vlans.md#switching-the-vlan-mode), which changes almost everything at
 once.
 
 ## Editing commands
@@ -209,13 +209,10 @@ switch:
 While the candidate holds an invalid change, `show` commands may print
 `CLI command error` lines. They go away once the candidate is valid again.
 
-## Password and factory reset
+## Commands that are not configuration
 
-| Command | What it does |
-|---|---|
-| `password` | Changes the admin password: asks for the current one and the new one twice, without echo. It is the admin password for SSH, the serial console and the web pages. |
-| `factory-reset` | Asks for confirmation, then erases all settings, the admin password, the SSH host keys and the HTTPS certificate, and reboots. See [Factory reset](../installation/update.md#factory-reset). |
-
+`password` changes the admin password and `factory-reset` erases the
+switch, see [Password and factory reset](../features/administration.md#cli).
 Neither changes the configuration, so neither needs `commit` or `save`.
 
 ## Leaving
@@ -224,3 +221,5 @@ Neither changes the configuration, so neither needs `commit` or `save`.
 lost. All CLI sessions share one candidate, and it keeps your changes until
 someone commits or discards them. Before you leave, `commit` or `discard`,
 so the next person does not find your half-done changes.
+
+All commands are listed in the [CLI command reference](../reference/cli-commands.md).

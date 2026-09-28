@@ -11,12 +11,13 @@ The whole configuration of the switch is described by
 
 | Interface | Where | What for |
 |---|---|---|
-| **CLI** | `ssh <username>@<switch-ip>` | Interactive configuration. Described in this guide. |
-| **RESTCONF** | `https://<switch-ip>/restconf` | Configuration by scripts and tools. [Coming later](restconf/index.md). |
-| **Web page** | `https://<switch-ip>/` | Status and settings: system, management address, ports, VLANs, spanning tree, SNMP. See [Web UI](web-ui.md). |
+| **Web UI** | `https://<switch-ip>/` | Status and the everyday settings. See [Using the web UI](getting-started/web-ui.md). |
+| **CLI** | `ssh <username>@<switch-ip>` | Every setting, interactively. See [Using the CLI](getting-started/cli.md). |
+| **RESTCONF** | `https://<switch-ip>/restconf` | Every setting, from scripts and tools. See [Using RESTCONF](getting-started/restconf.md). |
 
-The CLI and RESTCONF work on the same configuration. A change made through
-one is visible in the other.
+All three work on the same configuration. A change made through one is
+visible in the others. Each feature page describes the feature and then
+how to configure it in each of the three.
 
 ## What the switch can do
 
@@ -55,11 +56,11 @@ The board file is what you name when you [build the firmware](development/buildi
    getting Ethernet Switch OS onto the switch, or the emulated
    [Zyxel GS1900-8](installation/zyxel-gs1900-8.md#qemu) or
    [QEMU x86-64 switch](installation/qemu-x86-64.md) to try it without one.
-2. [Getting started](getting-started.md): factory settings and how to
-   connect.
-3. [CLI basics](cli/basics.md): how the CLI works. Read this before the task
-   chapters.
-4. The task chapters: [management IP address](cli/ip.md),
-   [VLANs](cli/vlans.md), [ports](cli/interfaces.md),
-   [spanning tree](cli/spanning-tree.md), [SNMP](snmp/index.md),
-   [system](cli/system.md).
+2. [Getting started](getting-started/index.md): factory settings, how to
+   connect, and how the web UI, the CLI and RESTCONF work. Read about
+   saving the configuration before the feature pages.
+3. The feature pages: [system information](features/system.md),
+   [management IP address](features/management-ip.md),
+   [ports](features/ports.md), [VLANs](features/vlans.md),
+   [spanning tree](features/spanning-tree.md), [SNMP](features/snmp.md),
+   [password and factory reset](features/administration.md).

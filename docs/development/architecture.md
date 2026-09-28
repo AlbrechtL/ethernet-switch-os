@@ -334,7 +334,7 @@ same backend.
 
 All YANG files are in `yang/` of clixon-switch-rs; `yang/vendor/` holds
 the imported OpenConfig and IETF modules. What the switch accepts is listed
-under [YANG models](../yang-models.md).
+under [YANG models](../reference/yang-models.md).
 
 ## Datastores and persistence
 

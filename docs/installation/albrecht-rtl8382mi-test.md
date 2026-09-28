@@ -36,7 +36,7 @@ installation. The factory `.swu` merges the original `JFFS2_CFG` and
 `JFFS2_LOG` partitions into the configuration partition, and both firmware
 slots (`RUNTIME1`, `RUNTIME2`) into one.
 
-Continue with [Getting started](../getting-started.md).
+Continue with [Getting started](../getting-started/index.md).
 
 ## LEDs and DIP switches
 

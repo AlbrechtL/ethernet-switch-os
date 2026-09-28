@@ -56,7 +56,7 @@ are identical at first; later updates use the `.swu` file (see
     `bmaptool copy <image>.wic.bz2 /dev/sdX` unpacks and writes only the used
     blocks in one step, using the `.wic.bmap` file next to the image.
 
-Continue with [Getting started](../getting-started.md).
+Continue with [Getting started](../getting-started/index.md).
 
 ## SD card layout and A/B boot
 

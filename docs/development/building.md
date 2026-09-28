@@ -142,7 +142,7 @@ update are in
 [Raspberry Pi 4-port switch](../installation/raspberry-pi.md#sd-card-layout-and-ab-boot).
 Once the switch is up: `https://192.168.1.1/` for the status and settings
 page (the first visit creates the admin account), then
-`ssh <username>@192.168.1.1` for the CLI, `https://192.168.1.1/update/` for SWUpdate. [Getting started](../getting-started.md)
+`ssh <username>@192.168.1.1` for the CLI, `https://192.168.1.1/update/` for SWUpdate. [Getting started](../getting-started/index.md)
 takes it from there.
 
 The QEMU switch builds a disk image in the same A/B shape, with EFI Boot

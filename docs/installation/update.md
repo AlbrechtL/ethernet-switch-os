@@ -7,7 +7,7 @@ installing new firmware, and getting back in when something went wrong.
 ## Saving the configuration
 
 Changes take effect with `commit`, but only `save` makes them survive a
-reboot (see [CLI basics](../cli/basics.md#candidate-running-startup)).
+reboot (see [CLI basics](../getting-started/cli.md#candidate-running-startup)).
 
 ```text
 switch> save
@@ -78,9 +78,9 @@ therefore have different versions, and every version names its commit.
 
 Where to read it:
 
-- the CLI: `show state text system` ([System status](../cli/system.md#system-status)),
+- the CLI: `show state text system` ([System status](../features/system.md#status)),
   as `os-version`, with the revision on its own in `os-build-id`,
-- the [status page](../web-ui.md#system) of the web UI, as **Firmware**,
+- the [status page](../features/system.md#web-ui) of the web UI, as **Firmware**,
 - RESTCONF:
 
     ```sh
@@ -222,7 +222,7 @@ the reboot.
 
 !!! note "Updating from firmware with the fixed admin account `cli`"
     Older firmware had a fixed admin account, `cli`, instead of one named in
-    the [first-login setup](../getting-started.md#first-login-create-the-admin-account).
+    the [first-login setup](../getting-started/index.md#first-login-create-the-admin-account).
     An update keeps it: `cli` logs in as before, with its password. Only a
     factory reset replaces it with the setup.
 
@@ -385,8 +385,8 @@ A factory reset erases everything the switch has stored: the saved
 configuration, the admin account, the SSH host keys and the HTTPS
 certificate. The firmware stays. The switch reboots and comes back like a
 freshly installed one: with the
-[factory settings](../getting-started.md#factory-settings) at `192.168.1.1`,
-without an admin account until the [first-login setup](../getting-started.md#first-login-create-the-admin-account)
+[factory settings](../getting-started/index.md#factory-settings) at `192.168.1.1`,
+without an admin account until the [first-login setup](../getting-started/index.md#first-login-create-the-admin-account)
 creates one, with a new SSH host key
 (ssh warns that it changed) and a new certificate.
 

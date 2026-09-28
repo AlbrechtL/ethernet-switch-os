@@ -26,7 +26,7 @@ See [Layers and kas files](kas.md) for how the layers fit together, and
 Open an issue in the repository that owns the code, or in
 [ethernet-switch-os](https://github.com/AlbrechtL/ethernet-switch-os/issues)
 if you are not sure which one that is. Say which board you use, the firmware
-version (shown on the [status page](../web-ui.md)) and how to reproduce the
+version (shown on the [status page](../getting-started/web-ui.md)) and how to reproduce the
 problem.
 
 ## Sending a change
@@ -49,6 +49,25 @@ Documentation changes are as welcome as code. The pages are Markdown files in
 and the navigation is in `mkdocs.yml`. Build it locally with
 `build --strict` before you send it, as CI does, see
 [Building this documentation](building.md#building-this-documentation).
+
+### Documenting a new feature
+
+Each feature has one page in `docs/features/`, with the same four parts:
+an introduction (what the feature does, its rules, what the status fields
+mean), then how to configure it in the **Web UI**, the **CLI** and over
+**RESTCONF**. To add one:
+
+1. Copy
+   [`docs/features/_template.md`](https://github.com/AlbrechtL/ethernet-switch-os/blob/master/docs/features/_template.md)
+   to `docs/features/<feature>.md`. Its comments say what goes where.
+2. Fill in all four parts. If an interface cannot configure the feature,
+   say so in its part instead of leaving it out.
+3. Add the page under **Features** in the `nav` of `mkdocs.yml`.
+4. Add a row to the feature table in
+   [Getting started](../getting-started/index.md#three-ways-to-configure),
+   and a card row to [Using the web UI](../getting-started/web-ui.md#cards)
+   if the status page shows it.
+5. Add its configuration paths to [YANG models](../reference/yang-models.md).
 
 ## License
 

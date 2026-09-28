@@ -26,7 +26,7 @@ source is in [`docs/`](docs/).
 | I want to … | Go to |
 |---|---|
 | Install it on a switch or try it in QEMU | [Installation](https://albrechtl.github.io/ethernet-switch-os/installation/download/) |
-| Configure the switch | [CLI](https://albrechtl.github.io/ethernet-switch-os/cli/basics/), [Web UI](https://albrechtl.github.io/ethernet-switch-os/web-ui/), [RESTCONF](https://albrechtl.github.io/ethernet-switch-os/restconf/) |
+| Configure the switch | [Getting started](https://albrechtl.github.io/ethernet-switch-os/getting-started/), then the feature pages, e.g. [VLANs](https://albrechtl.github.io/ethernet-switch-os/features/vlans/) |
 | Build the firmware | [Building the firmware](https://albrechtl.github.io/ethernet-switch-os/development/building/) |
 | Know what does not work yet | [Limitations](https://albrechtl.github.io/ethernet-switch-os/limitations/) |
 

@@ -11,9 +11,10 @@ strict: true
 validation:
   anchors: warn
 
-# Read by pip in CI, not a page.
+# Read by pip in CI, and the template for new feature pages: not pages.
 exclude_docs: |
   requirements.txt
+  features/_template.md
 
 theme:
   name: material
@@ -35,6 +36,24 @@ theme:
         icon: material/brightness-4
         name: Switch to light mode
 
+plugins:
+  - search
+  # The docs used to be split by interface; keep the old links working.
+  - redirects:
+      redirect_maps:
+        getting-started.md: getting-started/index.md
+        web-ui.md: getting-started/web-ui.md
+        restconf/index.md: getting-started/restconf.md
+        cli/basics.md: getting-started/cli.md
+        cli/system.md: features/system.md
+        cli/ip.md: features/management-ip.md
+        cli/interfaces.md: features/ports.md
+        cli/vlans.md: features/vlans.md
+        cli/spanning-tree.md: features/spanning-tree.md
+        snmp/index.md: features/snmp.md
+        cli/commands.md: reference/cli-commands.md
+        yang-models.md: reference/yang-models.md
+
 markdown_extensions:
   - admonition
   - attr_list
@@ -51,7 +70,11 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Getting started: getting-started.md
+  - Getting started:
+      - First steps: getting-started/index.md
+      - Using the web UI: getting-started/web-ui.md
+      - Using the CLI: getting-started/cli.md
+      - Using RESTCONF: getting-started/restconf.md
   - Installation:
       - Download: installation/download.md
       - Zyxel GS1900-8: installation/zyxel-gs1900-8.md
@@ -59,22 +82,21 @@ nav:
       - Raspberry Pi 4-port switch: installation/raspberry-pi.md
       - QEMU x86-64 switch: installation/qemu-x86-64.md
       - Update: installation/update.md
-  - Web UI: web-ui.md
-  - CLI:
-      - Basics: cli/basics.md
-      - Management IP address: cli/ip.md
-      - VLANs: cli/vlans.md
-      - Ports: cli/interfaces.md
-      - Spanning tree: cli/spanning-tree.md
-      - System: cli/system.md
-      - Command reference: cli/commands.md
-  - RESTCONF: restconf/index.md
-  - SNMP: snmp/index.md
-  - YANG models: yang-models.md
+  - Features:
+      - System information: features/system.md
+      - Management IP address: features/management-ip.md
+      - Ports: features/ports.md
+      - VLANs: features/vlans.md
+      - Spanning tree: features/spanning-tree.md
+      - SNMP: features/snmp.md
+      - Password and factory reset: features/administration.md
+  - Reference:
+      - CLI command reference: reference/cli-commands.md
+      - YANG models: reference/yang-models.md
+      - Limitations: limitations.md
   - Development:
       - Firmware architecture: development/architecture.md
       - Building the firmware: development/building.md
       - Layers and kas files: development/kas.md
       - Testing and CI: development/testing.md
       - Contributing: development/contributing.md
-  - Limitations: limitations.md
