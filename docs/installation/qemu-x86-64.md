@@ -62,7 +62,7 @@ qemu-system-x86_64 \
     -drive if=pflash,format=raw,file=switch0-vars.fd \
     -drive if=virtio,format=raw,file=switch0.wic \
     -device i6300esb -action watchdog=reset \
-    -netdev user,id=lan1,net=192.168.1.0/24,host=192.168.1.254,dns=192.168.1.244,dhcpstart=192.168.1.100,hostfwd=tcp:127.0.0.1:2222-192.168.1.1:22,hostfwd=tcp:127.0.0.1:8000-192.168.1.1:80,hostfwd=tcp:127.0.0.1:8080-192.168.1.1:8080 \
+    -netdev user,id=lan1,net=192.168.1.0/24,host=192.168.1.254,dns=192.168.1.244,dhcpstart=192.168.1.100,hostfwd=tcp:127.0.0.1:2222-192.168.1.1:22,hostfwd=tcp:127.0.0.1:8443-192.168.1.1:443 \
     -device virtio-net-pci,netdev=lan1,addr=0x10 \
     -device virtio-net-pci,addr=0x11 \
     -device virtio-net-pci,addr=0x12 \
@@ -88,7 +88,7 @@ What the options do:
 | `-netdev user,id=lan1,…` | QEMU's built-in user network, the network behind port `lan1`. |
 | `net=192.168.1.0/24` | The user network uses the switch's factory network. |
 | `host=…,dns=…,dhcpstart=…` | The addresses of QEMU's virtual gateway, DNS server and DHCP pool in that network. Without them QEMU would take `192.168.1.2` for itself. |
-| `hostfwd=tcp:127.0.0.1:2222-192.168.1.1:22` | Forwards port 2222 on your computer to SSH on the switch. The other two `hostfwd` do the same for the web pages (8000) and the firmware update page (8080). |
+| `hostfwd=tcp:127.0.0.1:2222-192.168.1.1:22` | Forwards port 2222 on your computer to SSH on the switch. The other `hostfwd` does the same for HTTPS (8443): the web pages, RESTCONF and the firmware update page. |
 | `-device virtio-net-pci,netdev=lan1,addr=0x10` | Network card of port `lan1`, connected to the user network. |
 | `-device virtio-net-pci,addr=0x11` … `0x17` | Network cards of ports `lan2` … `lan8`, without a cable. The switch names its ports by their PCI address: `0x10` is `lan1`, `0x17` is `lan8`. All eight must be there. |
 | `-nographic` | No window. The terminal becomes the switch's serial console. |
@@ -98,20 +98,21 @@ cable; that is expected.
 
 The terminal shows the serial console. After a few seconds the login prompt
 appears. Log in as `root` (no password) and start the CLI with `clixon_cli`,
-or log in as `cli`. **Ctrl-A x** quits QEMU.
+or log in as `cli`, which asks for a new admin password the first time (see
+[Logging in](../getting-started.md#logging-in)). **Ctrl-A x** quits QEMU.
 
 From your computer, the switch is reached through the forwarded ports:
 
 | On your computer | On the switch |
 |---|---|
 | `ssh -p 2222 cli@127.0.0.1` | The CLI |
-| `ssh -p 2222 root@127.0.0.1` | A root shell |
-| `http://127.0.0.1:8000/` | [Status page](../web-ui.md) |
-| `http://127.0.0.1:8000/restconf/` | RESTCONF |
-| `http://127.0.0.1:8080/` | Firmware update page |
+| `https://127.0.0.1:8443/` | [Status page](../web-ui.md) |
+| `https://127.0.0.1:8443/restconf/` | RESTCONF |
+| `https://127.0.0.1:8443/update/` | Firmware update page |
 
 So wherever this guide says `192.168.1.1`, use `127.0.0.1` with these
-ports. `scp` needs `-P 2222`. The ports only listen on `127.0.0.1`.
+ports. The ports only listen on `127.0.0.1`. A root shell is only on the
+serial console, the terminal QEMU runs in.
 
 With [DHCP turned on](../cli/ip.md#use-a-dhcp-client) for `vlan1`, the
 switch gets `192.168.1.100` from QEMU, the gateway `192.168.1.254` and the
@@ -169,7 +170,7 @@ everything that identifies a switch in that network must be its own:
 | Files | `switch0.wic`, `switch0-vars.fd` | `switch1.wic`, `switch1-vars.fd`, copied the same way |
 | Switch address | `192.168.1.1` (factory) | `192.168.1.2`, set once, see below |
 | QEMU's gateway, DNS, DHCP pool | `host=192.168.1.254`, `dns=192.168.1.244`, `dhcpstart=192.168.1.100` | `host=192.168.1.253`, `dns=192.168.1.243`, `dhcpstart=192.168.1.110` |
-| Forwarded ports | `2222-192.168.1.1:22`, `8000-192.168.1.1:80`, `8080-192.168.1.1:8080` | `2232-192.168.1.2:22`, `8010-192.168.1.2:80`, `8090-192.168.1.2:8080` |
+| Forwarded ports | `2222-192.168.1.1:22`, `8443-192.168.1.1:443` | `2232-192.168.1.2:22`, `8453-192.168.1.2:443` |
 | MAC addresses | QEMU's default | `,mac=52:54:00:00:01:01` on the `lan1` card, `…:01:02` on `lan2`, up to `…:01:08` on `lan8` |
 
 QEMU gives the network cards of every switch the same MAC addresses unless
@@ -211,11 +212,11 @@ Then start switch 0 in a second terminal.
 The switch is updated like a real one: with the `.swu` file of a newer
 [download](download.md) on the
 [firmware update page](update.md#update-in-the-browser) at
-`http://127.0.0.1:8080/`, or with `curl`:
+`https://127.0.0.1:8443/update/`, or with `curl`:
 
 ```sh
-curl -F file=@ethernet-switch-os-swu-upgrade-qemux86-64-switch.swu \
-    http://127.0.0.1:8080/upload
+curl -k -u cli -F file=@ethernet-switch-os-swu-upgrade-qemux86-64-switch.swu \
+    https://127.0.0.1:8443/update/upload
 ```
 
 The switch writes the new firmware into the slot it is **not** running
@@ -333,8 +334,7 @@ two cables, so that spanning tree has a loop to break:
 ```
 
 Switch N uses the addresses and ports of the table above, counted on by N:
-`192.168.1.N+1`, SSH on 2222 + 10·N, web pages on 8000 + 10·N and the
-update page on 8080 + 10·N. It needs its address set as above after every
+`192.168.1.N+1`, SSH on 2222 + 10·N and HTTPS on 8443 + 10·N. It needs its address set as above after every
 start. A switch without cables is always reached at
 `192.168.1.1`; to forward to another address, add `ADDRESS=...` in front of
 `/work/scripts/x86-64-q35-qemu`.

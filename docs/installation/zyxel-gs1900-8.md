@@ -215,7 +215,7 @@ out/qemu/bin/qemu-system-mips \
     -M rtl838x -m 128 -nographic -no-reboot \
     -kernel ../ethernet-switch-os-initramfs-zyxel-gs1900-8-a1.bin \
     -drive if=mtd,format=raw,file=../gs1900-flash.bin \
-    -nic user,net=192.168.1.0/24,host=192.168.1.254,dns=192.168.1.244,dhcpstart=192.168.1.100,hostfwd=tcp:127.0.0.1:2222-192.168.1.1:22,hostfwd=tcp:127.0.0.1:8000-192.168.1.1:80,hostfwd=tcp:127.0.0.1:8080-192.168.1.1:8080,hostfwd=udp:127.0.0.1:1161-192.168.1.1:161
+    -nic user,net=192.168.1.0/24,host=192.168.1.254,dns=192.168.1.244,dhcpstart=192.168.1.100,hostfwd=tcp:127.0.0.1:2222-192.168.1.1:22,hostfwd=tcp:127.0.0.1:8080-192.168.1.1:8080
 ```
 
 | Option | Meaning |
@@ -228,7 +228,7 @@ out/qemu/bin/qemu-system-mips \
 | `-nic user,…` | The first `-nic` is port `lan1`, connected to QEMU's built-in user network. The following options belong to it. |
 | `net=192.168.1.0/24` | The user network uses the switch's factory network. |
 | `host=…,dns=…,dhcpstart=…` | The addresses of QEMU's virtual gateway, DNS server and DHCP pool in that network. Without them QEMU would take `192.168.1.2` for itself. |
-| `hostfwd=tcp:127.0.0.1:2222-192.168.1.1:22` | Forwards port 2222 on your computer to SSH on the switch. The other `hostfwd` do the same for the web pages (8000), the firmware update page (8080) and SNMP (UDP 1161). |
+| `hostfwd=tcp:127.0.0.1:2222-192.168.1.1:22` | Forwards port 2222 on your computer to SSH on the switch. The other `hostfwd` does the same for the installer's firmware update page (8080), which has no password and no HTTPS: the installer only runs after a boot from the bootloader. |
 
 After about 20 seconds, the switch is up. Upload the **factory** `.swu` on
 the firmware update page at `http://127.0.0.1:8080/`, or from a second
@@ -249,7 +249,7 @@ From now on, start the switch without `-kernel` and without `-no-reboot`:
 out/qemu/bin/qemu-system-mips \
     -M rtl838x -m 128 -nographic \
     -drive if=mtd,format=raw,file=../gs1900-flash.bin \
-    -nic user,net=192.168.1.0/24,host=192.168.1.254,dns=192.168.1.244,dhcpstart=192.168.1.100,hostfwd=tcp:127.0.0.1:2222-192.168.1.1:22,hostfwd=tcp:127.0.0.1:8000-192.168.1.1:80,hostfwd=tcp:127.0.0.1:8080-192.168.1.1:8080,hostfwd=udp:127.0.0.1:1161-192.168.1.1:161
+    -nic user,net=192.168.1.0/24,host=192.168.1.254,dns=192.168.1.244,dhcpstart=192.168.1.100,hostfwd=tcp:127.0.0.1:2222-192.168.1.1:22,hostfwd=tcp:127.0.0.1:8443-192.168.1.1:443,hostfwd=udp:127.0.0.1:1161-192.168.1.1:161
 ```
 
 Without `-kernel`, the emulator does what the switch's bootloader does: it
@@ -262,7 +262,8 @@ carrier.
 The terminal shows the serial console, which is what you would see on the
 real switch's console port. After about 20 seconds the login prompt
 appears. Log in as `root` (no password) and start the CLI with
-`clixon_cli`, or log in as `cli`. **Ctrl-A x** quits QEMU. The update
+`clixon_cli`, or log in as `cli`, which asks for a new admin password the
+first time (see [Logging in](../getting-started.md#logging-in)). **Ctrl-A x** quits QEMU. The update
 service writes its log to the console as well, so its lines can appear
 between yours; press Enter to get a fresh prompt.
 
@@ -271,14 +272,14 @@ From your computer, the switch is reached through the forwarded ports:
 | On your computer | On the switch |
 |---|---|
 | `ssh -p 2222 cli@127.0.0.1` | The CLI |
-| `ssh -p 2222 root@127.0.0.1` | A root shell |
-| `http://127.0.0.1:8000/` | [Status page](../web-ui.md) |
-| `http://127.0.0.1:8000/restconf/` | RESTCONF |
-| `http://127.0.0.1:8080/` | Firmware update page |
+| `https://127.0.0.1:8443/` | [Status page](../web-ui.md) |
+| `https://127.0.0.1:8443/restconf/` | RESTCONF |
+| `https://127.0.0.1:8443/update/` | Firmware update page |
 | UDP `127.0.0.1:1161` | [SNMP](../snmp/index.md), e.g. `snmpwalk ... 127.0.0.1:1161 1.3.6.1.2.1.1` |
 
 So wherever this guide says `192.168.1.1`, use `127.0.0.1` with these
-ports. `scp` needs `-P 2222`. The ports only listen on `127.0.0.1`.
+ports. The ports only listen on `127.0.0.1`. A root shell is only on the
+serial console, the terminal QEMU runs in.
 
 With [DHCP turned on](../cli/ip.md#use-a-dhcp-client) for `vlan1`, the
 switch gets `192.168.1.100` from QEMU, the gateway `192.168.1.254` and the
@@ -292,11 +293,11 @@ the next time you start the switch with the same file.
 The emulated switch is updated like the real one: upload the **upgrade**
 `.swu` of a newer [download](download.md) on the
 firmware update page at
-`http://127.0.0.1:8080/`, or with `curl`:
+`https://127.0.0.1:8443/update/`, or with `curl`:
 
 ```sh
-curl -F file=@ethernet-switch-os-swu-upgrade-zyxel-gs1900-8-a1.swu \
-    http://127.0.0.1:8080/upload
+curl -k -u cli -F file=@ethernet-switch-os-swu-upgrade-zyxel-gs1900-8-a1.swu \
+    https://127.0.0.1:8443/update/upload
 ```
 
 The switch rewrites its firmware in the flash and reboots into it. Your
@@ -327,7 +328,7 @@ in a terminal of its own:
 out/qemu/bin/qemu-system-mips \
     -M rtl838x -m 128 -nographic \
     -drive if=mtd,format=raw,file=../gs1900-flash.bin \
-    -nic user,net=192.168.1.0/24,host=192.168.1.254,dns=192.168.1.244,dhcpstart=192.168.1.100,hostfwd=tcp:127.0.0.1:2222-192.168.1.1:22,hostfwd=tcp:127.0.0.1:8000-192.168.1.1:80,hostfwd=tcp:127.0.0.1:8080-192.168.1.1:8080,hostfwd=udp:127.0.0.1:1161-192.168.1.1:161 \
+    -nic user,net=192.168.1.0/24,host=192.168.1.254,dns=192.168.1.244,dhcpstart=192.168.1.100,hostfwd=tcp:127.0.0.1:2222-192.168.1.1:22,hostfwd=tcp:127.0.0.1:8443-192.168.1.1:443,hostfwd=udp:127.0.0.1:1161-192.168.1.1:161 \
     -netdev dgram,id=lan2,local.type=inet,local.host=127.0.0.1,local.port=20002,remote.type=inet,remote.host=127.0.0.1,remote.port=20102 \
     -net nic,netdev=lan2
 
@@ -335,7 +336,7 @@ out/qemu/bin/qemu-system-mips \
 out/qemu/bin/qemu-system-mips \
     -M rtl838x -m 128 -nographic \
     -drive if=mtd,format=raw,file=../gs1900-flash-1.bin \
-    -nic user,net=192.168.1.0/24,host=192.168.1.253,dns=192.168.1.243,dhcpstart=192.168.1.110,hostfwd=tcp:127.0.0.1:2232-192.168.1.2:22,hostfwd=tcp:127.0.0.1:8010-192.168.1.2:80,hostfwd=tcp:127.0.0.1:8090-192.168.1.2:8080,hostfwd=udp:127.0.0.1:1171-192.168.1.2:161 \
+    -nic user,net=192.168.1.0/24,host=192.168.1.253,dns=192.168.1.243,dhcpstart=192.168.1.110,hostfwd=tcp:127.0.0.1:2232-192.168.1.2:22,hostfwd=tcp:127.0.0.1:8453-192.168.1.2:443,hostfwd=udp:127.0.0.1:1171-192.168.1.2:161 \
     -netdev dgram,id=lan2,local.type=inet,local.host=127.0.0.1,local.port=20102,remote.type=inet,remote.host=127.0.0.1,remote.port=20002 \
     -net nic,netdev=lan2
 ```
@@ -352,7 +353,7 @@ switch needs addresses of its own:
 | Flash | `gs1900-flash.bin` | `gs1900-flash-1.bin` |
 | Switch address | `192.168.1.1` (factory) | `192.168.1.2`, set once, see below |
 | QEMU's gateway, DNS, DHCP pool | `.254`, `.244`, from `.100` | `.253`, `.243`, from `.110` |
-| SSH, web pages, update page, SNMP | 2222, 8000, 8080, 1161 | 2232, 8010, 8090, 1171 |
+| SSH, HTTPS (web pages, update page), SNMP | 2222, 8443, 1161 | 2232, 8453, 1171 |
 
 Otherwise your SSH session or browser would end up on whichever switch
 answers first. Switch 1 has to be given its address before switch 0 runs;
@@ -439,8 +440,8 @@ switch 1:
 ```
 
 Switch N uses the addresses and ports of the table above, counted on by N:
-`192.168.1.N+1`, SSH on 2222 + 10·N, web pages on 8000 + 10·N, the update
-page on 8080 + 10·N and SNMP on 1161 + 10·N. It needs its address set on
+`192.168.1.N+1`, SSH on 2222 + 10·N, HTTPS on 8443 + 10·N and SNMP on
+1161 + 10·N. It needs its address set on
 the console as above after every start of the script, since the script
 starts from the factory settings; `save` is not needed. A switch without
 cables is always reached at `192.168.1.1`; to forward to another address,

@@ -4,16 +4,28 @@ The switch has two web pages:
 
 | URL | Page |
 |---|---|
-| `http://<switch-ip>/` | [Status page](#status-page): what the switch is doing, and its [settings](#changing-settings). |
-| `http://<switch-ip>:8080/` | [Firmware update page](#firmware-update-page). |
+| `https://<switch-ip>/` | [Status page](#status-page): what the switch is doing, and its [settings](#changing-settings). |
+| `https://<switch-ip>/update/` | [Firmware update page](#firmware-update-page). |
 
-Both work in any current browser and need no login.
+Both work in any current browser, over HTTPS only.
 
-!!! danger "No password"
-    Anyone who can reach the switch can open both pages, change the
-    configuration on the status page and install firmware through the
-    update page. See
-    [Limitations](limitations.md#security).
+## Logging in
+
+The switch makes its own HTTPS certificate on the first boot, so the
+browser warns that it does not know who issued it. Accept it once for the
+switch's address; a factory reset makes a new certificate, and the browser
+warns again.
+
+- **First login.** A new switch, or one after a
+  [factory reset](installation/update.md#factory-reset), shows only a form
+  for the admin password: 8 to 128 characters, typed twice. It is the
+  password of the user `cli` for the web pages, SSH and the serial
+  console. **Continue** then reloads the page.
+- **Every other time**, the browser asks for a user name and password: `cli`
+  and the admin password. It remembers them until it is closed.
+
+If the page says "Not logged in", the login was cancelled or the password
+has changed: reload the page.
 
 ## Status page
 
@@ -126,6 +138,7 @@ The page does not update itself while a dialog is open.
 | VLANs | Add, rename, suspend and delete VLANs. In port-based mode, add, edit and delete groups; ticking a port that is in another group moves it. **VLAN mode** switches between 802.1Q and port-based mode. |
 | Spanning tree | **Edit**: the protocol or off, the bridge priority and the timers. A port's **Edit**: edge port, link type, path cost and port priority. |
 | SNMP | **Add user**, **Delete** a user, **Turn on** / **Turn off** the agent. |
+| Administration | **Change password**: the current and the new admin password. The browser then asks for the new one. **Factory reset**: see below. |
 
 A few changes need care:
 
@@ -150,6 +163,10 @@ A few changes need care:
   chapter. For the first user, the dialog proposes an engine ID if none is
   set; use your own if you want, and give every switch a different one.
   Deleting the last user turns the agent off.
+- **Factory reset** erases all settings, the admin password, the SSH host
+  keys and the HTTPS certificate, and reboots. The switch comes back at
+  `https://192.168.1.1/` with the first-login form. See
+  [Factory reset](installation/update.md#factory-reset).
 - MSTP regions and instances, SNMP views and groups other than the one the
   page creates, and everything else not listed above are configured with
   the CLI or RESTCONF.
@@ -158,7 +175,8 @@ A few changes need care:
 
 ![The firmware update page](assets/swupdate-page.jpg)
 
-The update page is SWUpdate's own web interface. How to use it, and what
+The update page is SWUpdate's own web interface, behind the same login as
+the status page. How to use it, and what
 to watch out for, is described in
 [Firmware update](installation/update.md#update-in-the-browser).
 In short:

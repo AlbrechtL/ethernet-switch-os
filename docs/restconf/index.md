@@ -4,7 +4,7 @@
     This chapter is not written yet.
 
 The switch serves a [RESTCONF](https://datatracker.ietf.org/doc/html/rfc8040)
-API (RFC 8040) at `http://<switch-ip>/restconf`. It works on the same data
+API (RFC 8040) at `https://<switch-ip>/restconf`. It works on the same data
 models and the same configuration as the [CLI](../cli/basics.md), so the
 CLI chapters apply: a CLI path like
 
@@ -26,12 +26,24 @@ Differences from the CLI:
   a `copy-config` from running to startup:
 
     ```sh
-    curl -X POST -H 'Content-Type: application/yang-data+json' \
+    curl -k -u cli -X POST -H 'Content-Type: application/yang-data+json' \
         -d '{"ietf-netconf:input":{"target":{"startup":[null]},"source":{"running":[null]}}}' \
-        http://192.168.1.1/restconf/operations/ietf-netconf:copy-config
+        https://192.168.1.1/restconf/operations/ietf-netconf:copy-config
     ```
 
-- There is no authentication (see [Limitations](../limitations.md#security)).
+- Every request needs the admin password, as HTTP basic auth for the user
+  `cli` (`curl -u cli` asks for it). `-k` accepts the switch's self-signed
+  certificate.
+- Two operations of the module `clixon-switch` manage the switch itself:
+  `set-password` (`current-password`, `new-password`) and `factory-reset`.
+  During the [first-login setup](../getting-started.md#first-login-set-the-admin-password)
+  `set-password` works without a login and without `current-password`:
+
+    ```sh
+    curl -k -X POST -H 'Content-Type: application/yang-data+json' \
+        -d '{"clixon-switch:input":{"new-password":"my new password"}}' \
+        https://192.168.1.1/restconf/operations/clixon-switch:set-password
+    ```
 
 Until this chapter is written, the
 [clixon-switch-rs README](https://github.com/AlbrechtL/clixon-switch-rs#data-model)

@@ -6,14 +6,20 @@
 #   ./kas-container --runtime-args "--network=host" \
 #       shell kas/board/zyxel-gs1900-8-a1.yml:kas/opt/rtl838x-qemu.yml -c /work/scripts/mips-rtl838x-qemu-test
 #
-# 1. Boots the built firmware from the emulated flash and waits until
-#    RESTCONF lists the front ports lan1..lan8.
-# 2. Uploads the built upgrade .swu to SWUpdate, which rewrites the firmware
-#    partition and reboots.
-# 3. Waits until the switch has booted again from flash and RESTCONF answers.
+# 1. Boots the built firmware from the emulated flash. It is in the
+#    first-login setup: RESTCONF answers nothing but setup-required and
+#    set-password without a login.
+# 2. Sets the admin password over HTTPS and waits until RESTCONF lists the
+#    front ports lan1..lan8 with it, and not without it.
+# 3. Uploads the built upgrade .swu to SWUpdate (https://.../update/), which
+#    rewrites the firmware partition and reboots.
+# 4. Waits until the switch has booted again from flash and RESTCONF answers
+#    with the same password: an update keeps it.
+# 5. Factory reset over RESTCONF: after the reboot the switch is in the
+#    first-login setup again.
 #
-# Uses switch 9 (ports 2312, 8090, 8170, 1251), so it does not disturb
-# switches started with scripts/mips-rtl838x-qemu. Exits non-zero on the first
+# Uses switch 9 (ports 2312, 8533, 1251), so it does not disturb switches
+# started with scripts/mips-rtl838x-qemu. Exits non-zero on the first
 # failure; the serial console is in build/qemu/rtl838x-switch9.log.
 
 set -eu
@@ -23,8 +29,8 @@ BUILDDIR=${BUILDDIR:-$here/../build}
 MACHINE=zyxel-gs1900-8-a1
 SWU=$BUILDDIR/tmp/deploy/images/$MACHINE/ethernet-switch-os-swu-upgrade-$MACHINE.swu
 LOG=$BUILDDIR/qemu/rtl838x-switch9.log
-HTTP=http://127.0.0.1:8090
-SWUPDATE=http://127.0.0.1:8170
+HTTPS=https://127.0.0.1:8533
+PASSWORD=ethernet-switch-os-test
 
 mkdir -p "$BUILDDIR/qemu"
 rm -f "$LOG"
@@ -38,6 +44,16 @@ fail() {
     echo "--- serial console (last 60 lines) ---" >&2
     tail -n 60 "$LOG" >&2 || true
     exit 1
+}
+
+# The certificate is self-signed: -k.
+rc() {
+    curl -sk -H 'Accept: application/yang-data+json' "$@"
+}
+
+# HTTP status of a request.
+status() {
+    rc -o /dev/null -w '%{http_code}' "$@" || true
 }
 
 # Waits up to $1 seconds for $2 to appear in the serial console.
@@ -62,12 +78,25 @@ wait_boots() {
     done
 }
 
-# Waits up to $1 seconds until RESTCONF lists lan1..lan8.
+# Waits up to $1 seconds until setup-required reads $2.
+wait_setup() {
+    t=0
+    while :; do
+        value=$(rc "$HTTPS/restconf/data/clixon-switch:system/state/setup-required" 2>/dev/null |
+            grep -o 'true\|false') || value=
+        [ "$value" = "$2" ] && return 0
+        kill -0 $qemu 2>/dev/null || fail "QEMU exited while waiting for setup-required $2"
+        [ $t -lt "$1" ] || fail "setup-required is not $2 after $1 s (got '$value')"
+        sleep 5
+        t=$((t + 5))
+    done
+}
+
+# Waits up to $1 seconds until RESTCONF lists lan1..lan8, with the password.
 wait_restconf() {
     t=0
     while :; do
-        ports=$(curl -sf -H 'Accept: application/yang-data+json' \
-            "$HTTP/restconf/data/openconfig-interfaces:interfaces" 2>/dev/null |
+        ports=$(rc -u "cli:$PASSWORD" "$HTTPS/restconf/data/openconfig-interfaces:interfaces" 2>/dev/null |
             grep -o '"lan[1-8]"' | sort -u | wc -l) || ports=0
         [ "$ports" -ge 8 ] && return 0
         kill -0 $qemu 2>/dev/null || fail "QEMU exited while waiting for RESTCONF"
@@ -77,17 +106,56 @@ wait_restconf() {
     done
 }
 
-echo "== boot from flash"
+set_password() {
+    rc -m 60 -X POST -H 'Content-Type: application/yang-data+json' \
+        -d "{\"clixon-switch:input\":{$1}}" -o /dev/null -w '%{http_code}' \
+        "$HTTPS/restconf/operations/clixon-switch:set-password" || true
+}
+
+INTERFACES=$HTTPS/restconf/data/openconfig-interfaces:interfaces
+
+echo "== boot from flash: first-login setup"
 wait_log 300 'login:'
-wait_restconf 300
-echo "ok: switch up, lan1..lan8 in RESTCONF"
+wait_setup 300 true
+[ "$(status "$INTERFACES")" = 401 ] || fail "RESTCONF answers without a login during the setup"
+[ "$(status "$HTTPS/update/")" = 401 ] || fail "the update page answers without a login during the setup"
+[ "$(set_password '"new-password":"short"')" != 204 ] || fail "a 5 character password was accepted"
+code=$(set_password "\"new-password\":\"$PASSWORD\"")
+[ "$code" = 204 ] || fail "set-password during the setup answered HTTP $code"
+wait_setup 60 false
+echo "ok: password set"
+
+echo "== login"
+wait_restconf 120
+[ "$(status "$INTERFACES")" = 401 ] || fail "RESTCONF answers without a login"
+[ "$(status -u cli:wrong-password "$INTERFACES")" = 401 ] || fail "RESTCONF answers with a wrong password"
+code=$(set_password '"new-password":"another-password"')
+[ "$code" = 403 ] || fail "set-password without current-password answered HTTP $code, not 403"
+# A 204 without a body: the web UI's "Save configuration".
+code=$(rc -m 60 -u "cli:$PASSWORD" -X POST -H 'Content-Type: application/yang-data+json' \
+    -d '{"ietf-netconf:input":{"target":{"startup":[null]},"source":{"running":[null]}}}' \
+    -o /dev/null -w '%{http_code}' "$HTTPS/restconf/operations/ietf-netconf:copy-config") || true
+[ "$code" = 204 ] || fail "copy-config running to startup answered HTTP $code"
+echo "ok: lan1..lan8 in RESTCONF with the password only"
 
 echo "== update"
 [ -e "$SWU" ] || fail "$SWU missing"
-curl -sf -F "file=@$SWU" "$SWUPDATE/upload" >/dev/null || fail "upload of $SWU failed"
+curl -skf -u "cli:$PASSWORD" -F "file=@$SWU" "$HTTPS/update/upload" >/dev/null ||
+    fail "upload of $SWU failed"
 wait_log 600 'SWUPDATE successful'
 wait_boots 120 2
 wait_restconf 300
-echo "ok: updated firmware booted from flash, lan1..lan8 in RESTCONF"
+echo "ok: updated firmware booted from flash, the password kept"
+
+echo "== factory reset"
+# An empty body, but with Content-Length: lighttpd answers 411 without one.
+code=$(rc -u "cli:$PASSWORD" -X POST -H 'Content-Type: application/yang-data+json' -d '' \
+    -o /dev/null -w '%{http_code}' "$HTTPS/restconf/operations/clixon-switch:factory-reset") || true
+[ "$code" = 204 ] || fail "factory-reset answered HTTP $code"
+wait_boots 120 3
+wait_log 120 'factory reset: mtd:data erased'
+wait_setup 300 true
+[ "$(status -u "cli:$PASSWORD" "$INTERFACES")" = 401 ] || fail "the old password still works after the factory reset"
+echo "ok: factory reset, first-login setup again"
 
 echo "PASS"

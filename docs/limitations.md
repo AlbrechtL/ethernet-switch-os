@@ -5,16 +5,25 @@ do yet, so you can decide whether it fits your use.
 
 ## Security
 
-!!! danger
-    There is **no access control** of any kind. Do not connect the
-    management address to an untrusted network.
+SSH, the web pages, RESTCONF and the firmware update need the admin
+password, and the web traffic is HTTPS (see
+[Access and security](development/architecture.md#access-and-security)).
+What is missing:
 
-- The users `root` and `cli` have **no password**, and passwords cannot be
-  set through the configuration.
-- RESTCONF and the web page have no authentication and no TLS: anyone who
-  reaches port 80 can read and change the configuration.
-- The firmware update page on port 8080 has no authentication either.
-- There are no user accounts, roles or read-only access.
+- **One admin account.** There are no other users, no roles and no
+  read-only access: whoever logs in may do everything.
+- **First login open to everyone.** Until the admin password is set, after
+  the first boot and after a factory reset, anyone who reaches the switch
+  can set it.
+- **Self-signed certificate.** The switch makes its own HTTPS certificate;
+  browsers warn about it, and a certificate of your own cannot be
+  installed.
+- **No brute-force protection** on the web login beyond the time a bcrypt
+  check takes, and no log of failed logins.
+- **`root` without password on the serial console.** Physical access to the
+  serial port is full access.
+- SSH, HTTPS and SNMP listen on every management address; they cannot be
+  turned off or limited to a VLAN.
 
 ## Known problems in the current firmware
 
@@ -116,7 +125,6 @@ has a complete example.
 
 ## CLI
 
-- No factory-reset command (see [Factory reset](installation/update.md#factory-reset)).
 - No reboot command; use the root shell.
 - Error messages include internal details (timestamps, function names) in
   front of the actual reason.
@@ -145,14 +153,14 @@ missing; requirements already met are not listed.
 
 | # | Requirement | Gap |
 |---|---|---|
-| 1 | Secure by default configuration (2b) | `root` and `cli` log in over SSH and the serial console with an empty password. No forced password change on first start. |
-| 2 | Protection from unauthorised access, authentication and access management (2d) | RESTCONF, the web page and the firmware update page (port 8080) have no authentication. No user accounts, roles or read-only access. |
-| 3 | Confidentiality of data in transit (2e) | RESTCONF, the web page and firmware upload use plain HTTP, no TLS. |
+| 1 | Secure by default configuration (2b) | The admin password is set at the first login, but until then anyone on the network can set it. `root` has an empty password on the serial console. |
+| 2 | Protection from unauthorised access, authentication and access management (2d) | One admin account only: no roles or read-only access, no brute-force protection or lockout, no log of failed logins. |
+| 3 | Confidentiality of data in transit (2e) | HTTPS with a self-signed certificate that cannot be replaced, so a browser cannot tell the switch from an impostor on first contact. |
 | 4 | Integrity of data and firmware (2f) | Update files are not signed and not checked before installation. No verified or secure boot. |
-| 5 | Minimised attack surface (2j) | SSH, RESTCONF with the web page, and the firmware update page always run on every management address. The configuration cannot turn them off or limit them to a management VLAN. |
+| 5 | Minimised attack surface (2j) | SSH and HTTPS (web page, RESTCONF, firmware update) always run on every management address. The configuration cannot turn them off or limit them to a management VLAN. |
 | 6 | Resilience, availability of essential functions (2h, 2i) | Zyxel GS1900-8 and Albrecht test switch: one firmware slot without fallback, so an interrupted update leaves the switch unable to start, and no automatic rollback. The A/B boards roll back, the Raspberry Pi only after a power cycle when a firmware hangs (no watchdog yet). |
 | 7 | Security-relevant logging and monitoring (2l) | No record of logins or configuration changes, no syslog forwarding, no real time (no NTP, fixed clock at boot), so log entries cannot be dated. |
-| 8 | Secure deletion of data and settings (2m) | No factory-reset command that removes the configuration and credentials. |
+| 8 | Secure deletion of data and settings (2m) | The factory reset erases the `data` flash partition on the RTL83xx boards. On the Raspberry Pi and QEMU it deletes the files, and the blocks may stay readable on the SD card. |
 | 9 | Security updates, automatic where possible, with user notification and opt-out (2c) | Updates are manual only. The switch does not check for or notify about new firmware. Any older version can be installed, so a downgrade to a vulnerable version is not prevented. |
 | 10 | No known exploitable vulnerabilities at release (2a) | No release process that checks the image for known CVEs before shipping. |
 

@@ -70,7 +70,7 @@ not implement (see below).
 
 To see all ports at once, use `show state text interfaces`. The
 [status page](../web-ui.md#ports) at
-`http://<switch-ip>/` shows the ports in a table.
+`https://<switch-ip>/` shows the ports in a table.
 
 ## Remove a port from the configuration
 

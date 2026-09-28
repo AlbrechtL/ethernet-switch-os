@@ -35,8 +35,7 @@
 #                server at .244-N, ADDRESS forwarded to 127.0.0.1 on the
 #                host:
 #                  ssh      2222 + 10*N
-#                  http     8000 + 10*N   (status page, RESTCONF)
-#                  SWUpdate 8080 + 10*N
+#                  https    8443 + 10*N   (web interface, RESTCONF, /update/)
 #                The slirp DHCP server hands out 192.168.1.100+10*N and up.
 #   lan2..lan8   UDP sockets on 127.0.0.1, port 20000 + 100*N + port number;
 #                one front port of another switch at the other end, or
@@ -119,13 +118,12 @@ else
 fi
 
 ssh_port=$((2222 + 10 * SWITCH))
-http_port=$((8000 + 10 * SWITCH))
-swupdate_port=$((8080 + 10 * SWITCH))
+https_port=$((8443 + 10 * SWITCH))
 
 # Front port N sits in PCI slot 0x10+N-1; qemu-switch-ports
 # (meta-qemu-switch-bsp) names the virtio-net devices lan1..lan8 in PCI order.
 set -- \
-    -netdev "user,id=lan1,net=192.168.1.0/24,host=192.168.1.$((254 - SWITCH)),dns=192.168.1.$((244 - SWITCH)),dhcpstart=192.168.1.$((100 + 10 * SWITCH)),hostfwd=tcp:127.0.0.1:$ssh_port-$ADDRESS:22,hostfwd=tcp:127.0.0.1:$http_port-$ADDRESS:80,hostfwd=tcp:127.0.0.1:$swupdate_port-$ADDRESS:8080" \
+    -netdev "user,id=lan1,net=192.168.1.0/24,host=192.168.1.$((254 - SWITCH)),dns=192.168.1.$((244 - SWITCH)),dhcpstart=192.168.1.$((100 + 10 * SWITCH)),hostfwd=tcp:127.0.0.1:$ssh_port-$ADDRESS:22,hostfwd=tcp:127.0.0.1:$https_port-$ADDRESS:443" \
     -device "virtio-net-pci,netdev=lan1,mac=52:54:00:00:0$SWITCH:01,addr=0x10"
 for n in 2 3 4 5 6 7 8; do
     set -- "$@" \
@@ -147,7 +145,7 @@ else
     set -- "$@" -nographic
 fi
 
-echo "switch $SWITCH: $ADDRESS forwarded: ssh -p $ssh_port cli@127.0.0.1, http://127.0.0.1:$http_port/, SWUpdate http://127.0.0.1:$swupdate_port/"
+echo "switch $SWITCH: $ADDRESS forwarded: ssh -p $ssh_port cli@127.0.0.1, https://127.0.0.1:$https_port/"
 
 # EFI Boot Guard arms the i6300esb watchdog; a reset it causes stays a reset
 # (the default), which is what makes a hanging update roll back.

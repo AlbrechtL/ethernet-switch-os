@@ -84,7 +84,7 @@ Where to read it:
 - RESTCONF:
 
     ```sh
-    curl -s http://192.168.1.1/restconf/data/clixon-switch:system/state/os-version
+    curl -sk -u cli https://192.168.1.1/restconf/data/clixon-switch:system/state/os-version
     ```
 
 - in a `root` shell: `/etc/os-release` (`VERSION`, `BUILD_ID`), and
@@ -222,8 +222,9 @@ the reboot.
 
 ### Update in the browser
 
-1. Open `http://<switch-ip>:8080/`. The status page at `http://<switch-ip>/`
-   links there with its **Firmware update** button.
+1. Open `https://<switch-ip>/update/` and log in as `cli` with the admin
+   password. The status page at `https://<switch-ip>/` links there with its
+   **Firmware update** button.
 2. Drop the **upgrade** `.swu` file on the "Software Update" area, or click
    the area and choose the file. The upload starts at once; there is no
    separate start button.
@@ -254,11 +255,12 @@ the reboot.
 ### Update with curl
 
 The update page accepts the file with a plain HTTP upload, so `curl` on
-your computer can do the same as the browser:
+your computer can do the same as the browser. `-u cli` asks for the admin
+password, `-k` accepts the switch's self-signed certificate:
 
 ```sh
-curl -F "file=@ethernet-switch-os-swu-upgrade-zyxel-gs1900-8-a1.swu" \
-     http://192.168.1.1:8080/upload
+curl -k -u cli -F "file=@ethernet-switch-os-swu-upgrade-zyxel-gs1900-8-a1.swu" \
+     https://192.168.1.1/update/upload
 ```
 
 The form field name does not matter, but the file name must be sent, which
@@ -283,7 +285,7 @@ To tell whether it worked:
   before:
 
     ```sh
-    curl -s http://192.168.1.1/restconf/data/clixon-switch:system/state/os-version
+    curl -sk -u cli https://192.168.1.1/restconf/data/clixon-switch:system/state/os-version
     ```
 
     With A/B, the old version after the reboot means the new firmware was
@@ -296,7 +298,7 @@ To tell whether it worked:
   `FAILURE`:
 
     ```sh
-    websocat ws://192.168.1.1:8080/ws
+    websocat -k --basic-auth cli:<password> wss://192.168.1.1/update/ws
     ```
 
 If the switch does not reboot within a few minutes, the update failed.
@@ -308,26 +310,25 @@ in the browser to see the reason, and continue as in step 5 of
 ### Update in the switch's shell
 
 As `root`, the switch has the `swupdate` command, which installs a `.swu`
-file that is already on the switch.
+file that is already on the switch. `root` logs in on the serial console
+only (115200 8N1), not over SSH.
 
-1. Copy the file into `/tmp` on the switch:
+1. Log in as `root` on the serial console.
 
-    ```sh
-    scp -O ethernet-switch-os-swu-upgrade-zyxel-gs1900-8-a1.swu root@192.168.1.1:/tmp/
+2. Fetch the file into `/tmp` on the switch, for example from a web or TFTP
+   server on your computer:
+
+    ```text
+    # cd /tmp
+    # wget http://192.168.1.10:8000/ethernet-switch-os-swu-upgrade-zyxel-gs1900-8-a1.swu
     ```
 
-    `-O` makes a current OpenSSH `scp` use the classic protocol. The switch
-    has no SFTP server, which `scp` otherwise needs.
+    (`python3 -m http.server` in the directory with the file is such a web
+    server; `tftp -g -r <file> <server>` fetches from TFTP.)
 
     Use `/tmp`, which is in RAM. The other directories are on the partition
     that also holds the configuration, and a file there would stay after
     the update.
-
-2. Log in as `root`:
-
-    ```sh
-    ssh root@192.168.1.1
-    ```
 
 3. Optionally, check the file without writing anything (`-c`):
 
@@ -366,7 +367,7 @@ away.
 
 !!! warning "The update page stops working until the next reboot"
     Every `swupdate` run in the shell, even a check with `-c`, removes the
-    connection that the update page on port 8080 uses to install. After
+    connection that the update page uses to install. After
     that, uploads on the page fail (`curl` prints `Failed to queue command`)
     until the switch reboots. Restarting the update service does not help.
     After a successful update you reboot anyway; after a check or a failed
@@ -374,20 +375,47 @@ away.
 
 ## Factory reset
 
-There is no CLI command for a factory reset. Log in as `root` and delete
-the saved configuration, then reboot:
+A factory reset erases everything the switch has stored: the saved
+configuration, the admin password, the SSH host keys and the HTTPS
+certificate. The firmware stays. The switch reboots and comes back like a
+freshly installed one: with the
+[factory settings](../getting-started.md#factory-settings) at `192.168.1.1`,
+asking for a new admin password at the first login, with a new SSH host key
+(ssh warns that it changed) and a new certificate.
+
+It is also the way back in when the admin password is lost. Any of these
+starts it:
+
+| Where | How |
+|---|---|
+| Reset button (Zyxel GS1900-8) | Hold it for at least 5 seconds, then release. A shorter press only reboots. |
+| DIP switch 6 ([Albrecht RTL8382MI test switch](albrecht-rtl8382mi-test.md#leds-and-dip-switches)) | Switch it on, wait at least 5 seconds, switch it off again. |
+| CLI | `factory-reset`, then confirm with `y`. |
+| Web page | **Administration → Factory reset**. |
+| Serial console | Log in as `root`, run `ethernet-switch-os-factory-reset`. |
 
 ```text
-$ ssh root@<switch-ip>
-# rm /var/lib/clixon/clixon-switch/startup_db
-# reboot
+switch> factory-reset
+All settings, the admin password, the SSH host keys and the HTTPS certificate
+will be erased, and the switch reboots. Continue? [y/N] y
+Rebooting. The switch comes back with the factory settings.
 ```
 
-The switch comes back with the [factory settings](../getting-started.md#factory-settings),
-at `192.168.1.1`.
+On the RTL83xx boards the flash partition that holds this data is erased,
+so nothing of it can be read back. On the Raspberry Pi and QEMU the files
+are deleted, but an SD card may keep the old blocks.
 
-On the [Albrecht RTL8382MI test switch](albrecht-rtl8382mi-test.md#leds-and-dip-switches), DIP switch 6 does the same: switch it
-on, wait at least 5 seconds, and switch it off again.
+### Lost password, but keep the settings
+
+With a serial cable, `root` can set a new admin password without a factory
+reset:
+
+```text
+zyxel-gs1900-8-a1 login: root
+# ethernet-switch-os-set-password cli
+New password for cli:
+Repeat new password:
+```
 
 ## When the saved configuration cannot be loaded
 
@@ -402,5 +430,6 @@ and save.
 | Situation | What to do |
 |---|---|
 | A committed but unsaved change cut you off | Power-cycle the switch. It boots with the saved configuration. |
-| A saved configuration cut you off | Connect to a port that is still in the management VLAN, or use the serial console (115200 8N1, login `root`) and fix it with `clixon_cli`, or do a factory reset. |
+| A saved configuration cut you off | Connect to a port that is still in the management VLAN, or use the serial console (115200 8N1, login `root`) and fix it with `clixon_cli`, or do a [factory reset](#factory-reset). |
+| The admin password is lost | A [factory reset](#factory-reset), or with a serial cable [a new password as root](#lost-password-but-keep-the-settings). |
 | The switch does not boot | Boot the TFTP image and reinstall with the factory `.swu`, see the installation of the [Zyxel GS1900-8](zyxel-gs1900-8.md#first-installation) or the [Albrecht RTL8382MI test switch](albrecht-rtl8382mi-test.md#first-installation). |

@@ -38,7 +38,9 @@ flowchart TB
     nms["SNMP manager"]
 
     subgraph user["Userspace"]
-        restconf["clixon_restconf<br/>HTTP port 80"]
+        lighttpd["lighttpd<br/>HTTPS port 443, login"]
+        restconf["clixon_restconf<br/>127.0.0.1 port 80"]
+        swupdate["SWUpdate<br/>127.0.0.1 port 8080"]
         cli["clixon_cli<br/>login shell of user cli"]
         snmpd["snmpd (net-snmp)<br/>UDP port 161"]
         clixon_snmp["clixon_snmp<br/>AgentX subagent"]
@@ -55,8 +57,10 @@ flowchart TB
 
     asic["Switch chip"]
 
-    browser --> restconf
-    script --> restconf
+    browser --> lighttpd
+    script --> lighttpd
+    lighttpd --> restconf
+    lighttpd -- "/update/" --> swupdate
     ssh --> cli
     nms --> snmpd --> clixon_snmp
     restconf -- "UNIX socket" --> backend
@@ -72,11 +76,12 @@ flowchart TB
 | Layer | What it is | Source |
 |---|---|---|
 | Web UI | Static HTML, CSS and JavaScript, no build step. Talks to the switch only through RESTCONF. | [meta-ethernet-switch-os](https://github.com/AlbrechtL/meta-ethernet-switch-os) `recipes-webui/` |
-| RESTCONF | `clixon_restconf`, clixon's native HTTP/1 server. Also serves the web UI's files at `/`. | clixon, recipe in meta-ethernet-switch-os `recipes-clixon/` |
-| CLI | `clixon_cli`, generated from the YANG models (clixon's autocli). It is the login shell of the user `cli`. | clixon; CLI spec in [clixon-switch-rs](https://github.com/AlbrechtL/clixon-switch-rs) `clixon/` |
+| HTTPS front end | lighttpd: TLS, the password check, the web UI's files, and forwarding to RESTCONF and SWUpdate. See [Access and security](#access-and-security). | meta-ethernet-switch-os `recipes-extended/lighttpd/` |
+| RESTCONF | `clixon_restconf`, clixon's native HTTP/1 server, on 127.0.0.1 only. | clixon, recipe in meta-ethernet-switch-os `recipes-clixon/` |
+| CLI | `clixon_cli`, generated from the YANG models (clixon's autocli), plus `password` and `factory-reset` from a small C plugin. It is the login shell of the user `cli`. | clixon; CLI spec and plugin in [clixon-switch-rs](https://github.com/AlbrechtL/clixon-switch-rs) `clixon/` |
 | SNMP | net-snmp's `snmpd` and `clixon_snmp` as its AgentX subagent. Read-only. | net-snmp, clixon |
 | Configuration backend | `clixon_backend`: holds the datastores, validates against YANG, runs transactions, loads the plugin. | clixon |
-| Backend plugin | `clixon-switch`, a Rust shared library. Validates each commit and brings the kernel in line with it. | [clixon-switch-rs](https://github.com/AlbrechtL/clixon-switch-rs) |
+| Backend plugin | `clixon-switch`, a Rust shared library. Validates each commit and brings the kernel in line with it. Runs the RPCs `set-password` and `factory-reset`. | [clixon-switch-rs](https://github.com/AlbrechtL/clixon-switch-rs) |
 | Linux networking | Bridge, VLANs, addresses, spanning tree states. Configured over rtnetlink. | Linux kernel |
 | Hardware offload | switchdev and DSA, and the switch chip's DSA driver. | Linux kernel, BSP layer |
 
@@ -173,7 +178,7 @@ The 16 MiB SPI-NOR flash is divided into five partitions:
 | `u-boot` | 256 KiB | The stock Zyxel bootloader. Never written. |
 | `u-boot-env` | 64 KiB | Bootloader environment |
 | `u-boot-env2` | 64 KiB | Second bootloader environment (`bootpartition`) |
-| `data` | 2 MiB | JFFS2, the writable layer on top of the root filesystem: the saved configuration, SSH host keys. Kept across firmware updates. |
+| `data` | 2 MiB | JFFS2, the writable layer on top of the root filesystem: the saved configuration, the admin password, SSH host keys, the HTTPS certificate. Kept across firmware updates, erased by a [factory reset](#factory-reset). |
 | `firmware` | 13.6 MiB | The firmware itself, see below. Rewritten by a firmware update. |
 | **Total** | **16 MiB** | |
 
@@ -345,7 +350,55 @@ clixon keeps the configuration in XML datastores:
 A commit changes `running` only. `save` in the CLI, "Save configuration" in
 the web UI or a RESTCONF `copy-config` from running to startup makes it
 permanent. Only `startup_db` is on flash, because clixon rewrites the other
-datastores on every edit. Deleting `startup_db` is a factory reset.
+datastores on every edit. A [factory reset](#factory-reset) erases it with
+everything else on the `data` partition.
+
+## Factory reset
+
+A factory reset puts the switch back into the state of a fresh install: the
+factory configuration at `192.168.1.1`, no admin password (the
+[first-login setup](#first-login-setup) runs again), new SSH host keys and a
+new HTTPS certificate. The firmware stays.
+
+Everything the switch writes lands in the overlay's upper layer on the
+`data` partition, so the reset erases that partition. It cannot be erased
+while the overlay on it is in use, so the reset takes two steps, split by a
+reboot:
+
+```text
+trigger ─► ethernet-switch-os-factory-reset ─► marker /overlay/.factory-reset ─► sync, reboot
+
+boot ─► overlay-init mounts data ─► marker? ─yes─► wipe data ─► build the overlay ─► init
+                                            └─no────────────►┘
+```
+
+Every trigger runs the same script, `/usr/sbin/ethernet-switch-os-factory-reset`
+(recipe `ethernet-switch-os-auth`):
+
+| Trigger | Path |
+|---|---|
+| Reset button, held 5 s or more (GS1900-8, test switch) | triggerhappy → `ethernet-switch-os-reset-key` |
+| CLI `factory-reset`, after a y/N question | RPC `clixon-switch:factory-reset` → backend plugin |
+| Web interface: Administration → Factory reset | the same RPC over RESTCONF |
+| `root` on the serial console | the script itself |
+
+The RPC runs the script with `--later`: it writes the marker and returns,
+and the reboot follows two seconds later, so the reply still reaches the
+client. A short press of the button only reboots.
+
+How the wipe is done depends on the storage. `overlay-init` belongs to the
+BSP layer:
+
+| Board | Wipe |
+|---|---|
+| RTL83xx (SPI-NOR, JFFS2) | `flash_eraseall -j` erases the whole `data` partition. Nothing of the old configuration, password or keys stays readable in the flash. |
+| Raspberry Pi, QEMU (ext4) | The upper and work directories of the overlay are deleted. The blocks are not overwritten: on an SD card they may still be readable. |
+
+If the erase fails, `overlay-init` continues with a tmpfs overlay: the switch
+comes up in the factory state, but keeps nothing across a reboot.
+
+The factory `.swu` of the RTL83xx boards writes an empty JFFS2 to `data`,
+which is a factory reset as well.
 
 ## Boot sequence
 
@@ -355,7 +408,8 @@ datastores on every edit. Deleting `startup_db` is a factory reset.
    front ports `lan1` ... `lanN`, named by the device tree.
 3. An overlay init script mounts the read-only squashfs root with the
    writable `data` partition on top (JFFS2 on the RTL83xx flash, ext4 on the
-   SD card and the QEMU disk).
+   SD card and the QEMU disk). Before that, it wipes `data` if a
+   [factory reset](#factory-reset) left its marker there.
 4. busybox `init` runs the SysV init scripts:
     - `clixon-backend` runs `prepare-datastore` (creates `startup_db` from
       the factory default on the first boot) and starts `clixon_backend`.
@@ -363,21 +417,149 @@ datastores on every edit. Deleting `startup_db` is a factory reset.
       `br-lan`, adds the ports and puts the management address on `vlan1`.
       **There is no other network configuration**: no
       `/etc/network/interfaces`, no NetworkManager.
-    - `clixon-restconf` starts `clixon_restconf` on port 80.
-    - `dropbear` (SSH) and `swupdate` (firmware update, port 8080).
+    - `clixon-restconf` starts `clixon_restconf` on 127.0.0.1, port 80.
+    - `dropbear` (SSH, `-w`: no root logins) and `swupdate` (firmware
+      update, 127.0.0.1 port 8080).
+    - `lighttpd` makes the HTTPS certificate on the first boot and after a
+      factory reset, and listens on port 443 in front of both.
 
 ## Processes at runtime
 
 | Process | Started by | Port / socket | Role |
 |---|---|---|---|
 | `clixon_backend` | init script | `/var/run/clixon-switch.sock` | Configuration, with the plugin loaded |
-| `clixon_restconf` | init script | TCP 80 | RESTCONF and the web UI files |
-| `clixon_cli` | SSH login of `cli` | — | CLI |
+| `clixon_restconf` | init script | TCP 80 on 127.0.0.1 | RESTCONF |
+| `lighttpd` | init script | TCP 443 | HTTPS and the login for the web interface, RESTCONF and SWUpdate |
+| `clixon_cli` | SSH or serial login of `cli` | — | CLI |
 | `dropbear` | init script | TCP 22 | SSH |
-| `swupdate` | init script | TCP 8080 | Firmware update and its web page |
+| `swupdate` | init script | TCP 8080 on 127.0.0.1 | Firmware update and its web page |
 | `mstpd` | plugin, while spanning tree is enabled | — | STP, RSTP, MSTP |
 | `udhcpc` | plugin, while a DHCP client is configured | — | DHCP client |
 | `snmpd`, `clixon_snmp` | plugin, while SNMP is enabled | UDP 161, AgentX socket | SNMPv3 agent |
+
+Only ports 22 and 443 are open to the network, plus UDP 161 while SNMP is
+on. The TFTP initramfs, the factory installer, also leaves SWUpdate on port
+8080 of every address: it has no password yet, and it only runs after a boot
+from the bootloader's serial console.
+
+## Access and security
+
+### Accounts
+
+| Account | Password | Serial console | SSH | Web, RESTCONF |
+|---|---|---|---|---|
+| `root` | none | yes, a shell | refused | no |
+| `cli` (admin) | set at the first login | yes, the CLI | yes, the CLI | yes |
+
+`root` has an empty password, but can only log in where someone has the
+hardware in hand. dropbear runs with `-w` (no root logins), `/etc/securetty`
+lists the console devices only, not the pseudo terminals of SSH sessions,
+and `su` is restricted to the `wheel` group, which nobody is in. `cli`'s login
+shell is the clixon CLI, so it never gets a shell to try.
+
+The image sets this up in `ethernet-switch-os-image-common.inc`: the image
+features `empty-root-password` and `allow-empty-password` (dropbear's `-B`,
+for the first login of `cli`), but not `allow-root-login`, which would drop
+`-w`.
+
+### First-login setup
+
+The firmware ships with `/etc/ethernet-switch-os/setup-required` and no
+password for `cli`. While the file exists:
+
+- A login as `cli`, on the serial console or over SSH, asks for a new
+  password twice before the CLI starts (the login shell
+  `ethernet-switch-os-cli` runs `clixon_cli -1 password`). A command on the
+  ssh command line is refused.
+- The web interface shows only a form for the password. lighttpd answers
+  two RESTCONF requests without a login: reading `setup-required` and the
+  `set-password` RPC.
+
+The first password that is set deletes the file, which leaves a whiteout in
+the overlay. A factory reset erases the overlay, and the file is back.
+
+Until then anyone who reaches the switch can set the password. Set it before
+connecting the switch to a network others use.
+
+### Passwords
+
+`/etc/shadow` is the only place the password lives. Whoever sets it, the
+same script does the work:
+
+```text
+CLI "password"   ─┐
+web form         ─┼─► RPC clixon-switch:set-password ─► backend plugin ─► ethernet-switch-os-set-password
+setup at login   ─┘      (checks current-password,       (root)            ├─ chpasswd -c BCRYPT  → /etc/shadow
+                          unless setup-required)                           ├─ copy of the hash    → /etc/lighttpd/htpasswd
+root on serial   ─────────────────────────────────────────────────────────►├─ rm setup-required
+                                                                           └─ restart lighttpd
+```
+
+The backend plugin checks `current-password` against `/etc/shadow` with
+`crypt()` before it runs the script, and the password rules (8 to 128
+characters, no control characters). The RPC answers `access-denied` (HTTP
+403) for a missing or wrong current password. `root` on the serial console
+runs `ethernet-switch-os-set-password cli` directly, to regain access without
+a factory reset.
+
+The hash is **bcrypt** (`$2b$`, cost 8, `BCRYPT_MIN_ROUNDS` and
+`BCRYPT_MAX_ROUNDS` in `/etc/login.defs`). Every program that checks a
+password uses musl's `crypt()`: `login`, `su`, dropbear, lighttpd and the
+backend plugin. musl knows bcrypt and SHA-crypt, and bcrypt is the harder of
+the two to attack with GPUs. yescrypt would be stronger still, but musl does
+not have it: it needs libxcrypt in place of musl's `crypt()` for all of these
+programs, and it is memory-hard by design (16 MiB per check at its default
+cost) on a switch with 128 MiB. shadow writes bcrypt hashes only when built
+with it (`recipes-extended/shadow` in meta-ethernet-switch-os).
+
+Cost 8 is 2^8 rounds, chosen to keep a check well under a second on the
+RTL838x. A login pays that once. The web interface sends several requests every few seconds,
+so lighttpd keeps a checked login for 10 minutes (`auth.cache`); the script
+restarts lighttpd so that a changed password counts at once.
+
+### HTTPS: lighttpd in front
+
+clixon_restconf and SWUpdate's web server listen on 127.0.0.1 only, without
+TLS or a login. lighttpd does both for them, so there is one certificate,
+one login and one origin:
+
+```text
+network ──443/tcp──► lighttpd ─┬─ /            static files, /usr/share/ethernet-switch-os/www
+                     (TLS,     ├─ /restconf    127.0.0.1:80    clixon_restconf
+                      basic    ├─ /.well-known 127.0.0.1:80    clixon_restconf
+                      auth)    └─ /update/     127.0.0.1:8080  SWUpdate (prefix stripped)
+        ──22/tcp───► dropbear (-w)
+UART    ──────────► login: root or cli
+```
+
+| URL on port 443 | Login | Goes to | Notes |
+|---|---|---|---|
+| `/`, the web interface's files | no | `/usr/share/ethernet-switch-os/www` | The files hold no data; the setup form has to load without a password. |
+| `/restconf/...` | yes | `127.0.0.1:80` | |
+| `POST /restconf/operations/clixon-switch:set-password` | no | `127.0.0.1:80` | Needs `current-password` once a password is set. |
+| `GET /restconf/data/clixon-switch:system/state/setup-required` | no | `127.0.0.1:80` | The web interface asks it to choose between setup form and normal page. |
+| `/.well-known/...` | no | `127.0.0.1:80` | RESTCONF root discovery (RFC 8040). |
+| `/update/...` | yes | `127.0.0.1:8080` | `map-urlpath` strips `/update`; WebSocket upgrade for the progress messages; the `.swu` is streamed through, not stored first. |
+
+The login is HTTP basic auth, user `cli`, realm "Ethernet Switch OS",
+checked against `/etc/lighttpd/htpasswd` (mode 0640, group `lighttpd`).
+lighttpd binds port 443 as root, reads the certificate and key, and then runs
+as the user `lighttpd`. It is built without pcre, so its configuration
+(`recipes-extended/lighttpd/files/lighttpd.conf` in meta-ethernet-switch-os)
+uses prefix and exact matches only.
+
+SWUpdate's page works below `/update/` because it uses relative URLs only
+and builds its WebSocket URL from `location.pathname`, with `wss:` on
+HTTPS.
+
+The certificate is self-signed, P-256, made by lighttpd's init script with
+`openssl req` into `/etc/ethernet-switch-os/tls/`. P-256 takes seconds on
+the RTL838x where RSA-2048 would take a minute. The switch has no real-time
+clock, so the validity is fixed (2000 to 9999) instead of counted from the
+clock. Browsers warn about it; there is no way to import a certificate yet.
+
+Not covered: user roles. There is one admin account, and anyone logged in
+may do everything. NACM (RFC 8341) is on the README's TODO list.
 
 ## Operating system base
 
@@ -388,8 +570,8 @@ datastores on every edit. Deleting `startup_db` is a factory reset.
   everything.
 - **Linux 6.18** on all current boards.
 - Root filesystem: read-only **squashfs**, with an overlay on the `data`
-  partition for everything that is written (the saved configuration, SSH
-  host keys).
+  partition for everything that is written (the saved configuration, the
+  admin password, SSH host keys, the HTTPS certificate).
 - **SWUpdate** installs `.swu` update files: in place on the RTL83xx boards
   (one firmware slot), A/B with rollback on the Raspberry Pi and QEMU. See
   [Firmware update](../installation/update.md#firmware-update).

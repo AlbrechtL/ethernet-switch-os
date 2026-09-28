@@ -209,6 +209,15 @@ switch:
 While the candidate holds an invalid change, `show` commands may print
 `CLI command error` lines. They go away once the candidate is valid again.
 
+## Password and factory reset
+
+| Command | What it does |
+|---|---|
+| `password` | Changes the admin password: asks for the current one and the new one twice, without echo. It is the password of `cli` for SSH, the serial console and the web pages. |
+| `factory-reset` | Asks for confirmation, then erases all settings, the admin password, the SSH host keys and the HTTPS certificate, and reboots. See [Factory reset](../installation/update.md#factory-reset). |
+
+Neither changes the configuration, so neither needs `commit` or `save`.
+
 ## Leaving
 
 `quit` leaves the CLI. Uncommitted changes in the candidate are **not**

@@ -43,12 +43,6 @@ repos:
       meta-poky:
 
 local_conf_header:
-  fragments: |
-    # An empty root and cli password -- proof of concept only. This is an
-    # ordinary oe-core fragment, not one of the builtin "machine/" or
-    # "distro/" ones: those assign MACHINE and DISTRO themselves and bitbake
-    # aborts when something else has already set them, which kas does.
-    OE_FRAGMENTS += "core/yocto/root-login-with-empty-password"
   zlib-net: |
     # zlib.net, and downloads.yoctoproject.org behind it in MIRRORS, answer
     # GitHub's hosted runners with something other than the tarball -- a

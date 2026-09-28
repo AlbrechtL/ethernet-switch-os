@@ -70,6 +70,17 @@ has the details.
 
 ## TODO
 
+- User roles with NACM (RFC 8341), for example an admin and a read-only
+  monitor role mapped from Linux groups. Today there is one admin account,
+  `cli`, and whoever logs in may do everything. clixon has NACM: rules in a
+  fixed file in the squashfs (`CLICON_NACM_MODE` `external`,
+  `CLICON_NACM_FILE`), with `CLICON_NACM_CREDENTIALS` `except` so that a
+  local client cannot pose as another user. For RESTCONF, clixon has to learn
+  who is logged in: lighttpd checks the password today and clixon_restconf
+  sees every request as `anonymous`. That needs a RESTCONF auth plugin
+  (`ca_auth`, like clixon's `example_restconf.c`) that checks basic auth
+  against `/etc/shadow` or trusts a user header from lighttpd. Measure the
+  cost of NACM's read filtering on the RTL838x first.
 - Remove the zlib.net workaround in [kas/base.yml](kas/base.yml)
   (`local_conf_header: zlib-net`) once zlib.net serves GitHub's hosted runners
   the real tarballs again. Since September 2026 the CI got a different file
