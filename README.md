@@ -81,6 +81,20 @@ has the details.
   (`ca_auth`, like clixon's `example_restconf.c`) that checks basic auth
   against `/etc/shadow` or trusts a user header from lighttpd. Measure the
   cost of NACM's read filtering on the RTL838x first.
+- Send the clixon patches upstream to
+  [clicon/clixon](https://github.com/clicon/clixon), then drop them from
+  meta-ethernet-switch-os (`recipes-clixon/clixon/files`) once a clixon
+  release has them. `Upstream-Status: Pending`:
+  - 0002: clixon_snmp supports YANG `binary` and `mac-address` types, also as
+    table index.
+  - 0003: clixon_snmp handles tables with augments and index leaves from
+    other tables, and SMI default values.
+  - 0004: clixon_snmp builds against net-snmp without MIB loading.
+  - 0005: clixon_restconf closes the HTTP/1 connection after a request with
+    `Connection: close` (needed behind lighttpd).
+
+  0001 is a backport from clixon master and goes away with the next clixon
+  release.
 - Remove the zlib.net workaround in [kas/base.yml](kas/base.yml)
   (`local_conf_header: zlib-net`) once zlib.net serves GitHub's hosted runners
   the real tarballs again. Since September 2026 the CI got a different file
