@@ -6,13 +6,13 @@
 #   ./kas-container --kvm --runtime-args "--network=host" \
 #       shell kas/board/qemux86-64-switch.yml -c /work/scripts/x86-64-q35-qemu-test
 #
-# 1. Boots the built disk (slot A), sets the admin password of the
+# 1. Boots the built disk (slot A), creates the admin account in the
 #    first-login setup over HTTPS and waits until RESTCONF lists the front
-#    ports lan1..lan8 with it.
+#    ports lan1..lan8 with its login.
 # 2. Uploads the built .swu to SWUpdate (https://.../update/), which writes
 #    slot B and reboots.
 # 3. Waits until slot B is up and confirmed, and RESTCONF answers again with
-#    the same password.
+#    the same login.
 #
 # Uses switch 9 (ports 2312, 8533), so it does not disturb switches
 # started with scripts/x86-64-q35-qemu. Exits non-zero on the first failure; the
@@ -26,6 +26,7 @@ MACHINE=qemux86-64-switch
 SWU=$BUILDDIR/tmp/deploy/images/$MACHINE/ethernet-switch-os-swu-upgrade-$MACHINE.swu
 LOG=$BUILDDIR/qemu/switch9.log
 HTTPS=https://127.0.0.1:8533
+USERNAME=ci
 PASSWORD=ethernet-switch-os-test
 
 mkdir -p "$BUILDDIR/qemu"
@@ -53,18 +54,19 @@ wait_log() {
     done
 }
 
-# Waits up to $1 seconds until the first-login setup takes the password.
+# Waits up to $1 seconds until the first-login setup creates the admin
+# account.
 # The certificate is self-signed: -k.
 set_password() {
     t=0
     while :; do
         code=$(curl -sk -o /dev/null -w '%{http_code}' -X POST \
             -H 'Content-Type: application/yang-data+json' \
-            -d "{\"clixon-switch:input\":{\"new-password\":\"$PASSWORD\"}}" \
+            -d "{\"clixon-switch:input\":{\"username\":\"$USERNAME\",\"new-password\":\"$PASSWORD\"}}" \
             "$HTTPS/restconf/operations/clixon-switch:set-password") || code=
         [ "$code" = 204 ] && return 0
         kill -0 $qemu 2>/dev/null || fail "QEMU exited while waiting for the setup"
-        [ $t -lt "$1" ] || fail "cannot set the password after $1 s (HTTP $code)"
+        [ $t -lt "$1" ] || fail "cannot create the admin account after $1 s (HTTP $code)"
         sleep 5
         t=$((t + 5))
     done
@@ -74,7 +76,7 @@ set_password() {
 wait_restconf() {
     t=0
     while :; do
-        ports=$(curl -skf -u "cli:$PASSWORD" -H 'Accept: application/yang-data+json' \
+        ports=$(curl -skf -u "$USERNAME:$PASSWORD" -H 'Accept: application/yang-data+json' \
             "$HTTPS/restconf/data/openconfig-interfaces:interfaces" 2>/dev/null |
             grep -o '"lan[1-8]"' | sort -u | wc -l) || ports=0
         [ "$ports" -ge 8 ] && return 0
@@ -93,7 +95,7 @@ echo "ok: slot A up, lan1..lan8 in RESTCONF"
 
 echo "== update to slot B"
 [ -e "$SWU" ] || fail "$SWU missing"
-curl -skf -u "cli:$PASSWORD" -F "file=@$SWU" "$HTTPS/update/upload" >/dev/null ||
+curl -skf -u "$USERNAME:$PASSWORD" -F "file=@$SWU" "$HTTPS/update/upload" >/dev/null ||
     fail "upload of $SWU failed"
 wait_log 600 'A/B: slot on /dev/vda5 confirmed'
 wait_restconf 300
