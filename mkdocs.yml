@@ -93,6 +93,7 @@ nav:
   - Reference:
       - CLI command reference: reference/cli-commands.md
       - YANG models: reference/yang-models.md
+      - Comparison with other firmware: comparison.md
       - Limitations: limitations.md
   - Development:
       - Firmware architecture: development/architecture.md

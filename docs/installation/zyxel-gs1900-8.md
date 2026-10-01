@@ -34,7 +34,9 @@ through a web page or the `swupdate` command.
 !!! warning "The original firmware is replaced"
     The factory `.swu` overwrites both firmware slots of the original
     firmware and its configuration with one Ethernet Switch OS system. The
-    bootloader is not touched. If you want to be able to go back, copy the
+    bootloader is not touched. What the original firmware can do and
+    Ethernet Switch OS cannot is listed in the
+    [comparison](../comparison.md). If you want to be able to go back, copy the
     flash first, before the installation. The
     [OpenWrt device page](https://openwrt.org/toh/zyxel/gs1900-8) has a
     "Return to factory firmware" section, which sends you on to the

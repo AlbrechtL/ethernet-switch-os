@@ -36,7 +36,9 @@ how to configure it in each of the three.
   update.
 
 What it cannot do (yet) is listed under [Limitations](limitations.md).
-Read that page before you rely on the switch for anything.
+Read that page before you rely on the switch for anything. How it compares
+to the firmware the Zyxel GS1900-8 is sold with, and to the Teltonika
+TSW202, is in [Comparison with other firmware](comparison.md).
 
 ## Supported hardware
 
