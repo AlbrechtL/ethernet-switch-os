@@ -54,7 +54,12 @@ are identical at first; later updates use the `.swu` file (see
 
 !!! tip "Faster flashing"
     `bmaptool copy <image>.wic.bz2 /dev/sdX` unpacks and writes only the used
-    blocks in one step, using the `.wic.bmap` file next to the image.
+    blocks in one step. It needs the `.wic.bmap` file from the same artifact,
+    next to the image and under its original name (`bmaptool` looks for
+    `<image>.wic.bmap`, derived from the `.wic.bz2` name it was given, not
+    for any `.bmap` file in the directory). Without it, `bmaptool` stops
+    with `bmap file not found`; either restore the `.wic.bmap` file or add
+    `--nobmap` to flash without it, at the speed of `dd`.
 
 Continue with [Getting started](../getting-started/index.md).
 
