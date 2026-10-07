@@ -41,7 +41,6 @@ plugins:
   # The docs used to be split by interface; keep the old links working.
   - redirects:
       redirect_maps:
-        getting-started.md: getting-started/index.md
         web-ui.md: getting-started/web-ui.md
         restconf/index.md: getting-started/restconf.md
         cli/basics.md: getting-started/cli.md
