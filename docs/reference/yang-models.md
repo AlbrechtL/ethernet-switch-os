@@ -40,6 +40,15 @@ Paths are written as in the CLI. `{…}` lists the supported leaves.
 | `stp mstp mst-instances mst-instance <id> interfaces interface <port> config {name, cost, port-priority}` | |
 | `stp interfaces interface <port> config {name, edge-port, link-type, guard, bpdu-guard, bpdu-filter}` | `guard` is `ROOT` or `NONE`. |
 
+## LLDP (`openconfig-lldp`)
+
+| Path | Notes |
+|---|---|
+| `lldp config {enabled, hello-timer}` | `hello-timer`: 1 … 3600 seconds, default 30. |
+| `lldp config {system-name, system-description}` | One line each. Default: the host name, and the firmware name and version. |
+| `lldp config suppress-tlv-advertisement` | `oc-lldp-types:MANAGEMENT_ADDRESS`, `oc-lldp-types:SYSTEM_CAPABILITIES`. |
+| `lldp interfaces interface <port> config {name, enabled}` | Switch ports only. |
+
 ## SNMP (`ietf-snmp`)
 
 | Path | Notes |
@@ -67,5 +76,7 @@ These show up in `show state` but cannot be configured:
 - port counters, `oper-status`, MAC address
 - `routed-vlan ipv4 state dhcp-lease` and each address's `origin`
 - `stp ... state`: roles, port states, root bridge
+- `lldp state` and `lldp interfaces interface <port> state`: what the switch announces, counters
+- `lldp interfaces interface <port> neighbors`: the neighbors of each port
 - `snmp engine engine-id-in-use`
-- the MIBs served over SNMP (BRIDGE-MIB, Q-BRIDGE-MIB, RSTP-MIB)
+- the MIBs served over SNMP (BRIDGE-MIB, Q-BRIDGE-MIB, RSTP-MIB, LLDP-MIB)

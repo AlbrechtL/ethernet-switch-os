@@ -52,5 +52,6 @@ described in [Using the CLI](../getting-started/cli.md). Use `?` and TAB to buil
 | `switch` | [VLANs](../features/vlans.md#port-based-vlans) (VLAN mode) |
 | `port-based-vlans` | [VLANs](../features/vlans.md#port-based-vlans) |
 | `stp` | [Spanning tree](../features/spanning-tree.md) |
+| `lldp` | [LLDP](../features/lldp.md) |
 | `snmp` | [SNMP](../features/snmp.md) |
 | `system` | [System](../features/system.md) |

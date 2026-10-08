@@ -111,7 +111,11 @@ has a complete example.
 ## Layer 2
 
 - No IGMP/MLD snooping.
-- No LLDP.
+- LLDP: no LLDP-MED, CDP, EDP, FDP or SONMP, no custom TLVs, and the
+  chassis ID cannot be set.
+- Raspberry Pi 4-port switch: not yet tested whether the switch chip
+  passes LLDP frames to the processor only, or also floods them to the
+  other ports.
 - Spanning tree: no Rapid PVST, loop guard, bridge assurance, EtherChannel
   guard or automatic recovery after BPDU guard.
 

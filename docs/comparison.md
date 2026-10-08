@@ -127,7 +127,7 @@ described by YANG models and reachable through a CLI and RESTCONF.
 | Media Redundancy Protocol (MRP) | No. | Yes, client and manager. | No. |
 | IGMP snooping | Yes, v1, v2 and v3. | Yes, with querier. | No. |
 | MLD snooping | No. | Not described. | No. |
-| LLDP | Yes, and LLDP-MED. | Yes. | No. |
+| LLDP | Yes, and LLDP-MED. | Yes. | Yes, without LLDP-MED. See [LLDP](features/lldp.md). |
 | Static MAC addresses | Yes, 64 entries. | Not described. | No. |
 | MAC address ageing time | Configurable. | Not described. | No setting. |
 

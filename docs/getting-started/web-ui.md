@@ -61,6 +61,7 @@ dialogs change is described on the feature's page:
 | Ports | [Ports](../features/ports.md#web-ui) |
 | VLANs | [VLANs](../features/vlans.md#web-ui) |
 | Spanning tree | [Spanning tree](../features/spanning-tree.md#web-ui) |
+| LLDP | [LLDP](../features/lldp.md#web-ui) |
 | SNMP | [SNMP](../features/snmp.md#web-ui) |
 | Administration | [Password and factory reset](../features/administration.md#web-ui) |
 

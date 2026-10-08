@@ -36,6 +36,7 @@ flowchart TB
     script["Scripts, curl"]
     ssh["SSH client"]
     nms["SNMP manager"]
+    neighbors["Neighboring devices"]
 
     subgraph user["Userspace"]
         lighttpd["lighttpd<br/>HTTPS port 443, login"]
@@ -47,6 +48,7 @@ flowchart TB
         backend["clixon_backend<br/>datastores, YANG validation, transactions"]
         plugin["clixon-switch plugin (Rust)<br/>validate, plan, reconcile"]
         helpers["mstpd, udhcpc"]
+        lldpd["lldpd<br/>LLDP"]
     end
 
     subgraph kernel["Linux kernel"]
@@ -63,12 +65,15 @@ flowchart TB
     lighttpd -- "/update/" --> swupdate
     ssh --> cli
     nms --> snmpd --> clixon_snmp
+    snmpd -- "AgentX, LLDP-MIB" --> lldpd
+    neighbors <-->|LLDP frames| lldpd
     restconf -- "UNIX socket" --> backend
     cli -- "UNIX socket" --> backend
     clixon_snmp -- "UNIX socket" --> backend
     backend -- "transaction callbacks" --> plugin
     plugin -- "rtnetlink" --> net
     plugin -- "starts, configures" --> helpers
+    plugin -- "starts, lldpcli" --> lldpd
     helpers -- "netlink" --> net
     net --> switchdev --> driver -- "registers (MMIO, MDIO, SPI, SMI)" --> asic
 ```
@@ -79,7 +84,8 @@ flowchart TB
 | HTTPS front end | lighttpd: TLS, the password check, the web UI's files, and forwarding to RESTCONF and SWUpdate. See [Access and security](#access-and-security). | meta-ethernet-switch-os `recipes-extended/lighttpd/` |
 | RESTCONF | `clixon_restconf`, clixon's native HTTP/1 server, on 127.0.0.1 only. | clixon, recipe in meta-ethernet-switch-os `recipes-clixon/` |
 | CLI | `clixon_cli`, generated from the YANG models (clixon's autocli), plus `password` and `factory-reset` from a small C plugin. It is the login shell of the admin account. | clixon; CLI spec and plugin in [clixon-switch-rs](https://github.com/AlbrechtL/clixon-switch-rs) `clixon/` |
-| SNMP | net-snmp's `snmpd` and `clixon_snmp` as its AgentX subagent. Read-only. | net-snmp, clixon |
+| SNMP | net-snmp's `snmpd` and `clixon_snmp` as its AgentX subagent; `lldpd` as a second one for LLDP-MIB. Read-only. | net-snmp, clixon |
+| LLDP | `lldpd`, started and configured by the plugin. | lldpd, trimmed in meta-ethernet-switch-os `recipes-networking/lldpd/` |
 | Configuration backend | `clixon_backend`: holds the datastores, validates against YANG, runs transactions, loads the plugin. | clixon |
 | Backend plugin | `clixon-switch`, a Rust shared library. Validates each commit and brings the kernel in line with it. Runs the RPCs `set-password` (which also creates the admin account) and `factory-reset`. | [clixon-switch-rs](https://github.com/AlbrechtL/clixon-switch-rs) |
 | Linux networking | Bridge, VLANs, addresses, spanning tree states. Configured over rtnetlink. | Linux kernel |
@@ -219,8 +225,9 @@ when much more is needed at once:
   from RAM: its root filesystem unpacks to 19.0 MiB, and the factory
   update file it then receives is another 9.6 MiB in `/tmp`, on top of the
   same services as in normal operation.
-- **Features and logins.** Spanning tree (`mstpd`), SNMP (`snmpd`,
-  `clixon_snmp`) and the DHCP client run only when configured, and every SSH
+- **Features and logins.** LLDP (`lldpd`) runs unless turned off.
+  Spanning tree (`mstpd`), SNMP (`snmpd`, `clixon_snmp`) and the DHCP
+  client run only when configured, and every SSH
   login to the CLI starts another `clixon_cli`. Every clixon process loads
   the YANG models into memory, and the OpenConfig models are large.
 - **Cache.** The programs run from a xz-compressed squashfs. When memory
@@ -259,7 +266,7 @@ flowchart TB
         plan["<b>3 Plan</b><br/>operations, actual to desired"]
         apply["<b>4 Apply</b><br/>operations over rtnetlink"]
         match{"Kernel<br/>matches?"}
-        helpers["<b>5 Helpers</b><br/>mstpd, udhcpc, snmpd"]
+        helpers["<b>5 Helpers</b><br/>mstpd, udhcpc, snmpd, lldpd"]
         validate --> observe --> plan --> apply --> match
         match -- no --> observe
         match -- yes --> helpers
@@ -303,8 +310,11 @@ The steps in the plugin:
    plugin observes again, until the kernel matches. Some operations have
    side effects that are easier to observe than to predict.
 5. **Helpers.** The plugin starts, reconfigures or stops `mstpd` (spanning
-   tree), `udhcpc` (DHCP client) and `snmpd` with `clixon_snmp`, as the
-   configuration asks for them. They are children of `clixon_backend`.
+   tree), `udhcpc` (DHCP client), `snmpd` with `clixon_snmp`, and `lldpd`
+   (LLDP), as the configuration asks for them. They are children of
+   `clixon_backend`. A failing `lldpd` is only logged, because LLDP is on
+   by default and must not keep the startup configuration from being
+   applied.
 
 If the commit fails, clixon calls `trans_revert`, and the plugin reconciles
 the kernel back to the previous configuration the same way.
@@ -319,13 +329,14 @@ configuration to kernel objects is in the
 **State data** (counters, link state, DHCP lease, spanning tree roles,
 firmware version) takes the reverse path: clixon calls the plugin's
 `statedata` callback, which reads the kernel over netlink, asks mstpd with
-`mstpctl`, and reads `/proc`.
+`mstpctl` and lldpd with `lldpcli` (LLDP neighbors), and reads `/proc`.
 
 ## Data model
 
 The configuration is described by YANG. It uses OpenConfig where OpenConfig
 has a model (`openconfig-interfaces`, `openconfig-vlan`,
-`openconfig-if-ip`, `openconfig-spanning-tree`), `ietf-snmp` for SNMP, and
+`openconfig-if-ip`, `openconfig-spanning-tree`, `openconfig-lldp`),
+`ietf-snmp` for SNMP, and
 the project's own module `clixon-switch` for what neither covers: the VLAN
 database, port-based VLANs, the MSTP CIST, system contact and location, and
 state such as the DHCP lease and `/system/state`. The MIBs served over SNMP
@@ -436,9 +447,10 @@ which is a factory reset as well.
 | `mstpd` | plugin, while spanning tree is enabled | — | STP, RSTP, MSTP |
 | `udhcpc` | plugin, while a DHCP client is configured | — | DHCP client |
 | `snmpd`, `clixon_snmp` | plugin, while SNMP is enabled | UDP 161, AgentX socket | SNMPv3 agent |
+| `lldpd` (two processes, one as `nobody`) | plugin, while LLDP is enabled (factory default) | raw socket on the switch ports, control socket | LLDP, and LLDP-MIB while SNMP is on |
 
 Only ports 22 and 443 are open to the network, plus UDP 161 while SNMP is
-on. The TFTP initramfs, the factory installer, also leaves SWUpdate on port
+on. LLDP is not IP: its frames stay on the link they arrive on. The TFTP initramfs, the factory installer, also leaves SWUpdate on port
 8080 of every address: it has no password yet, and it only runs after a boot
 from the bootloader's serial console.
 
@@ -643,7 +655,7 @@ may do everything. NACM (RFC 8341) is on the README's TODO list.
 | Repository | Content |
 |---|---|
 | [ethernet-switch-os](https://github.com/AlbrechtL/ethernet-switch-os) | kas files per board, CI, QEMU scripts, this documentation |
-| [meta-ethernet-switch-os](https://github.com/AlbrechtL/meta-ethernet-switch-os) | The distro: clixon and cligen recipes (with patches), the `clixon-switch` recipe, init scripts, the web UI, SWUpdate integration, mstpd and net-snmp adjustments. Reaches into each BSP through `dynamic-layers/`. |
+| [meta-ethernet-switch-os](https://github.com/AlbrechtL/meta-ethernet-switch-os) | The distro: clixon and cligen recipes (with patches), the `clixon-switch` recipe, init scripts, the web UI, SWUpdate integration, mstpd, net-snmp and lldpd adjustments. Reaches into each BSP through `dynamic-layers/`. |
 | [clixon-switch-rs](https://github.com/AlbrechtL/clixon-switch-rs) | The backend plugin, the YANG models, the CLI spec, `clixon.xml`, the factory default |
 | [meta-rtl83xx-bsp](https://github.com/AlbrechtL/meta-rtl83xx-bsp) | Realtek RTL83xx: kernel with the OpenWrt drivers, device trees, boot image, flash layout, rtl838x-qemu recipe |
 | [meta-rpi-managed-switch-bsp](https://github.com/AlbrechtL/meta-rpi-managed-switch-bsp) | Raspberry Pi switch HAT: kernel configuration and backports, device tree overlay, SD card layout, A/B update |
@@ -660,7 +672,7 @@ tested on a development machine without clixon or root rights:
 | Crate | Content |
 |---|---|
 | `switch-model` | JSON → validated `DesiredState`; state data as XML; `snmpd.conf`. Pure functions. |
-| `switch-net` | `ActualState`, the planner, `reconcile`, the netlink backend, a fake kernel for tests; mstpd, udhcpc and snmpd management |
+| `switch-net` | `ActualState`, the planner, `reconcile`, the netlink backend, a fake kernel for tests; mstpd, udhcpc, snmpd and lldpd management |
 | `clixon-sys` | Declarations of the libclixon functions in use |
 | `clixon-plugin` | A safe Rust interface to clixon's plugin callbacks. Panics are caught, so a bug fails the transaction instead of crashing `clixon_backend`. |
 | `clixon-switch-plugin` | The shared library `clixon_backend` loads; wires the other crates together |

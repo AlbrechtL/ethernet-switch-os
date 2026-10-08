@@ -41,4 +41,5 @@ Differences from the CLI:
 
 Until this chapter is written, the
 [clixon-switch-rs README](https://github.com/AlbrechtL/clixon-switch-rs#data-model)
-has RESTCONF examples for DHCP, spanning tree and SNMP.
+has RESTCONF examples for DHCP, spanning tree and SNMP, and the
+[LLDP](../features/lldp.md#restconf) page has its own.

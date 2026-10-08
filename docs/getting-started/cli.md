@@ -22,6 +22,7 @@ documentation, so what you learn here carries over.
     switch> set ?
       interfaces            Top level container for interfaces, including configuration
                             and state data.
+      lldp                  Top-level container for LLDP configuration and state data
       port-based-vlans      Port-based VLAN groups, used in vlan-mode PORT_BASED only.
       snmp                  Top-level container for SNMP-related configuration and
                             status objects.

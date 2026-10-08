@@ -15,6 +15,7 @@ A freshly installed switch starts with this configuration:
 | DHCP client | off |
 | Default gateway | none |
 | Spanning tree | off |
+| LLDP | on, on all ports |
 | SNMP | off |
 
 So every port is in the same network, and the switch answers on
@@ -105,7 +106,7 @@ as `root` without a password. `root` cannot log in over SSH.
 
 | URL | Content |
 |---|---|
-| `https://192.168.1.1/` | Status and settings page: firmware version, uptime, management address, ports, VLANs, spanning tree, SNMP, password. See [Using the web UI](web-ui.md). |
+| `https://192.168.1.1/` | Status and settings page: firmware version, uptime, management address, ports, VLANs, spanning tree, LLDP neighbors, SNMP, password. See [Using the web UI](web-ui.md). |
 | `https://192.168.1.1/update/` | Firmware update (SWUpdate). See [Firmware update](../installation/update.md#firmware-update). |
 
 The certificate is made by the switch itself, so the browser warns that it
@@ -141,6 +142,7 @@ per interface:
 | [Ports](../features/ports.md) | ✓ | ✓ | ✓ |
 | [VLANs](../features/vlans.md) | ✓ | ✓ | ✓ |
 | [Spanning tree](../features/spanning-tree.md) | without MSTP and guards | ✓ | ✓ |
+| [LLDP](../features/lldp.md) | ✓ | ✓ | ✓ |
 | [SNMP](../features/snmp.md) | users, on/off | ✓ | ✓ |
 | [Password and factory reset](../features/administration.md) | ✓ | ✓ | ✓ |
 

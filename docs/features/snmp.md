@@ -13,6 +13,7 @@ What it answers:
 | BRIDGE-MIB | Bridge address, ports (`dot1dBasePort` 1 is `lan1`), forwarding database, and spanning tree while it runs |
 | Q-BRIDGE-MIB | Configured and active VLANs, port VLAN ids, forwarding database per VLAN |
 | RSTP-MIB | Protocol version and per-port edge and point-to-point status, while spanning tree runs |
+| LLDP-MIB (IEEE 802.1AB) | What the switch announces over [LLDP](lldp.md) and the neighbors of each port, while LLDP is on. Below `1.0.8802.1.1.2`: the view has to include `1.0.8802`. |
 
 `sysContact` and `sysLocation` come from the
 [system information](system.md). `sysName` is the switch's host name.
@@ -68,7 +69,12 @@ $ snmpwalk -v3 -l authPriv -u nms -a SHA -A 'auth passphrase' -x AES -X 'priv pa
       192.168.1.1 1.3.6.1.2.1.1
 $ snmpwalk -v3 -l authPriv -u nms -a SHA -A 'auth passphrase' -x AES -X 'priv passphrase' \
       192.168.1.1 1.3.6.1.2.1.17
+$ snmpwalk -v3 -l authPriv -u nms -a SHA -A 'auth passphrase' -x AES -X 'priv passphrase' \
+      192.168.1.1 1.0.8802.1.1.2
 ```
+
+LLDP-MIB answers "No Such Object" for about 15 seconds after each change of
+the SNMP configuration, until it has registered with the agent again.
 
 ## Web UI
 
@@ -78,7 +84,8 @@ shows whether the agent is on, the engine ID, and the SNMP users.
 - **Add user** creates a user. You type the two passphrases (at least 8
   characters each) in the dialog. The browser turns them into keys, and
   only the keys go to the switch. The user can read everything with
-  `authPriv`, like user `nms` in the [CLI example](#configure-the-switch).
+  `authPriv` (`1.3.6.1` and LLDP-MIB's `1.0.8802`), like user `nms` in the
+  [CLI example](#configure-the-switch).
   For the first user, the dialog proposes an engine ID if none is set; use
   your own if you want, and give every switch a different one.
 - **Delete** removes a user. Deleting the last user turns the agent off.
@@ -141,6 +148,7 @@ switch> set snmp usm local user nms priv aes key 1c:ee:55:a4:50:94:f9:54:c5:9b:d
 switch> set snmp vacm group readers member nms security-model usm
 switch> set snmp vacm group readers access "" usm auth-priv read-view all
 switch> set snmp vacm view all include 1.3.6.1
+switch> set snmp vacm view all include 1.0.8802
 switch> commit
 switch> save
 ```
@@ -156,7 +164,8 @@ Line by line:
 | `usm local user nms priv aes key …` | Its encryption key. Optional, but without it the user can only use `auth-no-priv`. |
 | `vacm group readers member nms security-model usm` | Puts `nms` into group `readers`. |
 | `vacm group readers access "" usm auth-priv read-view all` | Members of `readers` may read view `all` when they authenticate **and** encrypt. The `""` is the context, which must be empty. Use `auth-no-priv` to allow unencrypted requests. |
-| `vacm view all include 1.3.6.1` | View `all` is everything below `1.3.6.1`. |
+| `vacm view all include 1.3.6.1` | View `all` is everything below `1.3.6.1`... |
+| `vacm view all include 1.0.8802` | ...and LLDP-MIB. |
 
 ### Restrict a view
 

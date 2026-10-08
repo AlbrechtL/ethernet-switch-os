@@ -87,6 +87,7 @@ nav:
       - Ports: features/ports.md
       - VLANs: features/vlans.md
       - Spanning tree: features/spanning-tree.md
+      - LLDP: features/lldp.md
       - SNMP: features/snmp.md
       - Password and factory reset: features/administration.md
   - Reference:

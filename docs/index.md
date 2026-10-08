@@ -26,8 +26,10 @@ how to configure it in each of the three.
 - **Management IP address**: static IPv4 addresses and/or a DHCP client, on
   one or more VLANs.
 - **Spanning tree**: STP, RSTP and MSTP.
+- **LLDP**: the switch announces itself and shows the neighbors of each
+  port.
 - **SNMP**: a read-only SNMPv3 agent (system group, IF-MIB, BRIDGE-MIB,
-  Q-BRIDGE-MIB, RSTP-MIB).
+  Q-BRIDGE-MIB, RSTP-MIB, LLDP-MIB).
 - **Firmware update** through a web page, `curl` or the `swupdate` command,
   with the configuration kept. The Raspberry Pi and QEMU x86-64 switches
   have two firmware slots (A/B) and roll back a failed update by
@@ -64,5 +66,6 @@ The board file is what you name when you [build the firmware](development/buildi
 3. The feature pages: [system information](features/system.md),
    [management IP address](features/management-ip.md),
    [ports](features/ports.md), [VLANs](features/vlans.md),
-   [spanning tree](features/spanning-tree.md), [SNMP](features/snmp.md),
+   [spanning tree](features/spanning-tree.md), [LLDP](features/lldp.md),
+   [SNMP](features/snmp.md),
    [password and factory reset](features/administration.md).
