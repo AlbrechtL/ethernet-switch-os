@@ -30,7 +30,7 @@ on:
         description: Which tests to run
         default: quick
         type: choice
-        options: [quick, smoke, rstp-conformance, mstp-conformance, vlan-conformance]
+        options: [quick, smoke, rstp-conformance, mstp-conformance, vlan-conformance, lldp-conformance]
       logs:
         description: Also publish the serial consoles and packet captures
         type: boolean
@@ -104,7 +104,7 @@ jobs:
           # gets the quick one. One job per suite: together they are hours.
           case "$EVENT" in
             workflow_dispatch) suites="[\"${DISPATCH_SUITE:-quick}\"]" ;;
-            schedule)          suites='["rstp-conformance","mstp-conformance","vlan-conformance"]' ;;
+            schedule)          suites='["rstp-conformance","mstp-conformance","vlan-conformance","lldp-conformance"]' ;;
             *)                 suites='["quick"]' ;;
           esac
           echo "suites=$suites" >> "$GITHUB_OUTPUT"
