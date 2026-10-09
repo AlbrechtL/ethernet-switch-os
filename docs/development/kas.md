@@ -11,7 +11,7 @@
 | `meta-rtl83xx-bsp` | [meta-rtl83xx-bsp](https://github.com/AlbrechtL/meta-rtl83xx-bsp) | master |
 | `meta-raspberrypi` | [meta-raspberrypi](https://git.yoctoproject.org/meta-raspberrypi) | wrynose |
 | `meta-rpi-managed-switch-bsp` | [meta-rpi-managed-switch-bsp](https://github.com/AlbrechtL/meta-rpi-managed-switch-bsp) | master |
-| `meta-efibootguard` | [meta-efibootguard](https://github.com/siemens/meta-efibootguard) | master (the wrynose one) |
+| `meta-efibootguard` | [meta-efibootguard](https://github.com/siemens/meta-efibootguard) | wrynose |
 | `meta-qemu-switch-bsp` | [meta-qemu-switch-bsp](https://github.com/AlbrechtL/meta-qemu-switch-bsp) | master |
 | `meta-ethernet-switch-os` | [meta-ethernet-switch-os](https://github.com/AlbrechtL/meta-ethernet-switch-os) | master |
 

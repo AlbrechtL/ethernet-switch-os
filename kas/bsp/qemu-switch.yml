@@ -11,11 +11,11 @@ header:
 
 repos:
   # The bootloader, its environment tools and the wic plugins for the config
-  # partitions. Its master branch is the one for wrynose.
+  # partitions. It has release branches, so it takes wrynose from
+  # kas/base.yml; its master follows the next release (blacksail).
   meta-efibootguard:
     url: https://github.com/siemens/meta-efibootguard
     path: layers/meta-efibootguard
-    branch: master
 
   meta-qemu-switch-bsp:
     url: https://github.com/AlbrechtL/meta-qemu-switch-bsp
